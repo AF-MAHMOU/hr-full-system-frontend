@@ -1,0 +1,260 @@
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/shared/hooks/useAuth';
+import { Button, Input, Card } from '@/shared/components';
+import type { RegisterDto, UserType } from '@/shared/types/auth';
+import { Gender, MaritalStatus } from '@/shared/types/auth';
+import styles from './register.module.css';
+
+export default function RegisterPage() {
+  const router = useRouter();
+  const { register, isLoading, error } = useAuth();
+  const [formData, setFormData] = useState<RegisterDto>({
+    email: '',
+    password: '',
+    firstName: '',
+    lastName: '',
+    nationalId: '',
+    userType: 'employee',
+  });
+  const [formError, setFormError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormError(null);
+    setSuccess(false);
+
+    try {
+      await register(formData);
+      setSuccess(true);
+      // Redirect to login after 2 seconds
+      setTimeout(() => {
+        router.push('/login');
+      }, 2000);
+    } catch (err: any) {
+      setFormError(err.message || 'Registration failed');
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  if (success) {
+    return (
+      <div className={styles.registerContainer}>
+        <Card padding="lg" shadow="warm" className={styles.registerCard}>
+          <div className={styles.successMessage}>
+            <h2>Registration Successful!</h2>
+            <p>Redirecting to login page...</p>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className={styles.registerContainer}>
+      <Card padding="lg" shadow="warm" className={styles.registerCard}>
+        <div className={styles.header}>
+          <h1>Create Account</h1>
+          <p>Register for HR Management System</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className={styles.form}>
+          {(error || formError) && (
+            <div className={styles.errorMessage} role="alert">
+              {error || formError}
+            </div>
+          )}
+
+          <div className={styles.formRow}>
+            <Input
+              id="firstName"
+              name="firstName"
+              type="text"
+              label="First Name"
+              value={formData.firstName}
+              onChange={handleChange}
+              required
+              fullWidth
+            />
+            <Input
+              id="lastName"
+              name="lastName"
+              type="text"
+              label="Last Name"
+              value={formData.lastName}
+              onChange={handleChange}
+              required
+              fullWidth
+            />
+          </div>
+
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            label="Email"
+            value={formData.email}
+            onChange={handleChange}
+            required
+            fullWidth
+            autoComplete="email"
+          />
+
+          <Input
+            id="nationalId"
+            name="nationalId"
+            type="text"
+            label="National ID"
+            value={formData.nationalId}
+            onChange={handleChange}
+            required
+            fullWidth
+          />
+
+          <Input
+            id="password"
+            name="password"
+            type="password"
+            label="Password"
+            value={formData.password}
+            onChange={handleChange}
+            required
+            fullWidth
+            minLength={6}
+            autoComplete="new-password"
+            helperText="Password must be at least 6 characters"
+          />
+
+          <div className={styles.formRow}>
+            <div className={styles.selectWrapper}>
+              <label htmlFor="userType" className={styles.label}>
+                User Type
+              </label>
+              <select
+                id="userType"
+                name="userType"
+                value={formData.userType}
+                onChange={handleChange}
+                className={styles.select}
+              >
+                <option value="employee">Employee</option>
+                <option value="candidate">Candidate</option>
+              </select>
+            </div>
+
+            <div className={styles.selectWrapper}>
+              <label htmlFor="gender" className={styles.label}>
+                Gender (Optional)
+              </label>
+              <select
+                id="gender"
+                name="gender"
+                value={formData.gender || ''}
+                onChange={handleChange}
+                className={styles.select}
+              >
+                <option value="">Select Gender</option>
+                <option value={Gender.MALE}>Male</option>
+                <option value={Gender.FEMALE}>Female</option>
+              </select>
+            </div>
+          </div>
+
+          <div className={styles.formRow}>
+            <div className={styles.selectWrapper}>
+              <label htmlFor="maritalStatus" className={styles.label}>
+                Marital Status (Optional)
+              </label>
+              <select
+                id="maritalStatus"
+                name="maritalStatus"
+                value={formData.maritalStatus || ''}
+                onChange={handleChange}
+                className={styles.select}
+              >
+                <option value="">Select Status</option>
+                <option value={MaritalStatus.SINGLE}>Single</option>
+                <option value={MaritalStatus.MARRIED}>Married</option>
+                <option value={MaritalStatus.DIVORCED}>Divorced</option>
+                <option value={MaritalStatus.WIDOWED}>Widowed</option>
+              </select>
+            </div>
+
+            <Input
+              id="mobilePhone"
+              name="mobilePhone"
+              type="tel"
+              label="Mobile Phone (Optional)"
+              value={formData.mobilePhone || ''}
+              onChange={handleChange}
+              fullWidth
+            />
+          </div>
+
+          <Input
+            id="dateOfBirth"
+            name="dateOfBirth"
+            type="date"
+            label="Date of Birth (Optional)"
+            value={formData.dateOfBirth || ''}
+            onChange={handleChange}
+            fullWidth
+          />
+
+          {formData.userType === 'employee' && (
+            <Input
+              id="dateOfHire"
+              name="dateOfHire"
+              type="date"
+              label="Date of Hire (Optional)"
+              value={formData.dateOfHire || ''}
+              onChange={handleChange}
+              fullWidth
+            />
+          )}
+
+          {formData.userType === 'candidate' && (
+            <Input
+              id="applicationDate"
+              name="applicationDate"
+              type="date"
+              label="Application Date (Optional)"
+              value={formData.applicationDate || ''}
+              onChange={handleChange}
+              fullWidth
+            />
+          )}
+
+          <Button
+            type="submit"
+            variant="primary"
+            size="lg"
+            fullWidth
+            isLoading={isLoading}
+          >
+            Register
+          </Button>
+        </form>
+
+        <div className={styles.footer}>
+          <p>
+            Already have an account?{' '}
+            <a href="/login" className={styles.link}>
+              Sign in here
+            </a>
+          </p>
+        </div>
+      </Card>
+    </div>
+  );
+}
+

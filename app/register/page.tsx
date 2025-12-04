@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/shared/hooks/useAuth';
+import { useAuthNoCheck } from '@/shared/hooks/useAuthNoCheck';
 import { Button, Input, Card } from '@/shared/components';
 import type { RegisterDto, UserType } from '@/shared/types/auth';
 import { Gender, MaritalStatus } from '@/shared/types/auth';
@@ -10,7 +10,9 @@ import styles from './register.module.css';
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { register, isLoading, error } = useAuth();
+  // useAuthNoCheck: checks if already logged in and redirects if so
+  // If not logged in, allows registration
+  const { register, isLoading, isCheckingAuth, error } = useAuthNoCheck();
   const [formData, setFormData] = useState<RegisterDto>({
     email: '',
     password: '',
@@ -20,20 +22,29 @@ export default function RegisterPage() {
     userType: 'employee',
   });
   const [formError, setFormError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
+
+  // Don't render the page at all if we're still checking auth status
+  // This prevents the flash of register page before redirect
+  if (isCheckingAuth) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        minHeight: '100vh' 
+      }}>
+        <div>Loading...</div>
+      </div>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError(null);
-    setSuccess(false);
 
     try {
       await register(formData);
-      setSuccess(true);
-      // Redirect to login after 2 seconds
-      setTimeout(() => {
-        router.push('/login');
-      }, 2000);
+      // Redirect is handled in useAuthNoCheck.register()
     } catch (err: any) {
       setFormError(err.message || 'Registration failed');
     }
@@ -45,19 +56,6 @@ export default function RegisterPage() {
       [e.target.name]: e.target.value,
     });
   };
-
-  if (success) {
-    return (
-      <div className={styles.registerContainer}>
-        <Card padding="lg" shadow="warm" className={styles.registerCard}>
-          <div className={styles.successMessage}>
-            <h2>Registration Successful!</h2>
-            <p>Redirecting to login page...</p>
-          </div>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className={styles.registerContainer}>

@@ -1,12 +1,20 @@
 /**
- * Authentication hook
- * Integrates with backend cookie-based JWT authentication
+ * Authentication hook for protected pages
+ * Calls /auth/me on mount to check authentication status
+ * Use this in dashboards, layouts, and protected pages
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { apiClient } from '../utils/api';
-import { API_ENDPOINTS } from '../constants';
-import type { AuthUser, LoginDto, RegisterDto, ChangePasswordDto, LoginResponse, RegisterResponse, ChangePasswordResponse, ApiErrorResponse } from '../types/auth';
+import { authApi, fetchMe } from '../api/authApi';
+import type {
+  AuthUser,
+  LoginDto,
+  RegisterDto,
+  ChangePasswordDto,
+  LoginResponse,
+  RegisterResponse,
+  ChangePasswordResponse,
+} from '../types/auth';
 
 export const useAuth = () => {
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -16,61 +24,59 @@ export const useAuth = () => {
   // Fetch current user from /auth/me
   const fetchCurrentUser = useCallback(async () => {
     try {
-      const response = await apiClient.get<AuthUser>(API_ENDPOINTS.AUTH.ME);
+      setIsLoading(true);
+      const response = await fetchMe();
       setUser(response.data);
       setError(null);
       return response.data;
     } catch (err: any) {
-      // 401 means not authenticated, which is fine
-      if (err.response?.status !== 401) {
+      // 401 means not authenticated, which is fine - don't set error
+      // The interceptor will handle redirect for non-auth endpoints
+      if (err.response?.status === 401) {
+        setUser(null);
+        setError(null);
+      } else {
+        // Other errors (network, server error, etc.)
         setError(err.response?.data?.message || 'Failed to fetch user');
+        setUser(null);
       }
-      setUser(null);
       return null;
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  // Check authentication on mount
+  // Check authentication on mount (once)
   useEffect(() => {
     fetchCurrentUser();
   }, [fetchCurrentUser]);
 
   const login = async (loginDto: LoginDto): Promise<LoginResponse> => {
+    setError(null);
+    setIsLoading(true);
     try {
-      setIsLoading(true);
-      setError(null);
-      const response = await apiClient.post<LoginResponse>(
-        API_ENDPOINTS.AUTH.LOGIN,
-        loginDto
-      );
-      
-      // Backend sets httpOnly cookie, we just store user data
-      setUser(response.data.user);
-      return response.data;
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.message || 'Login failed';
-      setError(errorMessage);
-      throw new Error(errorMessage);
+      const data = await authApi.login(loginDto);
+      setUser(data.user);
+      return data;
+    } catch (e: any) {
+      const msg = e.message || 'Login failed';
+      setError(msg);
+      throw e;
     } finally {
       setIsLoading(false);
     }
   };
 
   const register = async (registerDto: RegisterDto): Promise<RegisterResponse> => {
+    setError(null);
+    setIsLoading(true);
     try {
-      setIsLoading(true);
-      setError(null);
-      const response = await apiClient.post<RegisterResponse>(
-        API_ENDPOINTS.AUTH.REGISTER,
-        registerDto
-      );
-      return response.data;
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.message || 'Registration failed';
-      setError(errorMessage);
-      throw new Error(errorMessage);
+      const data = await authApi.register(registerDto);
+      return data;
+    } catch (e: any) {
+      const msg = e.message || 'Registration failed';
+      setError(msg);
+      throw e;
     } finally {
       setIsLoading(false);
     }
@@ -78,14 +84,12 @@ export const useAuth = () => {
 
   const logout = async (): Promise<void> => {
     try {
-      await apiClient.post(API_ENDPOINTS.AUTH.LOGOUT);
+      await authApi.logout();
     } catch (err) {
-      // Continue with logout even if API call fails
       console.error('Logout API call failed:', err);
     } finally {
       setUser(null);
       setError(null);
-      // Redirect to login page
       if (typeof window !== 'undefined') {
         window.location.href = '/login';
       }
@@ -93,17 +97,13 @@ export const useAuth = () => {
   };
 
   const changePassword = async (changePasswordDto: ChangePasswordDto): Promise<ChangePasswordResponse> => {
+    setError(null);
     try {
-      setError(null);
-      const response = await apiClient.post<ChangePasswordResponse>(
-        API_ENDPOINTS.AUTH.CHANGE_PASSWORD,
-        changePasswordDto
-      );
-      return response.data;
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.message || 'Failed to change password';
-      setError(errorMessage);
-      throw new Error(errorMessage);
+      return await authApi.changePassword(changePasswordDto);
+    } catch (e: any) {
+      const msg = e.message || 'Failed to change password';
+      setError(msg);
+      throw e;
     }
   };
 

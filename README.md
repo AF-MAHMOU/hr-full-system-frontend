@@ -60,9 +60,46 @@ frontend/
 
 ---
 
+## 📦 Central Import Pattern
+
+### ⚠️ IMPORTANT: Always Import from Central Index Files
+
+**All shared resources are exported through central `index.ts` files. Always import from these:**
+
+```tsx
+// ✅ CORRECT - Import from central index files
+import { Button, Card, Input, Modal, ProtectedRoute } from '@/shared/components';
+import { useAuth, useAuthNoCheck } from '@/shared/hooks';
+import { API_ENDPOINTS, ENV } from '@/shared/constants';
+import { apiClient } from '@/shared/utils/api';
+import type { AuthUser, LoginDto } from '@/shared/types';
+
+// ❌ WRONG - Don't import directly from subfolders
+import { Button } from '@/shared/components/Button/Button';
+import { useAuth } from '@/shared/hooks/useAuth';
+```
+
+### Central Index Files
+
+- **Components:** `@/shared/components` → Exports all UI components
+- **Hooks:** `@/shared/hooks` → Exports all React hooks
+- **Constants:** `@/shared/constants` → Exports API endpoints, env vars
+- **Types:** `@/shared/types` → Exports all TypeScript types
+- **Utils:** `@/shared/utils/api` → Exports API client
+
+**Why?**
+- ✅ Single source of truth
+- ✅ Easier refactoring
+- ✅ Consistent imports across teams
+- ✅ Better tree-shaking
+
+---
+
 ## 🎨 Shared UI Components
 
 All teams use shared components from `shared/components/` to maintain UI consistency across modules.
+
+**Always import from:** `@/shared/components`
 
 ### Available Components
 
@@ -131,6 +168,27 @@ import { Modal } from '@/shared/components';
 - `onClose`: function
 - `title`: string (optional)
 - `size`: `sm` | `md` | `lg` | `xl`
+
+#### ProtectedRoute
+```tsx
+import { ProtectedRoute } from '@/shared/components';
+
+export default function MyProtectedPage() {
+  return (
+    <ProtectedRoute>
+      <div>Protected content</div>
+    </ProtectedRoute>
+  );
+}
+```
+
+**Props:**
+- `children`: React.ReactNode (required)
+- `redirectTo?`: string (defaults to `/login`)
+- `showLoading?`: boolean (defaults to `true`)
+- `loadingComponent?`: React.ReactNode
+
+**⚠️ Always use this for protected pages!**
 
 ### Design System
 
@@ -227,33 +285,141 @@ NEXT_PUBLIC_API_URL=https://api.yourcompany.com
 
 ---
 
-## 🔐 Authentication & Cookies
+## 🔐 Authentication System
+
+### Overview
+
+The frontend uses **cookie-based JWT authentication** with automatic 401 handling. The system includes:
+- **Two auth hooks** for different use cases
+- **ProtectedRoute component** for route protection
+- **Centralized API client** with automatic redirects
+- **Centralized auth API** functions
+
+### ⚠️ IMPORTANT: Always Use Protected Routes
+
+**For ALL protected pages, you MUST use the `ProtectedRoute` component:**
+
+```tsx
+import { ProtectedRoute } from '@/shared/components';
+
+export default function MyProtectedPage() {
+  return (
+    <ProtectedRoute>
+      <div>Your protected content here</div>
+    </ProtectedRoute>
+  );
+}
+```
+
+**Why?**
+- ✅ Automatic redirect to login if not authenticated
+- ✅ Shows loading state while checking auth
+- ✅ Prevents flash of protected content
+- ✅ Works even if subteams forget to add guards
+
+**Example: Employee Profile (already implemented)**
+```tsx
+// app/modules/employee-profile/page.tsx
+import { ProtectedRoute } from '@/shared/components';
+
+function EmployeeProfileContent() {
+  // Your page content
+}
+
+export default function EmployeeProfilePage() {
+  return (
+    <ProtectedRoute>
+      <EmployeeProfileContent />
+    </ProtectedRoute>
+  );
+}
+```
+
+### Authentication Hooks
+
+#### 1. `useAuth` - For Protected Pages
+
+**Use this in:** Dashboards, layouts, and protected pages (NOT login/register)
+
+```tsx
+import { useAuth } from '@/shared/hooks/useAuth';
+
+export default function DashboardPage() {
+  const { user, isLoading, isAuthenticated, logout } = useAuth();
+
+  if (isLoading) return <div>Loading...</div>;
+  if (!isAuthenticated) return null; // ProtectedRoute handles redirect
+
+  return (
+    <div>
+      <p>Welcome, {user?.email}</p>
+      <button onClick={logout}>Logout</button>
+    </div>
+  );
+}
+```
+
+**What it does:**
+- Calls `/auth/me` on mount to check authentication
+- Returns user data, loading state, and auth methods
+- Use with `ProtectedRoute` for automatic redirects
+
+#### 2. `useAuthNoCheck` - For Login/Register Pages ONLY
+
+**Use this ONLY in:** `/login` and `/register` pages
+
+```tsx
+import { useAuthNoCheck } from '@/shared/hooks/useAuthNoCheck';
+
+export default function LoginPage() {
+  const { login, isLoading, error } = useAuthNoCheck();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await login({ email, password });
+      // Redirects to home automatically
+    } catch (err) {
+      // Show error
+    }
+  };
+
+  return <form onSubmit={handleSubmit}>...</form>;
+}
+```
+
+**What it does:**
+- Checks if user is already logged in → redirects to home
+- If not logged in → allows login/register
+- On successful login → redirects to home
+- Shows proper error messages (no redirect on auth endpoints)
 
 ### How Authentication Works
-
-The frontend uses **cookie-based JWT authentication** that integrates seamlessly with the backend.
 
 #### The Flow
 
 1. **User Logs In:**
    ```tsx
-   const { login } = useAuth();
+   const { login } = useAuthNoCheck(); // On login page
    await login({ email: 'user@example.com', password: 'password123' });
    ```
-   - Frontend sends credentials to backend
+   - Frontend sends credentials to `/auth/login`
    - Backend validates and creates JWT token
    - Backend sets httpOnly cookie with token
-   - Backend returns user data (NOT the token)
+   - Backend returns user data
    - Frontend stores user data in React state
+   - Redirects to home
 
 2. **Browser Stores Cookie:**
    - Cookie name: `token`
-   - Cookie value: JWT token (encrypted)
+   - Cookie value: JWT token
    - httpOnly: true (JavaScript CANNOT access it - secure!)
    - Automatically sent with every request
 
 3. **Making Authenticated Requests:**
    ```tsx
+   import { apiClient } from '@/shared/utils/api';
+   
    // Just make API calls normally
    const data = await apiClient.get('/employee-profile');
    // Cookie is automatically included!
@@ -261,10 +427,11 @@ The frontend uses **cookie-based JWT authentication** that integrates seamlessly
    - Browser automatically includes cookie
    - Backend validates cookie
    - Returns data if valid
+   - **If 401 → automatic redirect to `/login`** (except on auth endpoints)
 
 4. **Getting Current User:**
    ```tsx
-   const { user, isAuthenticated } = useAuth();
+   const { user, isAuthenticated } = useAuth(); // On protected pages
    // Automatically fetches from /auth/me on component mount
    ```
 
@@ -275,6 +442,119 @@ The frontend uses **cookie-based JWT authentication** that integrates seamlessly
    // Backend clears cookie, frontend clears state, redirects to login
    ```
 
+### Automatic 401 Handling
+
+The API client automatically handles 401 errors:
+
+**Protected Routes (any API call):**
+- 401 response → automatic redirect to `/login`
+- Works even if subteams don't add guards
+- Safety net for all protected routes
+
+**Auth Endpoints (login/register/me/change-password):**
+- 401 response → NO redirect
+- Shows proper error messages
+- Prevents redirect loops
+
+### ProtectedRoute Component
+
+**Always wrap protected pages with `ProtectedRoute`:**
+
+```tsx
+import { ProtectedRoute } from '@/shared/components';
+
+export default function MyProtectedPage() {
+  return (
+    <ProtectedRoute>
+      <div>Protected content</div>
+    </ProtectedRoute>
+  );
+}
+```
+
+**Props:**
+- `children`: Content to protect (required)
+- `redirectTo?`: Custom redirect path (defaults to `/login`)
+- `showLoading?`: Show loading state (defaults to `true`)
+- `loadingComponent?`: Custom loading component
+
+**Examples:**
+
+```tsx
+// Basic usage
+<ProtectedRoute>
+  <MyPage />
+</ProtectedRoute>
+
+// Custom redirect
+<ProtectedRoute redirectTo="/custom-login">
+  <MyPage />
+</ProtectedRoute>
+
+// Custom loading
+<ProtectedRoute loadingComponent={<MyLoader />}>
+  <MyPage />
+</ProtectedRoute>
+
+// No loading (if page handles its own)
+<ProtectedRoute showLoading={false}>
+  <MyPage />
+</ProtectedRoute>
+```
+
+### Available Auth Methods
+
+```tsx
+// useAuth (for protected pages)
+const {
+  user,              // Current user data
+  isLoading,         // Loading state
+  error,             // Error message
+  isAuthenticated,   // Boolean: is user logged in?
+  login,             // Login function
+  register,          // Register function
+  logout,            // Logout function
+  changePassword,    // Change password function
+  refreshUser,       // Refresh user data
+} = useAuth();
+
+// useAuthNoCheck (for login/register pages)
+const {
+  user,              // Current user data
+  isLoading,         // Loading state
+  error,             // Error message
+  isAuthenticated,   // Boolean: is user logged in?
+  login,             // Login function (redirects on success)
+  register,          // Register function (redirects on success)
+} = useAuthNoCheck();
+```
+
+### Change Password
+
+```tsx
+import { useAuth } from '@/shared/hooks/useAuth';
+
+const { changePassword } = useAuth();
+
+await changePassword({
+  currentPassword: 'oldpassword',
+  newPassword: 'newpassword123',
+});
+```
+
+**Note:** The employee profile page includes a change password modal that:
+- Verifies current password before allowing change
+- Shows clear error messages
+- Validates new password requirements
+
+### Backend Endpoints
+
+- `POST /auth/login` - Login (public)
+- `POST /auth/register` - Register (public)
+- `GET /auth/me` - Get current user (protected)
+- `POST /auth/logout` - Logout (protected)
+- `POST /auth/change-password` - Change password (protected)
+
 ### Key Points
 
 ✅ **Frontend DOES:**
@@ -282,6 +562,7 @@ The frontend uses **cookie-based JWT authentication** that integrates seamlessly
 - Store user data in React state
 - Include cookies in requests (via `withCredentials: true`)
 - Call `/auth/me` to get current user
+- Automatically redirect on 401 (except auth endpoints)
 
 ❌ **Frontend DOES NOT:**
 - Create JWT tokens (backend does this)
@@ -300,96 +581,6 @@ The frontend uses **cookie-based JWT authentication** that integrates seamlessly
 - Send cookie with requests automatically
 - Protect cookie from JavaScript (httpOnly)
 
-### Using Authentication in Components
-
-```tsx
-'use client';
-
-import { useAuth } from '@/shared/hooks/useAuth';
-import { SystemRole } from '@/shared/types/auth';
-
-export default function MyComponent() {
-  const { user, isLoading, isAuthenticated, logout } = useAuth();
-
-  if (isLoading) return <div>Loading...</div>;
-  if (!isAuthenticated) return <div>Please login</div>;
-
-  return (
-    <div>
-      <p>Welcome, {user?.email}</p>
-      <p>Role: {user?.roles.join(', ')}</p>
-      <button onClick={logout}>Logout</button>
-    </div>
-  );
-}
-```
-
-### Protected Routes
-
-```tsx
-'use client';
-
-import { useAuth } from '@/shared/hooks/useAuth';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
-
-export default function ProtectedPage() {
-  const { isAuthenticated, isLoading } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push('/login');
-    }
-  }, [isAuthenticated, isLoading, router]);
-
-  if (isLoading) return <div>Loading...</div>;
-  if (!isAuthenticated) return null;
-
-  return <div>Protected Content</div>;
-}
-```
-
-### Role-Based Access
-
-```tsx
-import { useAuth } from '@/shared/hooks/useAuth';
-import { SystemRole } from '@/shared/types/auth';
-
-const { user } = useAuth();
-
-const isAdmin = user?.roles.includes(SystemRole.SYSTEM_ADMIN) || 
-                user?.roles.includes(SystemRole.HR_MANAGER);
-
-if (!isAdmin) {
-  return <div>Access Denied</div>;
-}
-```
-
-### Available Auth Methods
-
-```tsx
-const {
-  user,              // Current user data
-  isLoading,         // Loading state
-  error,             // Error message
-  isAuthenticated,   // Boolean: is user logged in?
-  login,             // Login function
-  register,          // Register function
-  logout,            // Logout function
-  changePassword,    // Change password function
-  refreshUser,       // Refresh user data
-} = useAuth();
-```
-
-### Backend Endpoints
-
-- `POST /auth/login` - Login (public)
-- `POST /auth/register` - Register (public)
-- `GET /auth/me` - Get current user (protected)
-- `POST /auth/logout` - Logout (protected)
-- `POST /auth/change-password` - Change password (protected)
-
 ---
 
 ## 📦 Module Structure
@@ -403,25 +594,43 @@ module-name/
 └── types/               # Module-specific types
 ```
 
-**Example:**
+**Example (with ProtectedRoute):**
 ```tsx
 // app/modules/employee-profile/page.tsx
 'use client';
 
-import { Card, Button } from '@/shared/components';
+import { Card, Button, ProtectedRoute } from '@/shared/components';
+import { useAuth } from '@/shared/hooks';
 import { apiClient } from '@/shared/utils/api';
 import { API_ENDPOINTS } from '@/shared/constants';
 
-export default function EmployeeProfilePage() {
-  // Module-specific logic here
+function EmployeeProfileContent() {
+  const { user } = useAuth();
+  
   return (
     <Card padding="lg">
       <h1>Employee Profile</h1>
+      <p>Welcome, {user?.email}</p>
       {/* Module content */}
     </Card>
   );
 }
+
+// ⚠️ Always wrap with ProtectedRoute!
+export default function EmployeeProfilePage() {
+  return (
+    <ProtectedRoute>
+      <EmployeeProfileContent />
+    </ProtectedRoute>
+  );
+}
 ```
+
+**Key Points:**
+- ✅ Always use `ProtectedRoute` for protected pages
+- ✅ Import from central index files (`@/shared/components`, `@/shared/hooks`, etc.)
+- ✅ Keep module-specific code in module folder
+- ✅ Use shared components for UI consistency
 
 ---
 
@@ -488,10 +697,13 @@ npm run type-check  # TypeScript type checking
 ## 🎯 Key Takeaways
 
 1. **Always set `.env`** - Without it, API calls fail
-2. **Use shared components** - Maintains UI consistency
-3. **Cookies are automatic** - No manual token management needed
-4. **Module structure** - Each team works in their module folder
-5. **Default ports** - Frontend 3001, Backend 3000
+2. **Always use ProtectedRoute** - Wrap ALL protected pages with `<ProtectedRoute>`
+3. **Import from central index files** - Use `@/shared/components`, `@/shared/hooks`, etc.
+4. **Use shared components** - Maintains UI consistency
+5. **Cookies are automatic** - No manual token management needed
+6. **Module structure** - Each team works in their module folder
+7. **Default ports** - Frontend 3001, Backend 3000
+8. **401 handling is automatic** - API client redirects on 401 (except auth endpoints)
 
 ---
 

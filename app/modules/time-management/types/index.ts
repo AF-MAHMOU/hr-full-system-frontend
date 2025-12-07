@@ -153,6 +153,18 @@ export interface TimeException {
   reason?: string;
 }
 
+export interface Holiday {
+  id: string;           // corresponds to MongoDB _id
+  type: HolidayType;
+  startDate: string;    // usually ISO string for frontend
+  endDate?: string;     // optional
+  name?: string;        // optional
+  active: boolean;
+  createdAt: string;    // from timestamps
+  updatedAt: string;    // from timestamps
+}
+
+
 // ============================================================
 // 
 // ============================================================

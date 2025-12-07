@@ -1,0 +1,53 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { usePathname } from 'next/navigation';
+import s from "../page.module.css";
+import { deleteHoliday, getAllHolidays } from "../api/time-managementApi";
+import CreateHolidayForm from "../components/CreateHolidayForm";
+import HolidayList from "../components/HolidayList";
+
+export default function HolidayPage() {
+  const [holidays, setHolidays] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const token = "YOUR_TOKEN_HERE"; // Replace with your auth system
+
+  const pathname = usePathname();
+    const href = `${pathname}/holidays`;
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const data = await getAllHolidays(token);
+      console.log("Fetched holidays:", data); // check API response
+      setHolidays(data);
+    } catch (err) {
+      console.error("Error fetching holidays:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    load(); // <-- call the outer load function
+  }, []);
+
+  const handleDelete = async (id: string) => {
+    await deleteHoliday(id, token);
+    load();
+  };
+
+  return (
+    <div className={s.container}>
+      <h1 className={s.header}>Holidays</h1>
+
+      <CreateHolidayForm onCreated={load} />
+
+      {loading ? (
+        <p>Loading...</p>
+      ) : (
+        <HolidayList holidays={holidays} onDelete={handleDelete} />
+      )}
+    </div>
+  );
+}

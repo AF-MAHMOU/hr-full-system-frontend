@@ -15,6 +15,12 @@
   color: #F9F9F5;
 }
 
+.header2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #F9F9F5;
+}
+
 .description {
   font-size: 1rem;
   color: #F9FAF2;
@@ -87,4 +93,68 @@
 .shiftCard p {
   margin: 0;
   font-size: 0.95rem;
+}
+
+.navbar {
+  display: flex;
+  gap: 2rem;
+  padding: 1.5rem 2rem;
+  background: linear-gradient(75deg, #181623, #2f2c3c); /* match container */
+  color: #F9F9F5;
+  font-weight: 600;
+  position: relative; /* needed for dropdown positioning */
+}
+.navbar-item {
+  position: relative;
+  cursor: pointer;
+}
+.navbar-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: #262c3a;
+  border-radius: 0.75rem;
+  padding: 0.5rem 0;
+  box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.25);
+  display: none;
+  flex-direction: column;
+  min-width: 180px;
+  z-index: 50;
+}
+.navbar-item:hover .navbar-dropdown {
+  display: flex;
+}
+.navbar-dropdown-item {
+  padding: 0.5rem 1rem;
+  color: #F9F9F5;
+  transition: background 0.2s;
+}
+.navbar-dropdown-item:hover {
+  background: #3b3848;
+}
+
+.navbar-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: #262c3a;
+  border-radius: 0.75rem;
+  padding: 0.5rem 0;
+  box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.25);
+  
+  display: flex;
+  flex-direction: column;
+  min-width: 180px;
+  z-index: 50;
+
+  opacity: 0;
+  transform: translateY(-10px);
+  pointer-events: none;  /* prevent hovering invisible dropdown */
+  transition: all 3s ease; /* animate opacity and position */
+}
+
+.navbar-item:hover .navbar-dropdown {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto; /* make it interactive */
 }

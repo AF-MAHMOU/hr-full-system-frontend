@@ -49,6 +49,7 @@ export default function ShiftPage() {
       ) : (
         <ShiftList shifts={shifts} onDelete={handleDelete} />
       )}
+      <CreateShiftForm onCreated={load} />
     </div>
   );
 }

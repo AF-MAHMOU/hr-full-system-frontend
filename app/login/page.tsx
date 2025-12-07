@@ -34,35 +34,31 @@ export default function LoginPage() {
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setFormError(null);
+  e.preventDefault();
+  setFormError(null);
 
-    // Basic client-side validation
-    if (!formData.email || !formData.password) {
-      setFormError('Please enter both email and password.');
+  // validation omitted for brevity
+
+  try {
+    const result = await login(formData); // assuming result contains token
+    console.log('Login successful:', result);
+
+    // ✅ Store token in localStorage
+    if (result.token) {
+      localStorage.setItem('token', result.token);
+    } else {
+      console.error('No token returned from API');
+      setFormError('Login failed: no token returned');
       return;
     }
 
-    if (!formData.email.includes('@')) {
-      setFormError('Please enter a valid email address.');
-      return;
-    }
+    // Redirect handled by useAuthNoCheck
+  } catch (err: any) {
+    console.error('Login error:', err);
+    setFormError(err.message || 'Login failed. Please check your credentials.');
+  }
+};
 
-    if (formData.password.length < 6) {
-      setFormError('Password must be at least 6 characters long.');
-      return;
-    }
-
-    try {
-      const result = await login(formData);
-      console.log('Login successful:', result);
-      // Redirect is handled in useAuthNoCheck.login()
-    } catch (err: any) {
-      console.error('Login error:', err);
-      // Error message is already set in authApi
-      setFormError(err.message || 'Login failed. Please check your credentials.');
-    }
-  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({

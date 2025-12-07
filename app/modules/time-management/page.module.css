@@ -55,6 +55,35 @@
     inset 0 1px 1px rgba(255, 255, 255, 0.6);
 }
 
+.field {
+  display: flex;
+  flex-direction: column; 
+  width: 300px;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.field input[type="text"],
+.field input[type="time"],
+.field input[type="number"] {
+  padding: 0.6rem 0.8rem;
+  border-radius: 8px;
+  border: 1px solid #555;
+  background-color: #1f1c2c;
+  color: #F9F9F5;
+  font-size: 1rem;
+}
+
+.field input[type="checkbox"] {
+  transform: scale(1.2);
+  margin-right: 0.5rem;
+}
+
+.field input:focus {
+  outline: none;
+  border-color: #7c3aed;
+  box-shadow: 0 0 5px #7c3aed;
+}
 
 .glow {
   position: absolute;
@@ -159,4 +188,41 @@
   opacity: 1;
   transform: translateY(0);
   pointer-events: auto; /* make it interactive */
+}
+
+.dashboard {
+  display: flex;
+  gap: 2rem;
+  padding: 2rem;
+  min-height: 100vh;
+  background: linear-gradient(75deg, #181623, #2f2c3c, #25242d);
+}
+
+/* Left Form Panel */
+.leftPanel {
+  flex: 1;
+  max-width: 400px;
+  background-color: #2a2737;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+}
+
+/* Right Shift Cards Panel */
+.rightPanel {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+}
+
+.panelHeader {
+  font-size: 1.8rem;
+  color: #F9F9F5;
+  margin-bottom: 1rem;
+}
+
+.Cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
 }

@@ -5,19 +5,86 @@
   justify-content: flex-start;
   padding: 2rem;
   min-height: 100vh;
-  background-color: #1E1E1E;
+  background: linear-gradient(75deg, #181623,#2f2c3c);
   gap: 1rem;
 }
 
 .header {
   font-size: 4rem;
   font-weight: 700;
-  color: #CCCCCC;
+  color: #F9F9F5;
 }
 
 .description {
   font-size: 1rem;
-  color: #CCCCCC;
+  color: #F9FAF2;
   text-align: center;
   max-width: 600px;
+}
+
+.button {
+  padding: 12px 22px;
+  border-radius: 2rem;
+  border-color:#3b3848;
+  border-width: 0.125rem;
+
+  background: linear-gradient(90deg, #121325, #262D3A);
+
+  box-shadow:
+    0 1rem 2rem rgba(0, 0, 0, 0.25),
+    inset 0 1rem 1rem #121325;
+
+  color: #B8EDED;
+  font-weight: 1200;
+
+  transition: all 0.2s ease;
+}
+
+.button:hover {
+  background: linear-gradient(90deg, #121325, #262D3A);
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.35),
+    inset 0 1px 1px rgba(255, 255, 255, 0.6);
+}
+
+
+.glow {
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0,200,255,0.2), transparent 70%);
+  filter: blur(120px);
+  top: -100px;
+  left: -150px;
+  z-index: -1;
+}
+
+.shiftContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: flex-start;
+  margin-top: 20px;
+}
+
+.shiftCard {
+  background: #262c3a;
+  color: #f9f9f5;
+  border-radius: 1rem;
+  padding: 1rem 1.5rem;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.shiftCard h4 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.shiftCard p {
+  margin: 0;
+  font-size: 0.95rem;
 }

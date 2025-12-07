@@ -1,1 +1,1 @@
-export * from './timeManagementApi';
+export * from './time-managementApi';

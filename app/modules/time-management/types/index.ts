@@ -132,6 +132,7 @@ export interface ShiftType {
 }
 
 export interface Shift {
+  id: string;
   name: string;
   shiftTypeId: string;
   startTime: string; // "HH:mm"

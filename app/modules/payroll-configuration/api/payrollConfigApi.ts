@@ -8,6 +8,7 @@
  */
 
 import { apiClient } from '@/shared/utils/api';
+import { API_ENDPOINTS } from '@/shared/constants';
 import type {
   PayGrade,
   CreatePayGradeDto,
@@ -26,7 +27,7 @@ import type {
   ApprovedConfigurations,
 } from '../types';
 
-const BASE_URL = '/payroll-config';
+const BASE_URL = API_ENDPOINTS.PAYROLL_CONFIGURATION;
 
 // ==========================================
 // PAY GRADE API

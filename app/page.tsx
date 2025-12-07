@@ -21,11 +21,9 @@ export default function Home() {
     return (
       <main className={styles.container}>
         <Card padding="lg" shadow="warm" className={styles.card}>
-          <h1>HR Management System</h1>
-          <p>Welcome! Please login to continue.</p>
+          <h1 className={styles.header}>HR Management System</h1>
+          <p className={styles.description}>Welcome! Please login to continue.</p>
           <Button
-            variant="primary"
-            size="lg"
             onClick={() => router.push('/login')}
             className={styles.button}
           >

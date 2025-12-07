@@ -12,7 +12,7 @@ export default function ShiftList({ shifts, onDelete }: ShiftListProps) {
   return (
     <div className={s.shiftContainer}>
       {shifts.map((shift) => (
-        <div key={shift.id} className={s.shiftCard}>
+        <div key={shift.id} className={s.Card}>
           <h4 className={s.header}>{shift.name}</h4>
           <p className={s.description}>
             Shift Timing: {shift.startTime} - {shift.endTime}

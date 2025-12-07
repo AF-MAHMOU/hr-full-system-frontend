@@ -12,14 +12,24 @@ export default function HolidayList({ holidays, onDelete }: HolidayListProps) {
   return (
     <div className={s.holidayContainer}>
       {holidays.map((holiday) => (
-        <div key={holiday.id} className={s.holidayCard}>
+        <div key={holiday.id} className={s.Card}>
           <h4 className={s.header}>{holiday.name}</h4>
+          
           <p className={s.description}>
-            Holiday Start: {holiday.startDate} 
+            Starts on: {new Date(holiday.startDate).toLocaleDateString()}
           </p>
 
           <p className={s.description}>
-            Holiday Start: {holiday.endDate} 
+            Ends on: {holiday.endDate ? new Date(holiday.endDate).toLocaleDateString() : 'N/A'}
+          </p>
+
+
+          <p className={s.description}>
+            Type: {holiday.type} 
+          </p>
+
+          <p className={s.description}>
+            Active? {holiday.active} 
           </p>
           
           <button className={s.button} onClick={() => onDelete(holiday.id)}>

@@ -63,15 +63,25 @@ export interface Punch {
   type: 'IN' | 'OUT';
 }
 
+export interface Holiday {
+  id:string;
+  type: HolidayType;
+  startDate: Date;
+  endDate?: Date; // if missing, startDate == holiday day
+  name?: string;
+  active: boolean;
+}
+
 export interface AttendanceCorrectionRequest {
-  employeeId: string; // just the ID
-  attendanceRecordId: string; // just the ID
+  id: string;
+  employeeId: string;
+  attendanceRecord: AttendanceRecord;
   reason?: string;
   status: CorrectionRequestStatus;
 }
 
 export interface AttendanceRecord {
-  id: string; // optional, for frontend use
+  id: string;
   employeeId: string;
   punches: Punch[];
   totalWorkMinutes: number;
@@ -80,15 +90,8 @@ export interface AttendanceRecord {
   finalisedForPayroll: boolean;
 }
 
-export interface Holiday {
-  type: HolidayType;
-  startDate: string; // ISO string
-  endDate?: string;
-  name?: string;
-  active: boolean;
-}
-
 export interface LatenessRule {
+  id: string;
   name: string;
   description?: string;
   gracePeriodMinutes: number;
@@ -97,12 +100,14 @@ export interface LatenessRule {
 }
 
 export interface NotificationLog {
-  to: string; // employee ID
+  id: string;
+  to: string;
   type: string;
   message?: string;
 }
 
 export interface OvertimeRule {
+  id: string;
   name: string;
   description?: string;
   active: boolean;
@@ -110,23 +115,26 @@ export interface OvertimeRule {
 }
 
 export interface ScheduleRule {
+  id: string;
   name: string;
   pattern: string;
   active: boolean;
 }
 
 export interface ShiftAssignment {
+  id: string;
   employeeId?: string;
   departmentId?: string;
   positionId?: string;
   shiftId: string;
   scheduleRuleId?: string;
-  startDate: string;
-  endDate?: string;
+  startDate: Date;
+  endDate?: Date; //null means ongoing
   status: ShiftAssignmentStatus;
 }
 
 export interface ShiftType {
+  id: string;
   name: string;
   active: boolean;
 }
@@ -134,9 +142,9 @@ export interface ShiftType {
 export interface Shift {
   id: string;
   name: string;
-  shiftTypeId: string;
-  startTime: string; // "HH:mm"
-  endTime: string;   // "HH:mm"
+  shiftType: string;
+  startTime: string;
+  endTime: string;
   punchPolicy: PunchPolicy;
   graceInMinutes: number;
   graceOutMinutes: number;
@@ -145,25 +153,14 @@ export interface Shift {
 }
 
 export interface TimeException {
+  id: string;
   employeeId: string;
   type: TimeExceptionType;
   attendanceRecordId: string;
-  assignedTo: string;
+  assignedTo: string; // person responsible for handling the exception
   status: TimeExceptionStatus;
   reason?: string;
 }
-
-export interface Holiday {
-  id: string;           // corresponds to MongoDB _id
-  type: HolidayType;
-  startDate: string;    // usually ISO string for frontend
-  endDate?: string;     // optional
-  name?: string;        // optional
-  active: boolean;
-  createdAt: string;    // from timestamps
-  updatedAt: string;    // from timestamps
-}
-
 
 // ============================================================
 // 
@@ -257,7 +254,6 @@ export interface UpdateShiftDto {
   active?: boolean;
 }
 
-// Time Exception DTO
 export interface CreateTimeExceptionDto {
   employeeId: string;
   type: TimeExceptionType;
@@ -338,194 +334,93 @@ export interface UpdateShiftTypeDto {
 Keeping this for when I need it again
 for... some reason... :)
 
-export class AttendanceCorrectionRequest {
-  @Prop({ type: Types.ObjectId, ref: 'EmployeeProfile', required: true })
-  employeeId: Types.ObjectId;
-
-  @Prop({ type: Types.ObjectId, ref: 'AttendanceRecord', required: true })
+export interface AttendanceCorrectionRequest {
+  id: string;
+  employeeId: string;
   attendanceRecord: AttendanceRecord;
-
-  @Prop()
   reason?: string;
-
-  @Prop({
-    type: String,
-    enum: CorrectionRequestStatus,
-    default: CorrectionRequestStatus.SUBMITTED,
-  })
   status: CorrectionRequestStatus;
 }
 
-export class AttendanceRecord {
-  @Prop({ type: Types.ObjectId, ref: 'EmployeeProfile', required: true })
-  employeeId: Types.ObjectId;
-
-  @Prop({ default: [] })
+export interface AttendanceRecord {
+  id: string;
+  employeeId: string;
   punches: Punch[];
-
-  @Prop({ default: 0 }) // to be computed after creating an instance
   totalWorkMinutes: number;
-
-  @Prop({ default: false }) // to be computed after creating an instance
   hasMissedPunch: boolean;
-
-  @Prop({ type: Types.ObjectId, ref: 'TimeException', default: [] })
-  exceptionIds: Types.ObjectId[];
-
-  @Prop({ default: true }) // should be set to false when there is an attendance correction request that is not yet resolved
+  exceptionIds: string[];
   finalisedForPayroll: boolean;
 }
 
-export class Holiday {
-  @Prop({ type: String, enum: HolidayType, required: true })
-  type: HolidayType;
-
-  @Prop({ required: true })
-  startDate: Date;
-
-  @Prop()
-  endDate?: Date; // if missing, startDate == holiday day
-
-  @Prop()
-  name?: string;
-
-  @Prop({ default: true })
-  active: boolean;
-}
-
-export class LatenessRule {
-  @Prop({ required: true })
+export interface LatenessRule {
+  id: string;
   name: string;
-
-  @Prop()
   description?: string;
-
-  @Prop({ default: 0 })
   gracePeriodMinutes: number;
-
-  @Prop({ default: 0 })
   deductionForEachMinute: number;
-
-  @Prop({ default: true })
   active: boolean;
 }
 
-export class NotificationLog {
-  @Prop({ type: Types.ObjectId, ref: 'EmployeeProfile', required: true })
-  to: Types.ObjectId;
-
-  @Prop({ required: true })
+export interface NotificationLog {
+  id: string;
+  to: string;
   type: string;
-
-  @Prop()
   message?: string;
 }
 
-export class OvertimeRule {
-  @Prop({ required: true })
+export interface OvertimeRule {
+  id: string;
   name: string;
-
-  @Prop()
   description?: string;
-
-  @Prop({ default: true })
   active: boolean;
-
-  @Prop({ default: false })
   approved: boolean;
 }
 
-export class ScheduleRule {
-  @Prop({ required: true })
+export interface ScheduleRule {
+  id: string;
   name: string;
-
-  @Prop({ required: true })
   pattern: string;
-
-  @Prop({ default: true })
   active: boolean;
 }
 
-export class ShiftAssignment {
-  @Prop({ type: Types.ObjectId, ref: 'EmployeeProfile' })
-  employeeId?: Types.ObjectId;
-
-  @Prop({ type: Types.ObjectId, ref: 'Department' })
-  departmentId?: Types.ObjectId;
-
-  @Prop({ type: Types.ObjectId, ref: 'Position' })
-  positionId?: Types.ObjectId;
-
-  @Prop({ type: Types.ObjectId, ref: 'Shift', required: true })
-  shiftId: Types.ObjectId;
-
-  @Prop({ type: Types.ObjectId, ref: 'ScheduleRule' })
-  scheduleRuleId?: Types.ObjectId;
-
-  @Prop({ required: true })
+export interface ShiftAssignment {
+  id: string;
+  employeeId?: string;
+  departmentId?: string;
+  positionId?: string;
+  shiftId: string;
+  scheduleRuleId?: string;
   startDate: Date;
-
-  @Prop()
   endDate?: Date; //null means ongoing
-
-  @Prop({ type: String, enum: ShiftAssignmentStatus, default: ShiftAssignmentStatus.PENDING })
   status: ShiftAssignmentStatus;
 }
 
-export class ShiftType {
-  @Prop({ required: true })
+export interface ShiftType {
+  id: string;
   name: string;
-
-  @Prop({ default: true })
   active: boolean;
 }
 
-export class Shift {
-  @Prop({ required: true })
+export interface Shift {
+  id: string;
   name: string;
-
-  @Prop({ type: Types.ObjectId, ref: 'ShiftType', required: true })
-  shiftType: Types.ObjectId;
-
-  @Prop({ required: true })
+  shiftType: string;
   startTime: string;
-
-  @Prop({ required: true })
   endTime: string;
-
-  @Prop({ type: String, enum: PunchPolicy, default: PunchPolicy.FIRST_LAST })
   punchPolicy: PunchPolicy;
-
-  @Prop({ default: 0 })
   graceInMinutes: number;
-
-  @Prop({ default: 0 })
   graceOutMinutes: number;
-
-  @Prop({ default: false })
   requiresApprovalForOvertime: boolean;
-
-  @Prop({ default: true })
   active: boolean;
 }
 
-export class TimeException {
-  @Prop({ type: Types.ObjectId, ref: 'EmployeeProfile', required: true })
-  employeeId: Types.ObjectId;
-
-  @Prop({ type: String, enum: TimeExceptionType, required: true })
+export interface TimeException {
+  id: string;
+  employeeId: string;
   type: TimeExceptionType;
-
-  @Prop({ type: Types.ObjectId, ref: 'AttendanceRecord', required: true })
-  attendanceRecordId: Types.ObjectId;
-
-  @Prop({ type: Types.ObjectId, ref: 'EmployeeProfile', required: true })
-  assignedTo: Types.ObjectId; // person responsible for handling the exception
-
-  @Prop({ type: String, enum: TimeExceptionStatus, default: TimeExceptionStatus.OPEN })
+  attendanceRecordId: string;
+  assignedTo: string; // person responsible for handling the exception
   status: TimeExceptionStatus;
-
-  @Prop()
   reason?: string;
 }
   */

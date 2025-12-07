@@ -5,8 +5,10 @@
   justify-content: flex-start;
   padding: 2rem;
   min-height: 100vh;
-  background: linear-gradient(75deg, #181623,#2f2c3c);
+  width: 100vw;
+  background: linear-gradient(75deg, #181623, #2f2c3c, #25242d);
   gap: 1rem;
+  overscroll-behavior: contain;
 }
 
 .header {
@@ -74,7 +76,7 @@
   margin-top: 20px;
 }
 
-.shiftCard {
+.Card {
   background: #262c3a;
   color: #f9f9f5;
   border-radius: 1rem;
@@ -85,12 +87,12 @@
   gap: 0.5rem;
 }
 
-.shiftCard h4 {
+.Card h4 {
   margin: 0;
   font-size: 1.2rem;
 }
 
-.shiftCard p {
+.Card p {
   margin: 0;
   font-size: 0.95rem;
 }
@@ -99,7 +101,7 @@
   display: flex;
   gap: 2rem;
   padding: 1.5rem 2rem;
-  background: linear-gradient(75deg, #181623, #2f2c3c); /* match container */
+  background: linear-gradient(75deg, #181623, #2f2c3c, #25242d);
   color: #F9F9F5;
   font-weight: 600;
   position: relative; /* needed for dropdown positioning */

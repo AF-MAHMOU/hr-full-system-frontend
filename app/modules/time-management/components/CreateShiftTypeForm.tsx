@@ -15,9 +15,8 @@ export default function CreateShiftTypeForm({ onCreated }: CreateShiftTypeFormPr
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const token = typeof window !== "undefined"
-      ? localStorage.getItem("token")
-      : null;
+    const token = typeof window !== "undefined"? localStorage.getItem("token"): null;
+    console.log("All localStorage items:", Object.keys(localStorage));
     if (!token) return console.error("No token found. Please log in.");
 
     setLoading(true);

@@ -4,7 +4,7 @@ import { useAuth } from '@/shared/hooks/useAuth';
 import { Button, Card } from '@/shared/components';
 import { SystemRole } from '@/shared/types/auth';
 import { useRouter } from 'next/navigation';
-import styles from './page.module.css';
+import styles from '../app/modules/time-management/page.module.css';
 
 export default function Home() {
   const { user, isAuthenticated, isLoading, logout } = useAuth();

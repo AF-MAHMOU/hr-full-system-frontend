@@ -67,9 +67,14 @@
 .field input[type="time"],
 .field input[type="number"] {
   padding: 0.6rem 0.8rem;
-  border-radius: 8px;
+  border-radius: 1.25rem;
   border: 1px solid #555;
-  background-color: #1f1c2c;
+background: linear-gradient(
+    120deg,
+    rgba(28, 26, 40, 0.95),
+    rgba(32, 30, 46, 0.95)
+  );
+  outline-color: #00000059;
   color: #F9F9F5;
   font-size: 1rem;
 }
@@ -82,7 +87,9 @@
 .field input:focus {
   outline: none;
   border-color: #7c3aed;
-  box-shadow: 0 0 5px #7c3aed;
+  box-shadow: 0 0 1rem #7c3aed;
+
+  background: linear-gradient(120deg,#272438f2,#333048f2);
 }
 
 .glow {
@@ -95,14 +102,6 @@
   top: -100px;
   left: -150px;
   z-index: -1;
-}
-
-.shiftContainer {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  justify-content: flex-start;
-  margin-top: 20px;
 }
 
 .Card {
@@ -225,4 +224,27 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 1rem;
+}
+
+.select {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  gap: 1rem;
+
+  border-radius: 1.25rem;
+  background: #1c1a28e6;
+  backdrop-filter: blur(1.2rem);
+
+  box-shadow:
+    0 10px 30px #00000059,
+    inset 0 1px 2px #ffffff0d;
+}
+
+.select:hover {
+  background: linear-gradient(
+    120deg,
+    rgba(28, 26, 40, 0.95),
+    rgba(32, 30, 46, 0.95)
+  );
 }

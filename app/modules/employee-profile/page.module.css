@@ -13,8 +13,6 @@
   color: #666;
 }
 
-<<<<<<< HEAD
-=======
 .errorMessage {
   padding: 1rem;
   background: rgba(230, 57, 70, 0.1);
@@ -25,7 +23,6 @@
   font-weight: 500;
 }
 
->>>>>>> origin/main
 .card {
   width: 100%;
 }
@@ -49,10 +46,7 @@
 }
 
 .profileSection,
-<<<<<<< HEAD
-=======
 .cvSection,
->>>>>>> origin/main
 .settingsSection {
   margin-bottom: 2.5rem;
 }

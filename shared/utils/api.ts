@@ -29,7 +29,13 @@ class ApiClient {
       this.client.interceptors.request.use(
         (config) => {
           console.log('API Request:', config.method?.toUpperCase(), config.url);
-          return config;
+            // Check if token exists
+            const token = localStorage.getItem('token');
+            console.log('Token exists:', !!token);
+            console.log('Token value:', token);
+            console.log('Token length:', token?.length);
+            console.log("All localStorage items:", Object.keys(localStorage));
+            return config;
         },
         (error) => Promise.reject(error)
       );

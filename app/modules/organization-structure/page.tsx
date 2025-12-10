@@ -5,6 +5,7 @@ import { ProtectedRoute } from '@/shared/components';
 import { Card, Button, Input, Modal } from '@/shared/components';
 import { useAuth } from '@/shared/hooks/useAuth';
 import { SystemRole } from '@/shared/types/auth';
+import { useRouter } from 'next/navigation';
 import { createDepartment, getDepartments } from './api/orgStructureApi';
 import type { CreateDepartmentDto, Department } from './types';
 import styles from './page.module.css';
@@ -15,6 +16,7 @@ import { ChangeRequestList } from './change-requests/components/ChangeRequestLis
 function OrganizationStructureContent() {
   // All hooks must be called at the top level, before any conditional returns
   const { user } = useAuth();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<'departments' | 'change-requests'>('departments');
   const [departments, setDepartments] = useState<Department[]>([]);
   const [isLoadingDepartments, setIsLoadingDepartments] = useState(true);
@@ -84,15 +86,24 @@ function OrganizationStructureContent() {
               <h1>Organization Structure</h1>
               <p>Manage departments, positions, and change requests</p>
             </div>
-            {activeTab === 'departments' && (
+            <div className={styles.headerActions}>
               <Button
-                variant="primary"
+                variant="outline"
                 size="lg"
-                onClick={() => setShowAddDepartmentModal(true)}
+                onClick={() => router.push('/modules/organization-structure/org-chart')}
               >
-                + Add Department
+                📊 View Org Chart
               </Button>
-            )}
+              {activeTab === 'departments' && (
+                <Button
+                  variant="primary"
+                  size="lg"
+                  onClick={() => setShowAddDepartmentModal(true)}
+                >
+                  + Add Department
+                </Button>
+              )}
+            </div>
           </div>
 
           {/* Tabs */}

@@ -24,6 +24,8 @@ import type {
   CreateChangeRequestResponse,
   UpdateChangeRequestResponse,
   ChangeRequestsListResponse,
+  OrgChartResponse,
+  SimplifiedOrgChartResponse,
 } from '../types';
 
 /**
@@ -399,5 +401,87 @@ export async function cancelChangeRequest(id: string): Promise<{
     `${API_ENDPOINTS.ORGANIZATION_STRUCTURE}/change-requests/${id}`
   );
   return response.data;
+}
+
+// =====================================
+// ORGANIZATION CHART ENDPOINTS
+// =====================================
+
+/**
+ * Get full organization chart
+ */
+export async function getOrgChart(): Promise<OrgChartResponse> {
+  const response = await apiClient.get<OrgChartResponse>(
+    `${API_ENDPOINTS.ORGANIZATION_STRUCTURE}/org-chart`
+  );
+  return response.data;
+}
+
+/**
+ * Get department-specific organization chart
+ */
+export async function getDepartmentOrgChart(departmentId: string): Promise<OrgChartResponse> {
+  const response = await apiClient.get<OrgChartResponse>(
+    `${API_ENDPOINTS.ORGANIZATION_STRUCTURE}/org-chart/department/${departmentId}`
+  );
+  return response.data;
+}
+
+/**
+ * Get simplified organization chart
+ */
+export async function getSimplifiedOrgChart(): Promise<SimplifiedOrgChartResponse> {
+  const response = await apiClient.get<SimplifiedOrgChartResponse>(
+    `${API_ENDPOINTS.ORGANIZATION_STRUCTURE}/org-chart/simplified`
+  );
+  return response.data;
+}
+
+/**
+ * Export organization chart as JSON
+ */
+export async function exportOrgChartJson(departmentId?: string): Promise<void> {
+  const url = departmentId
+    ? `${API_ENDPOINTS.ORGANIZATION_STRUCTURE}/org-chart/export/json?departmentId=${departmentId}`
+    : `${API_ENDPOINTS.ORGANIZATION_STRUCTURE}/org-chart/export/json`;
+  
+  const response = await apiClient.get(url, {
+    responseType: 'blob',
+  });
+
+  // Create download link
+  const blob = new Blob([response.data], { type: 'application/json' });
+  const url_blob = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url_blob;
+  link.download = `org-chart-${Date.now()}.json`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(url_blob);
+}
+
+/**
+ * Export organization chart as CSV
+ */
+export async function exportOrgChartCsv(departmentId?: string): Promise<void> {
+  const url = departmentId
+    ? `${API_ENDPOINTS.ORGANIZATION_STRUCTURE}/org-chart/export/csv?departmentId=${departmentId}`
+    : `${API_ENDPOINTS.ORGANIZATION_STRUCTURE}/org-chart/export/csv`;
+  
+  const response = await apiClient.get(url, {
+    responseType: 'blob',
+  });
+
+  // Create download link
+  const blob = new Blob([response.data], { type: 'text/csv' });
+  const url_blob = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url_blob;
+  link.download = `org-chart-${Date.now()}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(url_blob);
 }
 

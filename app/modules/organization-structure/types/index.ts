@@ -183,3 +183,66 @@ export interface ChangeRequestsListResponse {
   limit: number;
   totalPages: number;
 }
+
+// Organization Chart Types
+export interface PositionNode {
+  id: string;
+  code: string;
+  title: string;
+  description?: string;
+  departmentId: string;
+  reportsToPositionId?: string;
+  isActive: boolean;
+  children?: PositionNode[];
+}
+
+export interface DepartmentChart {
+  department: {
+    id: string;
+    code: string;
+    name: string;
+    description?: string;
+    headPositionId?: string;
+    isActive: boolean;
+  };
+  positions: PositionNode[];
+  statistics: {
+    totalPositions: number;
+    filledPositions: number;
+    vacantPositions: number;
+  };
+}
+
+export interface OrgChartResponse {
+  success: boolean;
+  data: {
+    generatedAt: string;
+    departments: DepartmentChart[];
+    totalDepartments: number;
+  };
+}
+
+export interface SimplifiedPosition {
+  id: string;
+  code: string;
+  title: string;
+  reportsToPositionId?: string;
+}
+
+export interface SimplifiedDepartmentChart {
+  department: {
+    id: string;
+    code: string;
+    name: string;
+    headPositionId?: string;
+  };
+  positions: SimplifiedPosition[];
+}
+
+export interface SimplifiedOrgChartResponse {
+  success: boolean;
+  data: {
+    generatedAt: string;
+    departments: SimplifiedDepartmentChart[];
+  };
+}

@@ -19,7 +19,7 @@ export default function RegisterPage() {
     firstName: '',
     lastName: '',
     nationalId: '',
-    userType: 'employee',
+    userType: 'candidate',
   });
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -134,22 +134,6 @@ export default function RegisterPage() {
 
           <div className={styles.formRow}>
             <div className={styles.selectWrapper}>
-              <label htmlFor="userType" className={styles.label}>
-                User Type
-              </label>
-              <select
-                id="userType"
-                name="userType"
-                value={formData.userType}
-                onChange={handleChange}
-                className={styles.select}
-              >
-                <option value="employee">Employee</option>
-                <option value="candidate">Candidate</option>
-              </select>
-            </div>
-
-            <div className={styles.selectWrapper}>
               <label htmlFor="gender" className={styles.label}>
                 Gender (Optional)
               </label>
@@ -165,9 +149,7 @@ export default function RegisterPage() {
                 <option value={Gender.FEMALE}>Female</option>
               </select>
             </div>
-          </div>
 
-          <div className={styles.formRow}>
             <div className={styles.selectWrapper}>
               <label htmlFor="maritalStatus" className={styles.label}>
                 Marital Status (Optional)
@@ -186,17 +168,17 @@ export default function RegisterPage() {
                 <option value={MaritalStatus.WIDOWED}>Widowed</option>
               </select>
             </div>
-
-            <Input
-              id="mobilePhone"
-              name="mobilePhone"
-              type="tel"
-              label="Mobile Phone (Optional)"
-              value={formData.mobilePhone || ''}
-              onChange={handleChange}
-              fullWidth
-            />
           </div>
+
+          <Input
+            id="mobilePhone"
+            name="mobilePhone"
+            type="tel"
+            label="Mobile Phone (Optional)"
+            value={formData.mobilePhone || ''}
+            onChange={handleChange}
+            fullWidth
+          />
 
           <Input
             id="dateOfBirth"
@@ -208,29 +190,15 @@ export default function RegisterPage() {
             fullWidth
           />
 
-          {formData.userType === 'employee' && (
-            <Input
-              id="dateOfHire"
-              name="dateOfHire"
-              type="date"
-              label="Date of Hire (Optional)"
-              value={formData.dateOfHire || ''}
-              onChange={handleChange}
-              fullWidth
-            />
-          )}
-
-          {formData.userType === 'candidate' && (
-            <Input
-              id="applicationDate"
-              name="applicationDate"
-              type="date"
-              label="Application Date (Optional)"
-              value={formData.applicationDate || ''}
-              onChange={handleChange}
-              fullWidth
-            />
-          )}
+          <Input
+            id="applicationDate"
+            name="applicationDate"
+            type="date"
+            label="Application Date (Optional)"
+            value={formData.applicationDate || ''}
+            onChange={handleChange}
+            fullWidth
+          />
 
           <Button
             type="submit"

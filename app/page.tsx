@@ -2,6 +2,7 @@
 
 import { useAuth } from '@/shared/hooks/useAuth';
 import { Button, Card } from '@/shared/components';
+import { SystemRole } from '@/shared/types/auth';
 import { useRouter } from 'next/navigation';
 import styles from './page.module.css';
 
@@ -21,9 +22,11 @@ export default function Home() {
     return (
       <main className={styles.container}>
         <Card padding="lg" shadow="warm" className={styles.card}>
-          <h1 className={styles.header}>HR Management System</h1>
-          <p className={styles.description}>Welcome! Please login to continue.</p>
+          <h1>HR Management System</h1>
+          <p>Welcome! Please login to continue.</p>
           <Button
+            variant="primary"
+            size="lg"
             onClick={() => router.push('/login')}
             className={styles.button}
           >
@@ -50,9 +53,28 @@ export default function Home() {
           <p><strong>Roles:</strong> {user?.roles?.join(', ') || 'None'}</p>
         </div>
         <div className={styles.actions}>
-          <Button variant="primary" onClick={() => router.push('/modules/employee-profile')}>
-            Employee Profile
-          </Button>
+          {(() => {
+            const userRoles = user?.roles || [];
+            const isHrUser = 
+              userRoles.includes(SystemRole.HR_ADMIN) ||
+              userRoles.includes(SystemRole.HR_MANAGER) ||
+              userRoles.includes(SystemRole.HR_EMPLOYEE) ||
+              userRoles.includes(SystemRole.SYSTEM_ADMIN);
+
+            if (isHrUser) {
+              return (
+                <Button variant="primary" onClick={() => router.push('/modules/hr')}>
+                  HR Dashboard
+                </Button>
+              );
+            } else {
+              return (
+                <Button variant="primary" onClick={() => router.push('/modules/employee-profile')}>
+                  {user?.userType === 'candidate' ? 'Candidate Profile' : 'Employee Profile'}
+                </Button>
+              );
+            }
+          })()}
           <Button variant="outline" onClick={logout}>
             Logout
           </Button>

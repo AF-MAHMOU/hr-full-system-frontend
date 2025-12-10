@@ -101,3 +101,85 @@ export interface DeleteDepartmentResponse {
   message: string;
   data: Department;
 }
+
+// Change Request Types
+export enum ChangeRequestType {
+  NEW_DEPARTMENT = 'NEW_DEPARTMENT',
+  UPDATE_DEPARTMENT = 'UPDATE_DEPARTMENT',
+  NEW_POSITION = 'NEW_POSITION',
+  UPDATE_POSITION = 'UPDATE_POSITION',
+  CLOSE_POSITION = 'CLOSE_POSITION',
+}
+
+export enum ChangeRequestStatus {
+  DRAFT = 'DRAFT',
+  SUBMITTED = 'SUBMITTED',
+  UNDER_REVIEW = 'UNDER_REVIEW',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
+  CANCELED = 'CANCELED',
+  IMPLEMENTED = 'IMPLEMENTED',
+}
+
+export interface CreateChangeRequestDto {
+  requestType: ChangeRequestType;
+  targetDepartmentId?: string;
+  targetPositionId?: string;
+  details?: string;
+  reason?: string;
+}
+
+export interface UpdateChangeRequestDto {
+  requestType?: ChangeRequestType;
+  targetDepartmentId?: string;
+  targetPositionId?: string;
+  details?: string;
+  reason?: string;
+  status?: ChangeRequestStatus;
+}
+
+export interface ChangeRequest {
+  _id: string;
+  requestNumber: string;
+  requestType: ChangeRequestType;
+  status: ChangeRequestStatus;
+  targetDepartmentId?: string;
+  targetPositionId?: string;
+  details?: string;
+  reason?: string;
+  requestedByEmployeeId: string;
+  requestedByEmployee?: {
+    firstName?: string;
+    lastName?: string;
+  };
+  submittedByEmployeeId?: string;
+  submittedByEmployee?: {
+    firstName?: string;
+    lastName?: string;
+  };
+  submittedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateChangeRequestResponse {
+  success: boolean;
+  message: string;
+  data: ChangeRequest;
+}
+
+export interface UpdateChangeRequestResponse {
+  success: boolean;
+  message: string;
+  data: ChangeRequest;
+}
+
+export interface ChangeRequestsListResponse {
+  success: boolean;
+  message: string;
+  data: ChangeRequest[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}

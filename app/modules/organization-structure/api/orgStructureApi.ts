@@ -18,6 +18,12 @@ import type {
   DeletePositionResponse,
   Department,
   Position,
+  CreateChangeRequestDto,
+  UpdateChangeRequestDto,
+  ChangeRequest,
+  CreateChangeRequestResponse,
+  UpdateChangeRequestResponse,
+  ChangeRequestsListResponse,
 } from '../types';
 
 /**
@@ -229,6 +235,168 @@ export async function getPositionHierarchy(positionId?: string): Promise<{
   const response = await apiClient.get(
     `${API_ENDPOINTS.ORGANIZATION_STRUCTURE}/positions/hierarchy`,
     { params: positionId ? { positionId } : {} }
+  );
+  return response.data;
+}
+
+// =====================================
+// CHANGE REQUEST ENDPOINTS
+// =====================================
+
+/**
+ * Create a new change request
+ */
+export async function createChangeRequest(
+  data: CreateChangeRequestDto
+): Promise<CreateChangeRequestResponse> {
+  console.log('API: Creating change request with payload:', JSON.stringify(data, null, 2));
+  const response = await apiClient.post<CreateChangeRequestResponse>(
+    `${API_ENDPOINTS.ORGANIZATION_STRUCTURE}/change-requests`,
+    data
+  );
+  return response.data;
+}
+
+/**
+ * Get all change requests
+ */
+export async function getChangeRequests(params?: {
+  page?: number;
+  limit?: number;
+  requestNumber?: string;
+  requestType?: string;
+  status?: string;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}): Promise<ChangeRequestsListResponse> {
+  const response = await apiClient.get(
+    `${API_ENDPOINTS.ORGANIZATION_STRUCTURE}/change-requests`,
+    { params }
+  );
+  return response.data;
+}
+
+/**
+ * Get change request by ID
+ */
+export async function getChangeRequestById(id: string): Promise<{
+  success: boolean;
+  message: string;
+  data: ChangeRequest;
+}> {
+  const response = await apiClient.get(
+    `${API_ENDPOINTS.ORGANIZATION_STRUCTURE}/change-requests/${id}`
+  );
+  return response.data;
+}
+
+/**
+ * Get change request by request number
+ */
+export async function getChangeRequestByNumber(requestNumber: string): Promise<{
+  success: boolean;
+  message: string;
+  data: ChangeRequest;
+}> {
+  const response = await apiClient.get(
+    `${API_ENDPOINTS.ORGANIZATION_STRUCTURE}/change-requests/number/${requestNumber}`
+  );
+  return response.data;
+}
+
+/**
+ * Update change request (draft only)
+ */
+export async function updateChangeRequest(
+  id: string,
+  data: UpdateChangeRequestDto
+): Promise<UpdateChangeRequestResponse> {
+  const response = await apiClient.put<UpdateChangeRequestResponse>(
+    `${API_ENDPOINTS.ORGANIZATION_STRUCTURE}/change-requests/${id}`,
+    data
+  );
+  return response.data;
+}
+
+/**
+ * Submit change request for review
+ */
+export async function submitChangeRequest(id: string): Promise<{
+  success: boolean;
+  message: string;
+  data: ChangeRequest;
+}> {
+  const response = await apiClient.post(
+    `${API_ENDPOINTS.ORGANIZATION_STRUCTURE}/change-requests/${id}/submit`
+  );
+  return response.data;
+}
+
+/**
+ * Review change request (approve or reject)
+ */
+export async function reviewChangeRequest(
+  id: string,
+  approved: boolean,
+  comments?: string
+): Promise<{
+  success: boolean;
+  message: string;
+  data: ChangeRequest;
+}> {
+  const response = await apiClient.post(
+    `${API_ENDPOINTS.ORGANIZATION_STRUCTURE}/change-requests/${id}/review`,
+    { approved, comments }
+  );
+  return response.data;
+}
+
+/**
+ * Approve change request (System Admin only)
+ */
+export async function approveChangeRequest(
+  id: string,
+  comments?: string
+): Promise<{
+  success: boolean;
+  message: string;
+  data: ChangeRequest;
+}> {
+  const response = await apiClient.post(
+    `${API_ENDPOINTS.ORGANIZATION_STRUCTURE}/change-requests/${id}/approve`,
+    { comments }
+  );
+  return response.data;
+}
+
+/**
+ * Reject change request
+ */
+export async function rejectChangeRequest(
+  id: string,
+  reason: string
+): Promise<{
+  success: boolean;
+  message: string;
+  data: ChangeRequest;
+}> {
+  const response = await apiClient.post(
+    `${API_ENDPOINTS.ORGANIZATION_STRUCTURE}/change-requests/${id}/reject`,
+    { reason }
+  );
+  return response.data;
+}
+
+/**
+ * Cancel change request
+ */
+export async function cancelChangeRequest(id: string): Promise<{
+  success: boolean;
+  message: string;
+  data: ChangeRequest;
+}> {
+  const response = await apiClient.delete(
+    `${API_ENDPOINTS.ORGANIZATION_STRUCTURE}/change-requests/${id}`
   );
   return response.data;
 }

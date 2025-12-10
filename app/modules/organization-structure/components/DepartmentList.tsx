@@ -7,18 +7,8 @@ import { CreatePositionForm } from './CreatePositionForm';
 import { EditPositionForm } from './EditPositionForm';
 import { EditDepartmentForm } from './EditDepartmentForm';
 import { PositionTree } from './PositionTree';
-import type { Department } from '../types';
+import type { Department, Position } from '../types';
 import styles from './DepartmentList.module.css';
-
-interface Position {
-  _id: string;
-  code: string;
-  title: string;
-  description?: string;
-  departmentId: string;
-  reportsToPositionId?: string;
-  isActive: boolean;
-}
 
 interface DepartmentListProps {
   departments: Department[];

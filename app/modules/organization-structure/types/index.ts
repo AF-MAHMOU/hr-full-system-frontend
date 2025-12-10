@@ -3,5 +3,101 @@
  * Define types specific to this module
  */
 
-// Add module-specific types here
+// Department Types
+export interface CreateDepartmentDto {
+  code: string; // Required, 2-10 characters, unique
+  name: string; // Required, 2-100 characters
+  description?: string; // Optional, max 500 characters
+  headPositionId?: string; // Optional, MongoDB ObjectId
+  costCenter?: string; // Optional, max 50 characters
+}
 
+export interface UpdateDepartmentDto {
+  code?: string;
+  name?: string;
+  description?: string;
+  headPositionId?: string;
+  costCenter?: string;
+  isActive?: boolean;
+}
+
+export interface Department {
+  _id: string;
+  code: string;
+  name: string;
+  description?: string;
+  headPositionId?: string;
+  costCenter?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Position Types
+export interface CreatePositionDto {
+  code: string; // Required, 2-20 characters, unique
+  title: string; // Required, 2-100 characters
+  description?: string; // Optional, max 1000 characters
+  departmentId: string; // Required, MongoDB ObjectId
+  reportsToPositionId?: string; // Optional, MongoDB ObjectId
+}
+
+export interface Position {
+  _id: string;
+  code: string;
+  title: string;
+  description?: string;
+  departmentId: string;
+  reportsToPositionId?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// API Response Types
+export interface CreateDepartmentResponse {
+  success: boolean;
+  message: string;
+  data: Department;
+}
+
+export interface UpdateDepartmentResponse {
+  success: boolean;
+  message: string;
+  data: Department;
+}
+
+export interface UpdatePositionDto {
+  code?: string;
+  title?: string;
+  description?: string;
+  departmentId?: string;
+  reportsToPositionId?: string;
+  isActive?: boolean;
+  headcountBudget?: number;
+  currentHeadcount?: number;
+}
+
+export interface CreatePositionResponse {
+  success: boolean;
+  message: string;
+  data: Position;
+}
+
+export interface UpdatePositionResponse {
+  success: boolean;
+  message: string;
+  data: Position;
+}
+
+export interface DeletePositionResponse {
+  success: boolean;
+  message: string;
+  data: Position;
+}
+
+export interface DeleteDepartmentResponse {
+  success: boolean;
+  message: string;
+  data: Department;
+}

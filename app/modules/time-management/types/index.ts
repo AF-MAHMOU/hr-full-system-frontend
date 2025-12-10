@@ -291,6 +291,12 @@ export interface CreateNotificationLogDto {
   message?: string;
 }
 
+export interface UpdateNotificationLogDto {
+  to: string;
+  type: string;
+  message?: string;
+}
+
 // OvertimeRule DTO
 export interface CreateOvertimeRuleDto {
   name: string;

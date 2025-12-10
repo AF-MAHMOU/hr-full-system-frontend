@@ -370,35 +370,35 @@ export const deleteSchedule = async (id: string, token: string) => {
 // Lateness
 // ============================================================
 
-export const getAllLateness = async (token: string) => {
+export const getAllLatenessRule = async (token: string) => {
   const { data } = await axios.get(`${BASE_URL}/lateness`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   return data;
 };
 
-export const getLateness = async (id: string, token: string) => {
+export const getLatenessRule = async (id: string, token: string) => {
   const { data } = await axios.get(`${BASE_URL}/lateness/${id}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   return data;
 };
 
-export const createLateness = async (payload: any, token: string) => {
+export const createLatenessRule = async (payload: any, token: string) => {
   const { data } = await axios.post(`${BASE_URL}/lateness`, payload, {
     headers: { Authorization: `Bearer ${token}` },
   });
   return data;
 };
 
-export const updateLateness = async (id: string, payload: any, token: string) => {
+export const updateLatenessRule = async (id: string, payload: any, token: string) => {
   const { data } = await axios.put(`${BASE_URL}/lateness/${id}`, payload, {
     headers: { Authorization: `Bearer ${token}` },
   });
   return data;
 };
 
-export const deleteLateness = async (id: string, token: string) => {
+export const deleteLatenessRule = async (id: string, token: string) => {
   const { data } = await axios.delete(`${BASE_URL}/lateness/${id}`, {
     headers: { Authorization: `Bearer ${token}` },
   });

@@ -8,15 +8,15 @@ const navItems = [
   {
     name: "Time Management",
     sub: [
-      { name: "Attendance Correction", href: "/modules/time-management/attendanceCorrection" },
-      { name: "Attendance Record", href: "/modules/time-management/attendance" },
+      { name: "Attendance Correction", href: "/modules/time-management/attendance-correction" },
+      { name: "Attendance Record", href: "/modules/time-management/attendance-record" },
       { name: "Holiday", href: "/modules/time-management/holiday" },
       { name: "Lateness", href: "/modules/time-management/lateness" },
       { name: "Notification", href: "/modules/time-management/notification" },
       { name: "Overtime", href: "/modules/time-management/overtime" },
       { name: "Schedule", href: "/modules/time-management/schedule" },
       { name: "Shifts", href: "/modules/time-management/shifts" },
-      { name: "TimeException", href: "/modules/time-management/timeException" },
+      { name: "TimeException", href: "/modules/time-management/time-exception" },
     ],
   },
 ];

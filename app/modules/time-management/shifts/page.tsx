@@ -43,13 +43,8 @@ export default function ShiftPage() {
         <p>Loading...</p>
       ) : (
         <>
-          {/* LIST */}
           <ShiftList shifts={shifts} onDelete={handleDelete} />
-
-          {/* FORM */}
           <CreateShiftForm onCreated={load} />
-
-          {/* CALENDAR AT THE BOTTOM */}
           <div style={{ marginTop: "3rem" }}>
             <Calendar shifts={shifts} />
           </div>

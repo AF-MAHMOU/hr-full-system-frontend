@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { createHoliday } from "../api";
 import s from "../page.module.css";
+import { HolidayType } from "../types"; // make sure you import your HolidayType
 
 interface CreateHolidayFormProps {
   onCreated: () => void;
@@ -10,25 +11,40 @@ interface CreateHolidayFormProps {
 
 export default function CreateHolidayForm({ onCreated }: CreateHolidayFormProps) {
   const [name, setName] = useState("");
+  const [type, setType] = useState<HolidayType| "">(""); // your HolidayType
+  const [startDate, setStartDate] = useState(""); // format YYYY-MM-DD
+  const [endDate, setEndDate] = useState(""); // optional
+  const [active, setActive] = useState(true);
   const [loading, setLoading] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     const token = typeof window !== "undefined"
       ? localStorage.getItem("token")
       : null;
-
-    if (!token) {
-      console.error("No token found. Please log in.");
-      return;
-    }
+    if (!token) return console.error("No token found. Please log in.");
 
     setLoading(true);
     try {
-      await createHoliday({ name }, token);
+      await createHoliday(
+        {
+          name,
+          type,
+          startDate: new Date(startDate),
+          endDate: endDate ? new Date(endDate) : undefined,
+          active,
+        },
+        token
+      );
+
+      // reset form
       setName("");
-      onCreated(); // reload holidays
+      setType("");
+      setStartDate("");
+      setEndDate("");
+      setActive(true);
+
+      onCreated();
     } catch (err) {
       console.error("Error creating holiday:", err);
     } finally {
@@ -37,20 +53,42 @@ export default function CreateHolidayForm({ onCreated }: CreateHolidayFormProps)
   };
 
   return (
-    <form onSubmit={submit} style={{ marginTop: "20px" }}>
-      <h3 className={s.description}>Create Holiday</h3>
+    <form onSubmit={submit} className={s.formContainer}>
+      <div className={s.grid}>
+        <div className={s.field}>
+          <label className={s.description}>Holiday Name</label>
+          <input type="text" value={name} onChange={e => setName(e.target.value)} required />
 
-      <input
-        type="text"
-        placeholder="Holiday name"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        required
-      />
+          <label className={s.description}>Holiday Type</label>
+          <select
+            value={type}
+            onChange={e => setType(e.target.value as HolidayType)}
+            required
+          >
+            <option value="">Select type</option> {/* optional placeholder */}
+            {Object.values(HolidayType).map(t => (
+              <option key={t} value={t}>
+                {t.replace('_', ' ')} {/* optional: make it prettier */}
+              </option>
+            ))}
+          </select>
 
-      <button className={s.button} disabled={loading}>
-        {loading ? "Adding..." : "Add"}
-      </button>
+
+          <label className={s.description}>Start Date</label>
+          <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} required />
+
+          <label className={s.description}>End Date</label>
+          <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} />
+
+          <label className={s.description}>
+            <input type="checkbox" checked={active} onChange={e => setActive(e.target.checked)} /> Active
+          </label>
+
+          <button className={s.button} disabled={loading}>
+            {loading ? "Adding..." : "Add"}
+          </button>
+        </div>
+      </div>
     </form>
   );
 }

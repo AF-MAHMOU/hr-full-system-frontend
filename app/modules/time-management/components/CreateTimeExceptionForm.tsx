@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { createTimeException } from "../api";
+import { createTimeException } from '../api/index';
 import s from "../page.module.css";
 import { TimeExceptionStatus, TimeExceptionType } from "../types";
 
@@ -27,15 +27,6 @@ export default function CreateTimeExceptionForm({ onCreated }: CreateTimeExcepti
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const token = typeof window !== "undefined"
-      ? localStorage.getItem("token")
-      : null;
-
-    if (!token) {
-      console.error("No token found. Please log in.");
-      return;
-    }
-
     setLoading(true);
     try {
       await createTimeException({
@@ -45,7 +36,7 @@ export default function CreateTimeExceptionForm({ onCreated }: CreateTimeExcepti
         assignedTo,
         status,
         reason: reason || undefined, // optional
-      }, token);
+      });
 
       // Reset form to defaults
       setEmployeeId("");

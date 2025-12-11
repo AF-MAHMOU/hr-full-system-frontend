@@ -6,18 +6,16 @@ import ShiftTypeList from "../components/ShiftTypeList";
 import Calendar from "../components/Calendar";
 import s from "../page.module.css";
 import { ShiftType } from "../types";
-import { deleteShiftType, getAllShiftsType } from "../api";
+import { deleteShiftType, getAllShiftsType } from '../api/index';
 
 export default function ShiftTypePage() {
   const [shifttypes, setShiftTypes] = useState<ShiftType[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const token = "YOUR_TOKEN_HERE"; // temporary
-
   const load = async () => {
     setLoading(true);
     try {
-      const data = await getAllShiftsType(token);
+      const data = await getAllShiftsType();
       setShiftTypes(data);
     } catch (err) {
       console.error("Error fetching shifttypes:", err);
@@ -31,7 +29,7 @@ export default function ShiftTypePage() {
   }, []);
 
   const handleDelete = async (id: string) => {
-    await deleteShiftType(id, token);
+    await deleteShiftType(id);
     load();
   };
 

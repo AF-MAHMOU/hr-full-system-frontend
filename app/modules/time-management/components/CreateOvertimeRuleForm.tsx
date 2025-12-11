@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { createOvertime } from "../api";
+import { createOvertime } from '../api/index';
 import s from "../page.module.css";
 
 interface CreateOvertimeRuleFormProps {
@@ -18,15 +18,6 @@ export default function CreateOvertimeRuleForm({ onCreated }: CreateOvertimeRule
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const token = typeof window !== "undefined"
-      ? localStorage.getItem("token")
-      : null;
-
-    if (!token) {
-      console.error("No token found. Please log in.");
-      return;
-    }
-
     setLoading(true);
     try {
       await createOvertime(
@@ -35,8 +26,7 @@ export default function CreateOvertimeRuleForm({ onCreated }: CreateOvertimeRule
           description,
           active,
           approved,
-        },
-        token
+        }
       );
 
       // Reset form to default values

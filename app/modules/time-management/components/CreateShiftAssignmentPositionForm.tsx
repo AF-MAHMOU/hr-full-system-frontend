@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { createShiftAssignmentByPosition } from "../api";
+import { createShiftAssignmentByPosition } from '../api/index';
 import s from "../page.module.css";
 
 interface CreateShiftAssignmentPositionFormProps {
@@ -15,18 +15,9 @@ export default function CreateShiftAssignmentPositionForm({ onCreated }: CreateS
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const token = typeof window !== "undefined"
-      ? localStorage.getItem("token")
-      : null;
-
-    if (!token) {
-      console.error("No token found. Please log in.");
-      return;
-    }
-
     setLoading(true);
     try {
-      await createShiftAssignmentByPosition({ name }, token);
+      await createShiftAssignmentByPosition({ name });
       setName("");
       onCreated(); // reload shiftassignments
     } catch (err) {

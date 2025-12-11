@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { createShiftAssignmentByEmployee } from "../api";
+import { createShiftAssignmentByEmployee } from '../api/index';
 import s from "../page.module.css";
 
 interface CreateShiftAssignmentEmployeeFormProps {
@@ -15,18 +15,9 @@ export default function CreateShiftAssignmentEmployeeForm({ onCreated }: CreateS
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const token = typeof window !== "undefined"
-      ? localStorage.getItem("token")
-      : null;
-
-    if (!token) {
-      console.error("No token found. Please log in.");
-      return;
-    }
-
     setLoading(true);
     try {
-      await createShiftAssignmentByEmployee({ name }, token);
+      await createShiftAssignmentByEmployee({ name });
       setName("");
       onCreated(); // reload shiftassignments
     } catch (err) {

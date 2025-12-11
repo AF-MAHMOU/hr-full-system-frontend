@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import s from "../page.module.css";
-import { createNotification } from "../api";
+import { createNotification } from '../api/index';
 
 interface CreateNotificationLogFormProps {
   onCreated: () => void;
@@ -24,10 +24,6 @@ export default function CreateNotificationLogForm({ onCreated }: CreateNotificat
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const token = typeof window !== "undefined"
-      ? localStorage.getItem("token")
-      : null;
-    if (!token) return console.error("No token found. Please log in.");
 
     setLoading(true);
     try {
@@ -35,7 +31,7 @@ export default function CreateNotificationLogForm({ onCreated }: CreateNotificat
         to,
         type,
         message,
-      }, token);
+      });
 
       // this is the default btw :)
       setTo(""); setType(""); setMessage("")

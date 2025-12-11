@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { PunchPolicy, Shift } from '../types';
+import { PunchPolicy, Shift, ShiftType } from '../types';
 
 const BASE_URL = 'http://localhost:3000/time-management';
 
@@ -8,7 +8,7 @@ const BASE_URL = 'http://localhost:3000/time-management';
 // ============================================================
 
 
-export const getAllShifts = async (): Promise<Shift[]> => {
+export const getAllShifts = async () => {
   try {
     const response = await axios.get(`${BASE_URL}/shifts`, { 
       withCredentials: true 
@@ -28,10 +28,10 @@ export const getAllShifts = async (): Promise<Shift[]> => {
     }
     
     // Map raw data to Shift interface
-    return rawData.map((item: any): Shift => ({
-      id: item.id || item._id || "",
+    return rawData.map((item: Shift): Shift => ({
+      id: item.id || "",
       name: item.name || "",
-      shiftType: item.shiftType || item.shiftTypeId || item.shiftTypeName || "",
+      shiftType: item.shiftType || "",
       startTime: item.startTime || "",
       endTime: item.endTime || "",
       punchPolicy: item.punchPolicy || PunchPolicy.FIRST_LAST,
@@ -99,7 +99,7 @@ export const getAllShiftsType = async () => {
       withCredentials: true 
     });
     let shiftTypesData: any[] = [];
-    
+
     if (Array.isArray(response.data)) {
       shiftTypesData = response.data;
     } else if (response.data && Array.isArray(response.data.data)) {
@@ -109,13 +109,13 @@ export const getAllShiftsType = async () => {
     } else if (response.data && response.data.items) {
       shiftTypesData = response.data.items;
     }
-    
-    return shiftTypesData.map((item: any) => ({
-      id: item.id || item._id || item.shiftTypeId || "", // Try all possible ID fields
-      name: item.name || item.shiftTypeName || "",
-      active: item.active !== undefined ? item.active : true // Default to true if not specified
+
+    return shiftTypesData.map((item) => ({
+      id: item.id || item._id || item.shiftTypeId || item.typeId || "",
+      name: item.name || item.shiftName || "",
+      active: item.active !== undefined ? item.active : true,
     }));
-    
+
   } catch (error: any) {
     console.error("Error fetching shift types:", error.message);
     return [];

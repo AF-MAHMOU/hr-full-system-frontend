@@ -7,7 +7,7 @@ interface ScheduleRuleListProps {
 }
 
 export default function ScheduleRuleList({ schedulerules, onDelete }: ScheduleRuleListProps) {
-  if (!schedulerules.length) return <p>No schedulerules found</p>;
+  if (!schedulerules.length) return <p>No schedule rules found</p>;
 
   /*
   export interface ScheduleRule {

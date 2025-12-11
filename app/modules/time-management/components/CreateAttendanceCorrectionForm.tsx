@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { createAttendanceCorrection } from "../api";
+import { createAttendanceCorrection } from '../api/index';
 import s from "../page.module.css";
 
 interface CreateAttendanceCorrectionFormProps {
@@ -16,11 +16,10 @@ export default function CreateAttendanceCorrectionForm({ onCreated }: CreateAtte
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-    if (!token) return console.error("No token found. Please log in.");
+
     setLoading(true);
     try {
-      await createAttendanceCorrection({ employeeId, attendanceRecordId, reason: reason || undefined }, token);
+      await createAttendanceCorrection({ employeeId, attendanceRecordId, reason: reason || undefined });
       setEmployeeId(""); setAttendanceRecordId(""); setReason("");
       onCreated();
     } catch (err) { console.error("Error creating attendance correction:", err); }

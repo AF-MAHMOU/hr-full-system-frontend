@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { createShiftType } from "../api";
+import { createShiftType } from '../api/index';
 import s from "../page.module.css";
 
 interface CreateShiftTypeFormProps {
@@ -15,16 +15,13 @@ export default function CreateShiftTypeForm({ onCreated }: CreateShiftTypeFormPr
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const token = typeof window !== "undefined"? localStorage.getItem("token"): null;
-    console.log("All localStorage items:", Object.keys(localStorage));
-    if (!token) return console.error("No token found. Please log in.");
 
     setLoading(true);
     try {
       await createShiftType({
         name,
         active,
-      }, token);
+      });
 
       // this is the default btw :)
       setName(""); setActive(true);

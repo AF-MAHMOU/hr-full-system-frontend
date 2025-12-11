@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePathname } from 'next/navigation';
 import s from "../page.module.css";
-import { deleteTimeException, getAllTimeExceptions } from "../api/time-managementApi";
+import { deleteTimeException, getAllTimeExceptions } from '../api/index';
 import Link from "next/link";
 import CreateTimeExceptionForm from "../components/CreateTimeExceptionForm";
 import TimeExceptionList from "../components/TimeExceptionList";
@@ -11,15 +11,13 @@ import TimeExceptionList from "../components/TimeExceptionList";
 export default function timeExceptionPage() {
   const [timeexceptions, setTimeExceptions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const token = "YOUR_TOKEN_HERE"; // Replace with your auth system
-
   const pathname = usePathname();
     const href = `${pathname}/timeexceptions`;
 
   const load = async () => {
     setLoading(true);
     try {
-      const data = await getAllTimeExceptions(token);
+      const data = await getAllTimeExceptions();
       console.log("Fetched timeexceptions:", data); // check API response
       setTimeExceptions(data);
     } catch (err) {
@@ -34,7 +32,7 @@ export default function timeExceptionPage() {
   }, []);
 
   const handleDelete = async (id: string) => {
-    await deleteTimeException(id, token);
+    await deleteTimeException(id);
     load();
   };
 

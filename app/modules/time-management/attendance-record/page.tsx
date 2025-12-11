@@ -5,7 +5,7 @@ import CreateAttendanceRecordForm from "../components/CreateAttendanceRecordForm
 import AttendanceRecordList from "../components/AttendanceRecordList";
 import Calendar from "../components/Calendar";
 import s from "../page.module.css";
-import { deleteAttendanceRecord, getAllAttendanceRecord } from "../api/time-managementApi";
+import { deleteAttendanceRecord, getAllAttendanceRecord } from '../api/time-managementApiNoToken';
 import { AttendanceRecord } from "../types";
 
 export default function AttendanceRecordPage() {

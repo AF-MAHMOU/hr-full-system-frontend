@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { createAttendanceRecord } from "../api";
+import { createAttendanceRecord } from '../api/index';
 import s from "../page.module.css";
 import { Punch } from "../types";
 
@@ -39,7 +39,7 @@ export default function CreateAttendanceRecordForm({ onCreated }: CreateAttendan
       hasMissedPunch,
       exceptionIds: exceptionIds.length > 0 ? exceptionIds : undefined,
       finalisedForPayroll
-    }, token);
+    });
 
       // Reset form fields
       setEmployeeId("");
@@ -76,8 +76,21 @@ export default function CreateAttendanceRecordForm({ onCreated }: CreateAttendan
           <input type="text" value={employeeId} onChange={e => setEmployeeId(e.target.value)} required />
 
           <label className={s.description}>Punches (optional, comma separated time:type)</label>
-          <input type="text" value={punches.map(p => `${p.time}:${p.type}`).join(",")} 
-                 onChange={e => setPunches(e.target.value.split(",").map(p => { const [time,type] = p.split(":"); return {time, type:type as "in"|"out"}; }))} />
+          <input type="text"   value={punches.map(p => `${p.timestamp}:${p.type.toLowerCase()}`).join(",")}
+                 onChange={e =>
+                  setPunches(
+                    e.target.value
+                      .split(",")
+                      .map(p => {
+                        const [time, type] = p.split(":");
+                        return {
+                          timestamp: time,
+                          type: type.toUpperCase() as "IN" | "OUT"
+                        };
+                      })
+                  )
+                }
+           />
 
           <label className={s.description}>Total Work Minutes (optional)</label>
           <input type="number" value={totalWorkMinutes} onChange={e => setTotalWorkMinutes(Number(e.target.value))} />

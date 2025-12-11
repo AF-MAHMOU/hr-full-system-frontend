@@ -1,4 +1,4 @@
-import axios from 'axios';
+/*import axios from 'axios';
 
 const BASE_URL =
   (process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000") +
@@ -482,3 +482,4 @@ export const deleteNotification = async (id: string, token: string) => {
   });
   return data;
 };
+ */

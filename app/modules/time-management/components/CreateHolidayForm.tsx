@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { createHoliday } from "../api";
+import { createHoliday } from '../api/index';
 import s from "../page.module.css";
 import { HolidayType } from "../types"; // make sure you import your HolidayType
 
@@ -19,10 +19,6 @@ export default function CreateHolidayForm({ onCreated }: CreateHolidayFormProps)
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const token = typeof window !== "undefined"
-      ? localStorage.getItem("token")
-      : null;
-    if (!token) return console.error("No token found. Please log in.");
 
     setLoading(true);
     try {
@@ -33,8 +29,7 @@ export default function CreateHolidayForm({ onCreated }: CreateHolidayFormProps)
           startDate: new Date(startDate),
           endDate: endDate ? new Date(endDate) : undefined,
           active,
-        },
-        token
+        }
       );
 
       // reset form

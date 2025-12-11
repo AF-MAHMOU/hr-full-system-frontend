@@ -5,19 +5,17 @@ import CreateShiftForm from "../components/CreateShiftForm";
 import ShiftList from "../components/ShiftList";
 import Calendar from "../components/Calendar";
 import s from "../page.module.css";
-import { deleteShift, getAllShifts } from "../api/time-managementApi";
+import { deleteShift, getAllShifts } from '../api/index';
 import { Shift } from "../types";
 
 export default function ShiftPage() {
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const token = "YOUR_TOKEN_HERE"; // temporary
-
   const load = async () => {
     setLoading(true);
     try {
-      const data = await getAllShifts(token);
+      const data = await getAllShifts();
       setShifts(data);
     } catch (err) {
       console.error("Error fetching shifts:", err);
@@ -31,7 +29,7 @@ export default function ShiftPage() {
   }, []);
 
   const handleDelete = async (id: string) => {
-    await deleteShift(id, token);
+    await deleteShift(id);
     load();
   };
 

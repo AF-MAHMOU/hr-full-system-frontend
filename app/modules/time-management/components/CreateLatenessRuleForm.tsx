@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { createLatenessRule } from "../api";
+import { createLatenessRule } from '../api/index';
 import s from "../page.module.css";
 
 interface CreateLatenessRuleFormProps { onCreated: () => void; }
@@ -16,12 +16,10 @@ export default function CreateLatenessRuleForm({ onCreated }: CreateLatenessRule
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-    if (!token) return console.error("No token found. Please log in.");
 
     setLoading(true);
     try {
-      await createLatenessRule({ name, description: description || undefined, gracePeriodMinutes: gracePeriod || undefined, deductionForEachMinute: deduction || undefined, active }, token);
+      await createLatenessRule({ name, description: description || undefined, gracePeriodMinutes: gracePeriod || undefined, deductionForEachMinute: deduction || undefined, active });
       setName(""); setDescription(""); setGracePeriod(0); setDeduction(0); setActive(true);
       onCreated();
     } catch (err) { console.error("Error creating shift:", err); }

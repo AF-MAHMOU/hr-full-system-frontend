@@ -5,19 +5,17 @@ import CreateScheduleRuleForm from "../components/CreateScheduleRuleForm";
 import ScheduleRuleList from "../components/ScheduleRuleList";
 import Calendar from "../components/Calendar";
 import s from "../page.module.css";
-import { deleteSchedule, getAllSchedule } from "../api/time-managementApi";
 import { ScheduleRule } from "../types";
+import { deleteSchedule, getAllSchedule } from '../api/index';
 
 export default function ScheduleRulePage() {
   const [schedulerules, setScheduleRules] = useState<ScheduleRule[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const token = "YOUR_TOKEN_HERE"; // temporary
-
   const load = async () => {
     setLoading(true);
     try {
-      const data = await getAllSchedule(token);
+      const data = await getAllSchedule();
       setScheduleRules(data);
     } catch (err) {
       console.error("Error fetching schedulerules:", err);
@@ -31,7 +29,7 @@ export default function ScheduleRulePage() {
   }, []);
 
   const handleDelete = async (id: string) => {
-    await deleteSchedule(id, token);
+    await deleteSchedule(id);
     load();
   };
 

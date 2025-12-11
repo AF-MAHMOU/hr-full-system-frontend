@@ -3,21 +3,18 @@
 import { useEffect, useState } from "react";
 import CreateOvertimeRuleForm from "../components/CreateOvertimeRuleForm";
 import OvertimeRuleList from "../components/OvertimeRuleList";
-import Calendar from "../components/Calendar";
 import s from "../page.module.css";
 import { OvertimeRule } from "../types";
-import { deleteOvertime, getOvertime } from "../api";
+import { deleteOvertime, getOvertime } from '../api/index';
 
 export default function OvertimeRulePage() {
   const [overtimerules, setOvertimeRules] = useState<OvertimeRule[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const token = "YOUR_TOKEN_HERE"; // temporary
-
   const load = async () => {
     setLoading(true);
     try {
-      const data = await getOvertime(token);
+      const data = await getOvertime();
       setOvertimeRules(data);
     } catch (err) {
       console.error("Error fetching overtimerules:", err);
@@ -31,7 +28,7 @@ export default function OvertimeRulePage() {
   }, []);
 
   const handleDelete = async (id: string) => {
-    await deleteOvertime(id, token);
+    await deleteOvertime(id);
     load();
   };
 

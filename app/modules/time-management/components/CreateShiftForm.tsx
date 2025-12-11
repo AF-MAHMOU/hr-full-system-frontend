@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createShift, getAllShiftsType } from "../api";
 import { ShiftType } from "../types";
 import s from "../page.module.css";
+import { createShift, getAllShiftsType } from '../api/index';
 
 interface CreateShiftFormProps {
   onCreated: () => void;
@@ -24,15 +24,7 @@ export default function CreateShiftForm({ onCreated }: CreateShiftFormProps) {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    // load shift types on mount
-    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-    console.log("All localStorage items:", Object.keys(localStorage));
-    if (!token) {
-      setError("No token found. Please log in.");
-      return;
-    }
-    
-    getAllShiftsType(token)
+    getAllShiftsType()
       .then(setShiftTypes)
       .catch((err) => {
         console.error("Failed to load shift types", err);
@@ -42,15 +34,6 @@ export default function CreateShiftForm({ onCreated }: CreateShiftFormProps) {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Get token - you already did this correctly
-    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-    if (!token) {
-      setError("No token found. Please log in.");
-      return;
-    }
-
-    // Validate shift type selection
     if (!shiftType) {
       setError("Please select a shift type");
       return;
@@ -65,12 +48,12 @@ export default function CreateShiftForm({ onCreated }: CreateShiftFormProps) {
         shiftType, // Make sure this is the ID (not name) - check your API!
         startTime,
         endTime,
-        punchPolicy: "STANDARD",
+        punchPolicy: "FIRST_LAST",
         graceInMinutes: graceIn,
         graceOutMinutes: graceOut,
         requiresApprovalForOvertime: requiresOvertimeApproval,
         active,
-      }, token);
+      });
 
       // Reset form
       setName("");
@@ -116,8 +99,6 @@ export default function CreateShiftForm({ onCreated }: CreateShiftFormProps) {
           >
             <option value="" disabled>Select a Shift Type</option>
             {shiftTypes.map((st) => (
-              // ⚠️ IMPORTANT: Check if your API expects ID or name for shiftType!
-              // Usually it's ID: value={st.id}
               <option key={st.id} value={st.id}>
                 {st.name}
               </option>

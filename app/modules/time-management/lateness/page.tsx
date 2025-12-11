@@ -4,19 +4,17 @@ import { useEffect, useState } from "react";
 import LatenessRuleList from "../components/LatenessRuleList";
 import s from "../page.module.css";
 import { LatenessRule } from "../types";
-import { deleteLatenessRule, getAllLatenessRule } from "../api";
 import CreateLatenessRuleForm from "../components/CreateLatenessRuleForm";
+import { deleteLatenessRule, getAllLatenessRule } from '../api/index';
 
 export default function LatenessRulePage() {
   const [latenessrules, setLatenessRules] = useState<LatenessRule[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const token = "YOUR_TOKEN_HERE"; // temporary
-
   const load = async () => {
     setLoading(true);
     try {
-      const data = await getAllLatenessRule(token);
+      const data = await getAllLatenessRule();
       setLatenessRules(data);
     } catch (err) {
       console.error("Error fetching latenessrules:", err);
@@ -30,7 +28,7 @@ export default function LatenessRulePage() {
   }, []);
 
   const handleDelete = async (id: string) => {
-    await deleteLatenessRule(id, token);
+    await deleteLatenessRule(id);
     load();
   };
 

@@ -31,12 +31,13 @@ export default function OvertimeRuleList({ overtimerules, onDelete }: OvertimeRu
           )}
 
           <p className={s.description}>
-            Active? {overtimerule.active} 
-          </p>
+  Active? {overtimerule.active ? "Yes" : "No"}
+</p>
 
-          <p className={s.description}>
-            Approved? {overtimerule.approved} 
-          </p>
+<p className={s.description}>
+  Approved? {overtimerule.approved ? "Yes" : "No"}
+</p>
+
           
           <button className={s.button} onClick={() => onDelete(overtimerule.id)}>
             Delete

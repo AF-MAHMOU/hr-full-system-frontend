@@ -1,51 +1,59 @@
+// components/Calendar.tsx
 'use client';
 
-import { Shift } from "../types";
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import { format, parseISO } from 'date-fns';
+
+import { addDays, format } from 'date-fns';
+import { ShiftAssignmentWithType, Holiday } from '../types';
 
 interface CalendarProps {
-  shifts: Shift[];
-  selectedDate?: Date;
+  shiftassignments?: ShiftAssignmentWithType[];
+  holidays?: Holiday[];
 }
 
-export default function Calendar({ shifts = [], selectedDate = new Date() }: CalendarProps) {
-  const events = shifts.map(shift => {
-    const dateStr = format(selectedDate, 'yyyy-MM-dd');
-    
-    const startDateTime = `${dateStr}T${shift.startTime}:00`;
-    const endDateTime = `${dateStr}T${shift.endTime}:00`;
-    
-    return {
-      id: shift.id,
-      title: `${shift.name} - ${shift.shiftType}`,
-      start: startDateTime,
-      end: endDateTime,
-      color: shift.active ? '#3b82f6' : '#6b7280', // Blue for active, gray for inactive
-      extendedProps: {
-        shiftDetails: shift
-      }
-    };
-  });
+export default function Calendar({
+  shiftassignments = [],
+  holidays = [],
+}: CalendarProps) {
+  const shiftEvents = shiftassignments.map((sa) => ({
+    id: `shift-${sa.id}`,
+    title: `Shift ${sa.shiftId}`,
+    start: sa.startDate,
+    end: sa.endDate ?? sa.startDate,
+    color:
+      sa.type === 1 ? '#2563eb' : // Department
+      sa.type === 2 ? '#10b981' : // Employee
+                     '#f59e0b',   // Position
+    allDay: false,
+  }));
+
+  const holidayEvents = holidays.map((holiday) => ({
+    id: `holiday-${holiday.id}`,
+    title: `🎉 ${holiday.name ?? holiday.type}`,
+    start: holiday.startDate,
+    end: holiday.endDate ? addDays(holiday.endDate, 1) : undefined,
+    color: '#f87171',
+    allDay: true,
+  }));
+
+  const events = [...shiftEvents, ...holidayEvents];
 
   return (
     <FullCalendar
       plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-      initialView="timeGridWeek"
+      initialView="dayGridMonth"
       headerToolbar={{
         left: 'prev,next today',
         center: 'title',
-        right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        right: 'dayGridMonth,timeGridWeek,timeGridDay',
       }}
       events={events}
-      editable={true}
-      selectable={true}
+      selectable
+      editable
       height="auto"
-      slotMinTime="06:00:00"
-      slotMaxTime="22:00:00"
     />
   );
 }

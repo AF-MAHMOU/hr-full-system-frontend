@@ -65,7 +65,7 @@ export default function CreateTimeExceptionForm({ onCreated }: CreateTimeExcepti
           <input type="text" value={employeeId} onChange={e => setEmployeeId(e.target.value)} required />
 
           <label className={s.description}>Time Exception Type</label>
-          <select value={type} onChange={e => setType(e.target.value as TimeExceptionType)}>
+          <select className={s.select} value={type} onChange={e => setType(e.target.value as TimeExceptionType)}>
             {Object.values(TimeExceptionType).map(t => (
               <option key={t} value={t}>{t}</option>
             ))}
@@ -78,7 +78,7 @@ export default function CreateTimeExceptionForm({ onCreated }: CreateTimeExcepti
           <input type="text" value={assignedTo} readOnly />
 
           <label className={s.description}>Status</label>
-          <select value={status} onChange={e => setStatus(e.target.value as TimeExceptionStatus)}>
+          <select className={s.select} value={status} onChange={e => setStatus(e.target.value as TimeExceptionStatus)}>
             {Object.values(TimeExceptionStatus).map(s => (
               <option key={s} value={s}>{s}</option>
             ))}

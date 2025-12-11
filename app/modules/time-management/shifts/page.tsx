@@ -10,7 +10,7 @@ import { Shift, ShiftType } from "../types";
 
 export default function ShiftPage() {
   const [shifts, setShifts] = useState<Shift[]>([]);
-  const [shiftTypes, setShiftTypes] = useState<ShiftType[]>([]); // Add state for shiftTypes
+  const [shiftTypes, setShiftTypes] = useState<ShiftType[]>([]);
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
@@ -39,7 +39,7 @@ export default function ShiftPage() {
   };
 
   return (
-    <div className={s.container}>
+      <div className={s.container}>
       <h1 className={s.header}>Shifts</h1>
 
       {loading ? (

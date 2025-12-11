@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { usePathname } from 'next/navigation';
 import s from "../page.module.css";
 import { deleteTimeException, getAllTimeExceptions } from '../api/index';
-import Link from "next/link";
 import CreateTimeExceptionForm from "../components/CreateTimeExceptionForm";
 import TimeExceptionList from "../components/TimeExceptionList";
 
@@ -28,7 +27,7 @@ export default function timeExceptionPage() {
   };
 
   useEffect(() => {
-    load(); // <-- call the outer load function
+    load();
   }, []);
 
   const handleDelete = async (id: string) => {
@@ -38,15 +37,14 @@ export default function timeExceptionPage() {
 
   return (
     <div className={s.container}>
-      <h1 className={s.header}>Time-Exceptions</h1>
-
-      <CreateTimeExceptionForm onCreated={load} />
+      <h1 className={s.header}>Time Exceptions</h1>      
 
       {loading ? (
         <p>Loading...</p>
       ) : (
         <TimeExceptionList timeexceptions={timeexceptions} onDelete={handleDelete} />
       )}
+      <CreateTimeExceptionForm onCreated={load} />
     </div>
   );
 }

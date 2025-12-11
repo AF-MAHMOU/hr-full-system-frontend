@@ -29,8 +29,8 @@ export default function ShiftList({ shifts, shiftTypes, onDelete }: ShiftListPro
 
   return (
     <div className={s.cardcontainer}>
-      {shifts.map((shift) => (
-        <div key={shift.id} className={s.Card}>
+      {shifts.map((shift, index) => (
+  <div key={shift.id || shift.name || `shift-${index}`} className={s.Card}>
           <h4 className={s.header}>{shift.name}</h4>
 
           <p className={s.description}>

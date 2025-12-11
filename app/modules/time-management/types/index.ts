@@ -121,6 +121,8 @@ export interface ScheduleRule {
   active: boolean;
 }
 
+export type AssignmentType = 1 | 2 | 3;
+
 export interface ShiftAssignment {
   id: string;
   employeeId?: string;
@@ -131,6 +133,10 @@ export interface ShiftAssignment {
   startDate: Date;
   endDate?: Date; //null means ongoing
   status: ShiftAssignmentStatus;
+}
+
+export interface ShiftAssignmentWithType extends ShiftAssignment {
+  type: AssignmentType; // 1 = dept, 2 = employee, 3 = position
 }
 
 export interface ShiftType {

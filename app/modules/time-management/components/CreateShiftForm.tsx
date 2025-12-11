@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ShiftType } from "../types";
 import s from "../page.module.css";
 import { createShift, getAllShiftsType } from '../api/index';
+import { useRouter, usePathname } from "next/navigation";
 
 interface CreateShiftFormProps {
   onCreated: () => void;
@@ -30,7 +31,10 @@ export default function CreateShiftForm({ onCreated }: CreateShiftFormProps) {
         console.error("Failed to load shift types", err);
         setError("Failed to load shift types");
       });
-  }, []); // Empty dependency array means run once on mount
+  }, []);
+
+  const router = useRouter();
+  const pathname = usePathname();
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,7 +49,7 @@ export default function CreateShiftForm({ onCreated }: CreateShiftFormProps) {
     try {
       await createShift({
         name,
-        shiftType, // Make sure this is the ID (not name) - check your API!
+        shiftType,
         startTime,
         endTime,
         punchPolicy: "FIRST_LAST",
@@ -75,6 +79,12 @@ export default function CreateShiftForm({ onCreated }: CreateShiftFormProps) {
     }
   };
 
+  const goToShiftTypePage = () => {
+    const parts = pathname.split("/").filter(Boolean);
+    parts[parts.length - 1] = "shift-type";
+    router.push("/" + parts.join("/"));
+  };
+
   return (
     <form onSubmit={submit} className={s.formContainer}>
       {error && <div style={{ color: "red", marginBottom: "10px" }}>{error}</div>}
@@ -90,7 +100,6 @@ export default function CreateShiftForm({ onCreated }: CreateShiftFormProps) {
           />
           
           <label className={s.description}>Shift Type</label>
-          {/* ✅ Fixed: Added value and onChange to select */}
           <select 
             className={s.select}
             value={shiftType}
@@ -104,6 +113,14 @@ export default function CreateShiftForm({ onCreated }: CreateShiftFormProps) {
               </option>
             ))}
           </select>
+
+          <button 
+            type="button"
+            className={s.button}
+            onClick={goToShiftTypePage}
+          >
+            Add Shift Type
+          </button>
 
           <label className={s.description}>Start Time</label>
           <input 

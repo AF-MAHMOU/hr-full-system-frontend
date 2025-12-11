@@ -56,6 +56,7 @@ export default function CreateHolidayForm({ onCreated }: CreateHolidayFormProps)
 
           <label className={s.description}>Holiday Type</label>
           <select
+            className={s.select}
             value={type}
             onChange={e => setType(e.target.value as HolidayType)}
             required
@@ -70,10 +71,10 @@ export default function CreateHolidayForm({ onCreated }: CreateHolidayFormProps)
 
 
           <label className={s.description}>Start Date</label>
-          <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} required />
+          <input className={s.select}type="date" value={startDate} onChange={e => setStartDate(e.target.value)} required />
 
           <label className={s.description}>End Date</label>
-          <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} />
+          <input className={s.select}type="date" value={endDate} onChange={e => setEndDate(e.target.value)} />
 
           <label className={s.description}>
             <input type="checkbox" checked={active} onChange={e => setActive(e.target.checked)} /> Active

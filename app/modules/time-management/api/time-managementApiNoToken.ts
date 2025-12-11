@@ -13,7 +13,7 @@ export const getAllShifts = async () => {
     const response = await axios.get(`${BASE_URL}/shifts`, { 
       withCredentials: true 
     });
-    
+
     let rawData: any[] = [];
     
     // Handle different response structures
@@ -407,6 +407,51 @@ export const deleteShiftAssignmentByPosition = async (id: string) => {
     return null;
   }
 };
+
+//
+//
+//
+
+export const getAllShiftAssignmentsByDepartment = async () => {
+  try {
+    const { data } = await axios.get(`${BASE_URL}/shift-assignments/department`, {
+      withCredentials: true,
+    });
+    return data;
+  } catch (error: any) {
+    console.error("Error fetching department shift assignments:", error.message);
+    return [];
+  }
+};
+
+export const getAllShiftAssignmentsByEmployee = async () => {
+  try {
+    const { data } = await axios.get(`${BASE_URL}/shift-assignments/employee`, {
+      withCredentials: true,
+    });
+    return data;
+  } catch (error: any) {
+    console.error("Error fetching department shift assignments:", error.message);
+    return [];
+  }
+};
+
+export const getAllShiftAssignmentsByPosition = async () => {
+  try {
+    const { data } = await axios.get(`${BASE_URL}/shift-assignments/position`, {
+      withCredentials: true,
+    });
+    return data;
+  } catch (error: any) {
+    console.error("Error fetching department shift assignments:", error.message);
+    return [];
+  }
+};
+
+
+//
+//
+//
 
 export const getShiftAssignmentsByDepartment = async (id: string) => {
   try {

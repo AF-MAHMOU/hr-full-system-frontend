@@ -6,6 +6,7 @@ import s from "../page.module.css";
 import { deleteHoliday, getAllHolidays } from '../api/index';
 import CreateHolidayForm from "../components/CreateHolidayForm";
 import HolidayList from "../components/HolidayList";
+import Calendar from "../components/Calendar";
 
 export default function HolidayPage() {
   const [holidays, setHolidays] = useState([]);
@@ -39,14 +40,16 @@ export default function HolidayPage() {
   return (
     <div className={s.container}>
       <h1 className={s.header}>Holidays</h1>
-
-      <CreateHolidayForm onCreated={load} />
-
       {loading ? (
         <p>Loading...</p>
       ) : (
         <HolidayList holidays={holidays} onDelete={handleDelete} />
       )}
+      <CreateHolidayForm onCreated={load} />
+    <div style={{ marginTop: "3rem" }}>
+                <Calendar holidays={holidays} />
+              </div>
     </div>
+    
   );
 }

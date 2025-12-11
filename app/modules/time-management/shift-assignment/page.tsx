@@ -1,44 +1,52 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import s from "../page.module.css";
-import Calendar from "../components/Calendar";
 import ShiftAssignmentList from "../components/ShiftAssignmentList";
+import Calendar from "../components/Calendar";
+import s from "../page.module.css";
 
-import CreateShiftAssignmentEmployeeForm from "../components/CreateShiftAssignmentEmployeeForm";
-import CreateShiftAssignmentPositionForm from "../components/CreateShiftAssignmentPositionForm";
-import CreateShiftAssignmentDepartmentForm from "../components/CreateShiftAssignmentDepartmentForm";
-
-import { ShiftAssignment } from "../types";
 import {
-  getShiftAssignmentsByEmployee,
-  getShiftAssignmentsByPosition,
-  getShiftAssignmentsByDepartment,
+  getAllShiftAssignmentsByDepartment,
+  getAllShiftAssignmentsByEmployee,
+  getAllShiftAssignmentsByPosition,
+  deleteShiftAssignmentByDepartment,
   deleteShiftAssignmentByEmployee,
   deleteShiftAssignmentByPosition,
-  deleteShiftAssignmentByDepartment,
 } from "../api";
 
+import {
+  ShiftAssignmentWithType,
+  AssignmentType,
+  ShiftAssignment,
+} from "../types";
+
+import CreateShiftAssignmentDepartmentForm from "../components/CreateShiftAssignmentDepartmentForm";
+import CreateShiftAssignmentEmployeeForm from "../components/CreateShiftAssignmentEmployeeForm";
+import CreateShiftAssignmentPositionForm from "../components/CreateShiftAssignmentPositionForm";
+
 export default function ShiftAssignmentPage() {
-  const [shiftassignments, setShiftAssignments] = useState<ShiftAssignment[]>([]);
+  const [shiftassignments, setShiftAssignments] = useState<ShiftAssignmentWithType[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-
   const load = async () => {
-    if (!token) return;
     setLoading(true);
+
     try {
-      const [byEmployee, byPosition, byDepartment] = await Promise.all([
-  getShiftAssignmentsByEmployee("EMPLOYEE_ID", token).then(arr => arr.map(a => ({ ...a, type: "employee" }))),
-  getShiftAssignmentsByPosition("POSITION_ID", token).then(arr => arr.map(a => ({ ...a, type: "position" }))),
-  getShiftAssignmentsByDepartment("DEPARTMENT_ID", token).then(arr => arr.map(a => ({ ...a, type: "department" }))),
-]);
+      const [byDept, byEmp, byPos] = await Promise.all([
+        getAllShiftAssignmentsByDepartment(),
+        getAllShiftAssignmentsByEmployee(),
+        getAllShiftAssignmentsByPosition(),
+      ]);
+const allAssignments: ShiftAssignmentWithType[] = [
+  ...byDept.map((a: ShiftAssignment) => ({ ...a, type: 1 })),
+  ...byEmp.map((a: ShiftAssignment) => ({ ...a, type: 2 })),
+  ...byPos.map((a: ShiftAssignment) => ({ ...a, type: 3 })),
+];
 
-setShiftAssignments([...byEmployee, ...byPosition, ...byDepartment]);
 
+      setShiftAssignments(allAssignments);
     } catch (err) {
-      console.error("Error fetching shift assignments:", err);
+      console.error("Error fetching data:", err);
     } finally {
       setLoading(false);
     }
@@ -46,15 +54,15 @@ setShiftAssignments([...byEmployee, ...byPosition, ...byDepartment]);
 
   useEffect(() => {
     load();
-  }, [token]);
+  }, []);
 
-  const handleDelete = async (id: string, type: "employee" | "position" | "department") => {
-    if (!token) return;
+  const handleDelete = async (id: string, type: AssignmentType) => {
     try {
-      if (type === "employee") await deleteShiftAssignmentByEmployee(id, token);
-      if (type === "position") await deleteShiftAssignmentByPosition(id, token);
-      if (type === "department") await deleteShiftAssignmentByDepartment(id, token);
-      load();
+      if (type === 1) await deleteShiftAssignmentByDepartment(id);
+      if (type === 2) await deleteShiftAssignmentByEmployee(id);
+      if (type === 3) await deleteShiftAssignmentByPosition(id);
+
+      await load();
     } catch (err) {
       console.error("Error deleting shift assignment:", err);
     }
@@ -70,20 +78,12 @@ setShiftAssignments([...byEmployee, ...byPosition, ...byDepartment]);
         <>
           <ShiftAssignmentList
             shiftassignments={shiftassignments}
-            onDelete={(id) => {
-            const assignment = shiftassignments.find(a => a.id === id);
-            if (!assignment) return;
-            handleDelete(id, assignment.type);
-          }}
-
+            onDelete={handleDelete}
           />
 
-
-          <div style={{ display: "flex", gap: "2rem", marginTop: "2rem" }}>
-            <CreateShiftAssignmentEmployeeForm onCreated={load} />
-            <CreateShiftAssignmentPositionForm onCreated={load} />
-            <CreateShiftAssignmentDepartmentForm onCreated={load} />
-          </div>
+          <CreateShiftAssignmentDepartmentForm onCreated={load} />
+          <CreateShiftAssignmentEmployeeForm onCreated={load} />
+          <CreateShiftAssignmentPositionForm onCreated={load} />
 
           <div style={{ marginTop: "3rem" }}>
             <Calendar shiftassignments={shiftassignments} />

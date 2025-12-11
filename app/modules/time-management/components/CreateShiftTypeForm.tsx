@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { createShiftType } from '../api/index';
 import s from "../page.module.css";
+import { useRouter, usePathname } from "next/navigation";
 
 interface CreateShiftTypeFormProps {
   onCreated: () => void;
@@ -32,6 +33,15 @@ export default function CreateShiftTypeForm({ onCreated }: CreateShiftTypeFormPr
     finally {setLoading(false);}
   };
 
+  const router = useRouter();
+  const pathname = usePathname();
+  
+  const goToShiftPage = () => {
+    const parts = pathname.split("/").filter(Boolean);
+    parts[parts.length - 1] = "shifts";
+    router.push("/" + parts.join("/"));
+  };
+
   return (
     <form onSubmit={submit} className={s.formContainer}>
       <div className={s.grid}>
@@ -42,6 +52,14 @@ export default function CreateShiftTypeForm({ onCreated }: CreateShiftTypeFormPr
          <label className={s.description}>
           <input type="checkbox" checked={active} onChange={e => setActive(e.target.checked)} />Active</label>
       <button className={s.button} disabled={loading}>{loading ? "Adding..." : "Add"}</button>
+      <button 
+            type="button"
+            className={s.button}
+            onClick={goToShiftPage}
+          >
+            Add Shift Type
+          </button>
+
       </div>
     </div>
   </form>

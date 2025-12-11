@@ -5,20 +5,25 @@ import CreateShiftForm from "../components/CreateShiftForm";
 import ShiftList from "../components/ShiftList";
 import Calendar from "../components/Calendar";
 import s from "../page.module.css";
-import { deleteShift, getAllShifts } from '../api/index';
-import { Shift } from "../types";
+import { deleteShift, getAllShifts, getAllShiftsType } from '../api/index'; 
+import { Shift, ShiftType } from "../types";
 
 export default function ShiftPage() {
   const [shifts, setShifts] = useState<Shift[]>([]);
+  const [shiftTypes, setShiftTypes] = useState<ShiftType[]>([]); // Add state for shiftTypes
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
     setLoading(true);
     try {
-      const data = await getAllShifts();
-      setShifts(data);
+      const [shiftsData, shiftTypesData] = await Promise.all([
+        getAllShifts(),
+        getAllShiftsType()
+      ]);
+      setShifts(shiftsData);
+      setShiftTypes(shiftTypesData);
     } catch (err) {
-      console.error("Error fetching shifts:", err);
+      console.error("Error fetching data:", err);
     } finally {
       setLoading(false);
     }
@@ -41,7 +46,8 @@ export default function ShiftPage() {
         <p>Loading...</p>
       ) : (
         <>
-          <ShiftList shifts={shifts} onDelete={handleDelete} />
+          {/* Pass shiftTypes array properly */}
+          <ShiftList shifts={shifts} shiftTypes={shiftTypes} onDelete={handleDelete} />
           <CreateShiftForm onCreated={load} />
           <div style={{ marginTop: "3rem" }}>
             <Calendar shifts={shifts} />

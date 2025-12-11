@@ -41,7 +41,7 @@ export default function ShiftTypePage() {
         <p>Loading...</p>
       ) : (
         <>
-          <ShiftTypeList shifttypes={shifttypes} onDelete={handleDelete} />
+          <ShiftTypeList shifttypes={shifttypes} onToggleStatus={load} onDelete={handleDelete} />
           <CreateShiftTypeForm onCreated={load} />
         </>
       )}

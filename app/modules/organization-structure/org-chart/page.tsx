@@ -37,10 +37,7 @@ function OrgChartContent() {
   const canAccessOrgStructure =
     userRoles.includes(SystemRole.HR_ADMIN) ||
     userRoles.includes(SystemRole.HR_MANAGER) ||
-    userRoles.includes(SystemRole.SYSTEM_ADMIN) ||
-    userRoles.includes('HR Admin') ||
-    userRoles.includes('HR Manager') ||
-    userRoles.includes('System Admin');
+    userRoles.includes(SystemRole.SYSTEM_ADMIN);
 
   // Fetch departments for dropdown
   useEffect(() => {
@@ -56,7 +53,7 @@ function OrgChartContent() {
       }
     };
     fetchDepartments();
-  }, []);
+  }, [selectedDepartmentId]);
 
   // Fetch all positions for complete tree building
   useEffect(() => {
@@ -142,7 +139,7 @@ function OrgChartContent() {
         <Card padding="lg">
           <div className={styles.emptyStateContent}>
             <h2>Access Denied</h2>
-            <p>You don't have permission to access the Organization Chart.</p>
+            <p>You don&apos;t have permission to access the Organization Chart.</p>
             <p>Required roles: HR Admin, HR Manager, or System Admin</p>
           </div>
         </Card>

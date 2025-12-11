@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, Button } from '@/shared/components';
 import {
   getChangeRequests,
@@ -31,11 +31,7 @@ export function ChangeRequestList({ onRefresh }: ChangeRequestListProps) {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  useEffect(() => {
-    fetchRequests();
-  }, [statusFilter, typeFilter, searchQuery, page]);
-
-  const fetchRequests = async () => {
+  const fetchRequests = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -66,7 +62,11 @@ export function ChangeRequestList({ onRefresh }: ChangeRequestListProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [statusFilter, typeFilter, searchQuery, page]);
+
+  useEffect(() => {
+    fetchRequests();
+  }, [fetchRequests]);
 
   const handleCreateSuccess = () => {
     setShowCreateModal(false);

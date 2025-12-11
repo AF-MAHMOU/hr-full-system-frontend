@@ -56,22 +56,16 @@ export default function Home() {
           {(() => {
             const userRoles = user?.roles || [];
             
-            // Debug: Log roles to console
-            console.log('User roles:', userRoles);
-            console.log('HR_ADMIN enum value:', SystemRole.HR_ADMIN);
-            console.log('Direct includes check:', userRoles.includes(SystemRole.HR_ADMIN));
-            console.log('String check:', userRoles.includes('HR Admin'));
-            
             const isHrUser = 
               userRoles.includes(SystemRole.HR_ADMIN) ||
               userRoles.includes(SystemRole.HR_MANAGER) ||
               userRoles.includes(SystemRole.HR_EMPLOYEE) ||
               userRoles.includes(SystemRole.SYSTEM_ADMIN);
             
-            // Check for org structure access - use both enum and string comparison
-            const hasHrAdmin = userRoles.includes(SystemRole.HR_ADMIN) || userRoles.includes('HR Admin');
-            const hasHrManager = userRoles.includes(SystemRole.HR_MANAGER) || userRoles.includes('HR Manager');
-            const hasSystemAdmin = userRoles.includes(SystemRole.SYSTEM_ADMIN) || userRoles.includes('System Admin');
+            // Check for org structure access
+            const hasHrAdmin = userRoles.includes(SystemRole.HR_ADMIN);
+            const hasHrManager = userRoles.includes(SystemRole.HR_MANAGER);
+            const hasSystemAdmin = userRoles.includes(SystemRole.SYSTEM_ADMIN);
             
             const canAccessOrgStructure = hasHrAdmin || hasHrManager || hasSystemAdmin;
 

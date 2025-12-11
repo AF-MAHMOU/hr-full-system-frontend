@@ -366,7 +366,7 @@ export function PositionTree({ positions, headPositionId, departmentId, onUpdate
     if (positions.length === 0) {
       return (
         <div className={styles.emptyTree}>
-          <p>No positions yet. Click "Add Position" to create one.</p>
+          <p>No positions yet. Click &quot;Add Position&quot; to create one.</p>
         </div>
       );
     }

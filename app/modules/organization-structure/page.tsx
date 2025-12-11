@@ -29,10 +29,7 @@ function OrganizationStructureContent() {
     const canAccessOrgStructure = 
       userRoles.includes(SystemRole.HR_ADMIN) ||
       userRoles.includes(SystemRole.HR_MANAGER) ||
-      userRoles.includes(SystemRole.SYSTEM_ADMIN) ||
-      userRoles.includes('HR Admin') ||
-      userRoles.includes('HR Manager') ||
-      userRoles.includes('System Admin');
+      userRoles.includes(SystemRole.SYSTEM_ADMIN);
 
     if (canAccessOrgStructure && activeTab === 'departments') {
       const fetchDepartments = async () => {
@@ -57,10 +54,7 @@ function OrganizationStructureContent() {
   const canAccessOrgStructure = 
     userRoles.includes(SystemRole.HR_ADMIN) ||
     userRoles.includes(SystemRole.HR_MANAGER) ||
-    userRoles.includes(SystemRole.SYSTEM_ADMIN) ||
-    userRoles.includes('HR Admin') ||
-    userRoles.includes('HR Manager') ||
-    userRoles.includes('System Admin');
+    userRoles.includes(SystemRole.SYSTEM_ADMIN);
 
   const handleDepartmentCreated = () => {
     setShowAddDepartmentModal(false);
@@ -74,7 +68,7 @@ function OrganizationStructureContent() {
         <Card padding="lg">
           <div className={styles.emptyStateContent}>
             <h2>Access Denied</h2>
-            <p>You don't have permission to access the Organization Structure module.</p>
+            <p>You don&apos;t have permission to access the Organization Structure module.</p>
             <p>Required roles: HR Admin, HR Manager, or System Admin</p>
             <p>Your roles: {userRoles.length > 0 ? userRoles.join(', ') : 'None'}</p>
           </div>

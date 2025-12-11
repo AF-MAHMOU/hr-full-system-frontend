@@ -61,7 +61,7 @@ export function CreatePositionForm({
     };
 
     fetchPositions();
-  }, [departmentId]);
+  }, [departmentId, formData.reportsToPositionId]);
 
   // Validate code in real-time
   useEffect(() => {

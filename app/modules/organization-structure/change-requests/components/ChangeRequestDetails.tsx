@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Modal, Button } from '@/shared/components';
 import {
   getChangeRequestById,
@@ -36,19 +36,19 @@ export function ChangeRequestDetails({
     details: request.details || '',
   });
 
-  useEffect(() => {
-    // Refresh request data
-    fetchRequestDetails();
-  }, [initialRequest._id]);
-
-  const fetchRequestDetails = async () => {
+  const fetchRequestDetails = useCallback(async () => {
     try {
       const response = await getChangeRequestById(initialRequest._id);
       setRequest(response.data);
     } catch (err) {
       console.error('Error fetching request details:', err);
     }
-  };
+  }, [initialRequest._id]);
+
+  useEffect(() => {
+    // Refresh request data
+    fetchRequestDetails();
+  }, [fetchRequestDetails]);
 
   const getStatusBadgeClass = (status: ChangeRequestStatus) => {
     switch (status) {

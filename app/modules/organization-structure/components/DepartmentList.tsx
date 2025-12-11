@@ -444,7 +444,7 @@ export function DepartmentList({ departments, onRefresh }: DepartmentListProps) 
                     />
                   ) : (
                     <p className={styles.emptyPositions}>
-                      No positions yet. Click "Add Position" to create one.
+                      No positions yet. Click &quot;Add Position&quot; to create one.
                     </p>
                   )}
                 </div>

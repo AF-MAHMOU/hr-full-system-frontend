@@ -49,14 +49,6 @@ function PositionNodeComponent({ position, isHead = false, level = 0 }: Position
 }
 
 export function OrgChartVisualization({ departments, allPositions }: OrgChartVisualizationProps) {
-  if (!departments || departments.length === 0) {
-    return (
-      <div className={styles.emptyState}>
-        <p>No organization chart data available</p>
-      </div>
-    );
-  }
-
   // Normalize ID helper (same as PositionTree)
   const normalizeId = (id: any): string => {
     if (!id) return '';
@@ -67,7 +59,11 @@ export function OrgChartVisualization({ departments, allPositions }: OrgChartVis
   };
 
   // Rebuild tree using the SAME logic as PositionTree
+  // Must be called before any early returns to comply with React hooks rules
   const enhancedDepartments = useMemo(() => {
+    if (!departments || departments.length === 0) {
+      return [];
+    }
     // If no allPositions, use backend structure (even if incomplete)
     if (!allPositions || allPositions.length === 0) {
       return departments;
@@ -143,10 +139,10 @@ export function OrgChartVisualization({ departments, allPositions }: OrgChartVis
             children: buildChildren(headIdStr),
           };
           
-          console.log(`Head tree built. Head has ${headTree.children.length} direct children`);
-          if (headTree.children.length > 0) {
+          console.log(`Head tree built. Head has ${headTree.children?.length || 0} direct children`);
+          if (headTree.children && headTree.children.length > 0) {
             headTree.children.forEach((child, idx) => {
-              console.log(`  Child ${idx}: ${child.title} (${child.code}) has ${child.children.length} children`);
+              console.log(`  Child ${idx}: ${child.title} (${child.code}) has ${child.children?.length || 0} children`);
             });
           }
           
@@ -309,6 +305,15 @@ export function OrgChartVisualization({ departments, allPositions }: OrgChartVis
       });
     });
     console.log('=== END BACKEND DEBUG ===\n');
+  }
+
+  // Early return check after hooks
+  if (!departments || departments.length === 0 || enhancedDepartments.length === 0) {
+    return (
+      <div className={styles.emptyState}>
+        <p>No organization chart data available</p>
+      </div>
+    );
   }
 
   return (

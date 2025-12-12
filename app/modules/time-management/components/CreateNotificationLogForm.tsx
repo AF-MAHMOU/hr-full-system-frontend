@@ -3,6 +3,8 @@
 import { useState } from "react";
 import s from "../page.module.css";
 import { createNotification } from '../api/index';
+import { EmployeeProfile } from "../../hr/api/hrApi";
+import Selections from "./Selections";
 
 interface CreateNotificationLogFormProps {
   onCreated: () => void;
@@ -21,6 +23,9 @@ export default function CreateNotificationLogForm({ onCreated }: CreateNotificat
   const [type, setType] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [employeeId, setEmployeeId] = useState("");
+  const [employees, setEmployees] = useState<EmployeeProfile[]>([]);
+
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,11 +52,19 @@ export default function CreateNotificationLogForm({ onCreated }: CreateNotificat
       <div className={s.grid}>
         <div className={s.field}>
           <label className={s.description}>Employee ID</label>
-          <input type="text" value={to} onChange={e => setTo(e.target.value)} required />
+          <Selections
+                      employeeId={employeeId}
+                      setEmployeeId={setEmployeeId}
+                      employees={employees}
+                      setEmployees={setEmployees}
+                    />
+          
           <label className={s.description}>Notification Type</label>
           <input type="text" value={type} onChange={e => setType(e.target.value)} required />
+          
           <label className={s.description}>Message (optional)</label>
           <input type="text" value={message} onChange={e => setMessage(e.target.value)} />
+          
           <button className={s.button} disabled={loading}>{loading ? "Adding..." : "Add"}</button>
         </div>
       </div>

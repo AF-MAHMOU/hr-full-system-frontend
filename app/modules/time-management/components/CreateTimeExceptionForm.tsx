@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { createTimeException } from '../api/index';
+import { useEffect, useState } from "react";
+import { createTimeException, getAllAttendanceRecord } from '../api/index';
 import s from "../page.module.css";
-import { TimeExceptionStatus, TimeExceptionType } from "../types";
+import { AttendanceRecord, TimeExceptionStatus, TimeExceptionType } from "../types";
+import { EmployeeProfile, getAllEmployees } from "../../hr/api/hrApi";
 
 interface CreateTimeExceptionFormProps {
   onCreated: () => void;
@@ -13,6 +14,8 @@ export default function CreateTimeExceptionForm({ onCreated }: CreateTimeExcepti
   const [employeeId, setEmployeeId] = useState("");
   const [type, setType] = useState<TimeExceptionType>(TimeExceptionType.MISSED_PUNCH);
   const [attendanceRecordId, setAttendanceRecordId] = useState("");
+  const [employees, setEmployees] = useState<EmployeeProfile[]>([]);
+  const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
   const [assignedTo, setAssignedTo] = useState(() => {
     if (typeof window !== "undefined") {
       const currentUser = localStorage.getItem("userId"); 
@@ -23,6 +26,12 @@ export default function CreateTimeExceptionForm({ onCreated }: CreateTimeExcepti
   const [status, setStatus] = useState<TimeExceptionStatus>(TimeExceptionStatus.OPEN);
   const [reason, setReason] = useState(""); // optional
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+  getAllEmployees().then(setEmployees).catch(() => {});
+  getAllAttendanceRecord().then(setAttendanceRecords).catch(() => {});
+}, []);
+
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,16 +62,25 @@ export default function CreateTimeExceptionForm({ onCreated }: CreateTimeExcepti
       setLoading(false);
     }
   };
-
-  // balabizo
-  // make the IDs dropdown, lamma n7el el karsa el awel
   
+    /* export interface TimeException {
+      attendanceRecordId: string;
+      assignedTo: string; // person responsible for handling the exception
+    }*/
+
   return (
     <form onSubmit={submit} className={s.formContainer}>
       <div className={s.grid}>
         <div className={s.field}>
-          <label className={s.description}>Employee ID</label>
-          <input type="text" value={employeeId} onChange={e => setEmployeeId(e.target.value)} required />
+          <label className={s.description}>Employee</label>
+          <select className={s.select}value={employeeId} onChange={(e) => setEmployeeId(e.target.value)}required>
+            <option value="" disabled>Select employee</option>
+            {employees.map(emp => (
+              <option key={emp._id} value={emp._id}>
+                {emp.firstName} {emp.lastName}
+              </option>
+            ))}
+          </select>
 
           <label className={s.description}>Time Exception Type</label>
           <select className={s.select} value={type} onChange={e => setType(e.target.value as TimeExceptionType)}>
@@ -71,11 +89,30 @@ export default function CreateTimeExceptionForm({ onCreated }: CreateTimeExcepti
             ))}
           </select>
 
-          <label className={s.description}>Attendance Record ID</label>
-          <input type="text" value={attendanceRecordId} onChange={e => setAttendanceRecordId(e.target.value)} required />
+          <label className={s.description}>Employee</label>
+          <select
+            className={s.select}
+            value={employeeId}
+            onChange={(e) => setEmployeeId(e.target.value)}
+            required
+          >
+            <option value="" disabled>Select employee</option>
+            {employees.map(emp => (
+              <option key={emp._id} value={emp._id}>
+                {emp.firstName} {emp.lastName}
+              </option>
+            ))}
+          </select>
 
-          <label className={s.description}>Assigned To</label>
-          <input type="text" value={assignedTo} readOnly />
+          <label className={s.description}>Assign to</label>
+          <select className={s.select}value={assignedTo} onChange={(e) => setAssignedTo(e.target.value)}required>
+            <option value="" disabled>Select employee</option>
+            {employees.map(emp => (
+              <option key={emp._id} value={emp._id}>
+                {emp.firstName} {emp.lastName}
+              </option>
+            ))}
+          </select>
 
           <label className={s.description}>Status</label>
           <select className={s.select} value={status} onChange={e => setStatus(e.target.value as TimeExceptionStatus)}>

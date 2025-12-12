@@ -174,11 +174,14 @@ export interface TimeException {
 export interface CreateAttendanceCorrectionRequestDto {
   employeeId: string;
   attendanceRecordId: string;
+  status: CorrectionRequestStatus;
   reason?: string;
 }
 
 export interface UpdateAttendanceCorrectionRequestDto {
-  status?: CorrectionRequestStatus;
+  employeeId: string;
+  attendanceRecordId: string;
+  status: CorrectionRequestStatus;
   reason?: string;
 }
 

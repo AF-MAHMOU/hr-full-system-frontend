@@ -1,53 +1,38 @@
 import axios from 'axios';
-import { CreateOvertimeRuleDto, OvertimeRule, PunchPolicy, Shift, ShiftType } from '../types';
+import { AttendanceRecord, AttendanceCorrectionRequest,CreateOvertimeRuleDto, OvertimeRule, PunchPolicy, Shift, ShiftType, Holiday, ShiftAssignment, TimeException, ScheduleRule, NotificationLog, LatenessRule, CreateAttendanceCorrectionRequestDto } from '../types';
+import { mapIds } from './utils';
+import HolidayList from '../components/HolidayList';
+import axiosInstance from './axiosinstance';
 
 const BASE_URL = 'http://localhost:3000/time-management';
 
-// ============================================================
-// Shift
-// ============================================================
-
-
-export const getAllShifts = async () => {
-  try {
-    const response = await axios.get(`${BASE_URL}/shifts`, { 
-      withCredentials: true 
-    });
-
-    let rawData: any[] = [];
-    
-    // Handle different response structures
-    if (Array.isArray(response.data)) {
-      rawData = response.data;
-    } else if (response.data && Array.isArray(response.data.data)) {
-      rawData = response.data.data;
-    } else if (response.data && response.data.shifts) {
-      rawData = response.data.shifts;
-    } else if (response.data && response.data.items) {
-      rawData = response.data.items;
-    }
-    
-    // Map raw data to Shift interface
-    return rawData.map((item: Shift): Shift => ({
-      id: item.id || "",
-      name: item.name || "",
-      shiftType: item.shiftType || "",
-      startTime: item.startTime || "",
-      endTime: item.endTime || "",
-      punchPolicy: item.punchPolicy || PunchPolicy.FIRST_LAST,
-      graceInMinutes: item.graceInMinutes || 0,
-      graceOutMinutes: item.graceOutMinutes || 0,
-      requiresApprovalForOvertime: item.requiresApprovalForOvertime !== undefined 
-        ? item.requiresApprovalForOvertime 
-        : false,
-      active: item.active !== undefined ? item.active : true
-    }));
-    
-  } catch (error: any) {
-    console.error("Error fetching shifts:", error.message);
-    return [];
-  }
+const toArray = (data: any): any[] => {
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.data)) return data.data;
+  return [];
 };
+
+const toId = (x: any): string => {
+  return String(x?._id ?? x?.id);
+};
+
+const mapShiftAssignment = (a: any): ShiftAssignment => ({
+  id: toId(a),
+  employeeId: a.employeeId,
+  departmentId: a.departmentId,
+  positionId: a.positionId,
+  shiftId: a.shiftId,
+  scheduleRuleId: a.scheduleRuleId,
+  startDate: new Date(a.startDate),
+  endDate: a.endDate ? new Date(a.endDate) : undefined,
+  status: a.status,
+});
+
+
+// ============================================================
+// Yalla bina
+// ============================================================
+
 
 export const getShift = async (id: string) => {
   try {
@@ -76,49 +61,6 @@ export const updateShift = async (id: string, payload: any) => {
   } catch (error: any) {
     console.error("Error:", error.message);
     return null;
-  }
-};
-
-export const deleteShift = async (id: string) => {
-  try {
-    const { data } = await axios.delete(`${BASE_URL}/shifts/${id}`, { withCredentials: true });
-    return data;
-  } catch (error: any) {
-    console.error("Error:", error.message);
-    return null;
-  }
-};
-
-// ============================================================
-// Shift Type
-// ============================================================
-
-export const getAllShiftsType = async () => {
-  try {
-    const response = await axios.get(`${BASE_URL}/shift-type`, { 
-      withCredentials: true 
-    });
-    let shiftTypesData: any[] = [];
-
-    if (Array.isArray(response.data)) {
-      shiftTypesData = response.data;
-    } else if (response.data && Array.isArray(response.data.data)) {
-      shiftTypesData = response.data.data;
-    } else if (response.data && response.data.shiftTypes) {
-      shiftTypesData = response.data.shiftTypes;
-    } else if (response.data && response.data.items) {
-      shiftTypesData = response.data.items;
-    }
-
-    return shiftTypesData.map((item) => ({
-      id: item.id || item._id || item.shiftTypeId || item.typeId || "",
-      name: item.name || item.shiftName || "",
-      active: item.active !== undefined ? item.active : true,
-    }));
-
-  } catch (error: any) {
-    console.error("Error fetching shift types:", error.message);
-    return [];
   }
 };
 
@@ -152,30 +94,6 @@ export const updateShiftType = async (id: string, payload: any) => {
   }
 };
 
-export const deleteShiftType = async (id: string) => {
-  try {
-    const { data } = await axios.delete(`${BASE_URL}/shift-type/${id}`, { withCredentials: true });
-    return data;
-  } catch (error: any) {
-    console.error("Error:", error.message);
-    return null;
-  }
-};
-
-// ============================================================
-// Attendance Correction
-// ============================================================
-
-export const getAllAttendanceCorrections = async () => {
-  try {
-    const { data } = await axios.get(`${BASE_URL}/attendanceCorrection`, { withCredentials: true });
-    return data;
-  } catch (error: any) {
-    console.error("Error:", error.message);
-    return [];
-  }
-};
-
 export const getAttendanceCorrection = async (id: string) => {
   try {
     const { data } = await axios.get(`${BASE_URL}/attendanceCorrection/${id}`, { withCredentials: true });
@@ -203,30 +121,6 @@ export const updateAttendanceCorrection = async (id: string, payload: any) => {
   } catch (error: any) {
     console.error("Error:", error.message);
     return null;
-  }
-};
-
-export const deleteAttendanceCorrection = async (id: string) => {
-  try {
-    const { data } = await axios.delete(`${BASE_URL}/attendanceCorrection/${id}`, { withCredentials: true });
-    return data;
-  } catch (error: any) {
-    console.error("Error:", error.message);
-    return null;
-  }
-};
-
-// ============================================================
-// Attendance Record
-// ============================================================
-
-export const getAllAttendanceRecord = async () => {
-  try {
-    const { data } = await axios.get(`${BASE_URL}/attendance`, { withCredentials: true });
-    return data;
-  } catch (error: any) {
-    console.error("Error:", error.message);
-    return [];
   }
 };
 
@@ -260,30 +154,6 @@ export const updateAttendanceRecord = async (id: string, payload: any) => {
   }
 };
 
-export const deleteAttendanceRecord = async (id: string) => {
-  try {
-    const { data } = await axios.delete(`${BASE_URL}/attendance/${id}`, { withCredentials: true });
-    return data;
-  } catch (error: any) {
-    console.error("Error:", error.message);
-    return null;
-  }
-};
-
-// ============================================================
-// TimeException
-// ============================================================
-
-export const getAllTimeExceptions = async () => {
-  try {
-    const { data } = await axios.get(`${BASE_URL}/timeException`, { withCredentials: true });
-    return data;
-  } catch (error: any) {
-    console.error("Error:", error.message);
-    return [];
-  }
-};
-
 export const getTimeException = async (id: string) => {
   try {
     const { data } = await axios.get(`${BASE_URL}/timeException/${id}`, { withCredentials: true });
@@ -307,16 +177,6 @@ export const createTimeException = async (payload: any) => {
 export const updateTimeException = async (id: string, payload: any) => {
   try {
     const { data } = await axios.put(`${BASE_URL}/timeException/${id}`, payload, { withCredentials: true });
-    return data;
-  } catch (error: any) {
-    console.error("Error:", error.message);
-    return null;
-  }
-};
-
-export const deleteTimeException = async (id: string) => {
-  try {
-    const { data } = await axios.delete(`${BASE_URL}/timeException/${id}`, { withCredentials: true });
     return data;
   } catch (error: any) {
     console.error("Error:", error.message);
@@ -358,16 +218,6 @@ export const updateShiftAssignmentByEmployee = async (id: string, payload: any) 
   }
 };
 
-export const deleteShiftAssignmentByEmployee = async (id: string) => {
-  try {
-    const { data } = await axios.delete(`${BASE_URL}/shift-assignments/employee/${id}`, { withCredentials: true });
-    return data;
-  } catch (error: any) {
-    console.error("Error:", error.message);
-    return null;
-  }
-};
-
 export const getShiftAssignmentsByPosition = async (id: string) => {
   try {
     const { data } = await axios.get(`${BASE_URL}/shift-assignments/position/${id}`, { withCredentials: true });
@@ -398,71 +248,6 @@ export const updateShiftAssignmentByPosition = async (id: string, payload: any) 
   }
 };
 
-export const deleteShiftAssignmentByPosition = async (id: string) => {
-  try {
-    const { data } = await axios.delete(`${BASE_URL}/shift-assignments/position/${id}`, { withCredentials: true });
-    return data;
-  } catch (error: any) {
-    console.error("Error:", error.message);
-    return null;
-  }
-};
-
-//
-//
-//
-
-export const getAllShiftAssignmentsByDepartment = async () => {
-  try {
-    const { data } = await axios.get(`${BASE_URL}/shift-assignments/department`, {
-      withCredentials: true,
-    });
-    return data;
-  } catch (error: any) {
-    console.error("Error fetching department shift assignments:", error.message);
-    return [];
-  }
-};
-
-export const getAllShiftAssignmentsByEmployee = async () => {
-  try {
-    const { data } = await axios.get(`${BASE_URL}/shift-assignments/employee`, {
-      withCredentials: true,
-    });
-    return data;
-  } catch (error: any) {
-    console.error("Error fetching department shift assignments:", error.message);
-    return [];
-  }
-};
-
-export const getAllShiftAssignmentsByPosition = async () => {
-  try {
-    const { data } = await axios.get(`${BASE_URL}/shift-assignments/position`, {
-      withCredentials: true,
-    });
-    return data;
-  } catch (error: any) {
-    console.error("Error fetching department shift assignments:", error.message);
-    return [];
-  }
-};
-
-
-//
-//
-//
-
-export const getShiftAssignmentsByDepartment = async (id: string) => {
-  try {
-    const { data } = await axios.get(`${BASE_URL}/shift-assignments/department/${id}`, { withCredentials: true });
-    return data;
-  } catch (error: any) {
-    console.error("Error:", error.message);
-    return [];
-  }
-};
-
 export const createShiftAssignmentByDepartment = async (payload: any) => {
   try {
     const { data } = await axios.post(`${BASE_URL}/shift-assignments/department`, payload, { withCredentials: true });
@@ -483,16 +268,6 @@ export const updateShiftAssignmentByDepartment = async (id: string, payload: any
   }
 };
 
-export const deleteShiftAssignmentByDepartment = async (id: string) => {
-  try {
-    const { data } = await axios.delete(`${BASE_URL}/shift-assignments/department/${id}`, { withCredentials: true });
-    return data;
-  } catch (error: any) {
-    console.error("Error:", error.message);
-    return null;
-  }
-};
-
 // ============================================================
 // Overtime
 // ============================================================
@@ -503,40 +278,6 @@ export const getOvertime = async () => {
     return data;
   } catch (error: any) {
     console.error("Error:", error.message);
-    return [];
-  }
-};
-
-export const getAllOvertime = async () => {
-  try {
-    const response = await axios.get(`${BASE_URL}/overtime`, { 
-      withCredentials: true 
-    });
-
-    let rawData: any[] = [];
-    
-    // Handle different response structures
-    if (Array.isArray(response.data)) {
-      rawData = response.data;
-    } else if (response.data && Array.isArray(response.data.data)) {
-      rawData = response.data.data;
-    } else if (response.data && response.data.shifts) {
-      rawData = response.data.shifts;
-    } else if (response.data && response.data.items) {
-      rawData = response.data.items;
-    }
-    
-    // Map raw data to Shift interface
-    return rawData.map((item: OvertimeRule): OvertimeRule => ({
-      id: item.id || "",
-      name: item.name || "",
-      description: item.description || "",
-      approved: item.approved !== undefined ? item.approved : true,
-      active: item.active !== undefined ? item.active : true
-    }));
-    
-  } catch (error: any) {
-    console.error("Error fetching shifts:", error.message);
     return [];
   }
 };
@@ -563,29 +304,9 @@ export const updateOvertime = async (id: string, payload: any) => {
   }
 };
 
-export const deleteOvertime = async (id: string) => {
-  try {
-    const { data } = await axios.delete(`${BASE_URL}/overtime/${id}`, { withCredentials: true });
-    return data;
-  } catch (error: any) {
-    console.error("Error:", error.message);
-    return null;
-  }
-};
-
-// ============================================================
-// Schedule
-// ============================================================
-
-export const getAllSchedule = async () => {
-  try {
-    const { data } = await axios.get(`${BASE_URL}/schedule`, { withCredentials: true });
-    return data;
-  } catch (error: any) {
-    console.error("Error:", error.message);
-    return [];
-  }
-};
+//
+//
+//
 
 export const getSchedule = async (id: string) => {
   try {
@@ -624,20 +345,6 @@ export const deleteSchedule = async (id: string) => {
   } catch (error: any) {
     console.error("Error:", error.message);
     return null;
-  }
-};
-
-// ============================================================
-// Lateness
-// ============================================================
-
-export const getAllLatenessRule = async () => {
-  try {
-    const { data } = await axios.get(`${BASE_URL}/lateness`, { withCredentials: true });
-    return data;
-  } catch (error: any) {
-    console.error("Error:", error.message);
-    return [];
   }
 };
 
@@ -681,20 +388,6 @@ export const deleteLatenessRule = async (id: string) => {
   }
 };
 
-// ============================================================
-// Holiday
-// ============================================================
-
-export const getAllHolidays = async () => {
-  try {
-    const { data } = await axios.get(`${BASE_URL}/holidays`, { withCredentials: true });
-    return data;
-  } catch (error: any) {
-    console.error("Error:", error.message);
-    return [];
-  }
-};
-
 export const getHoliday = async (id: string) => {
   try {
     const { data } = await axios.get(`${BASE_URL}/holidays/${id}`, { withCredentials: true });
@@ -722,30 +415,6 @@ export const updateHoliday = async (id: string, payload: any) => {
   } catch (error: any) {
     console.error("Error:", error.message);
     return null;
-  }
-};
-
-export const deleteHoliday = async (id: string) => {
-  try {
-    const { data } = await axios.delete(`${BASE_URL}/holidays/${id}`, { withCredentials: true });
-    return data;
-  } catch (error: any) {
-    console.error("Error:", error.message);
-    return null;
-  }
-};
-
-// ============================================================
-// Notification
-// ============================================================
-
-export const getAllNotification = async () => {
-  try {
-    const { data } = await axios.get(`${BASE_URL}/notification`, { withCredentials: true });
-    return data;
-  } catch (error: any) {
-    console.error("Error:", error.message);
-    return [];
   }
 };
 
@@ -779,12 +448,339 @@ export const updateNotification = async (id: string, payload: any) => {
   }
 };
 
-export const deleteNotification = async (id: string) => {
+// ============================================================
+// All
+// ============================================================
+
+export const getAllAttendanceCorrections =
+  async (): Promise<AttendanceCorrectionRequest[]> => {
+    try {
+      const { data } = await axiosInstance.get("/attendanceCorrection");
+      return toArray(data).map((r: any): AttendanceCorrectionRequest => ({
+        id: toId(r),
+        employeeId: r.employeeId,
+        attendanceRecord: r.attendanceRecord,
+        reason: r.reason,
+        status: r.status,
+      }));
+    } catch {
+      return [];
+    }
+  };
+
+
+export const getAllAttendanceRecord =
+  async (): Promise<AttendanceRecord[]> => {
+    try {
+      const { data } = await axiosInstance.get("/attendance");
+      return toArray(data).map((r: any): AttendanceRecord => ({
+        id: toId(r),
+        employeeId: r.employeeId,
+        punches: r.punches ?? [],
+        totalWorkMinutes: r.totalWorkMinutes,
+        hasMissedPunch: r.hasMissedPunch,
+        exceptionIds: r.exceptionIds ?? [],
+        finalisedForPayroll: r.finalisedForPayroll,
+      }));
+    } catch {
+      return [];
+    }
+  };
+
+
+export const getAllHolidays = async (): Promise<Holiday[]> => {
   try {
-    const { data } = await axios.delete(`${BASE_URL}/notification/${id}`, { withCredentials: true });
-    return data;
+    const { data } = await axiosInstance.get("/holidays");
+
+    const list = Array.isArray(data) ? data : data?.data ?? [];
+
+    return list
+      .map((h: any) => {
+        const id = h._id;
+
+        return {
+          id: String(id),
+          type: h.type,
+          startDate: h.startDate,
+          endDate: h.endDate,
+          name: h.name,
+          active: h.active,
+        };
+      })
+      .filter(Boolean) as Holiday[];
+  } catch (error) {
+    return [];
+  }
+};
+
+export const getAllLatenessRule = async (): Promise<LatenessRule[]> => {
+  try {
+    const { data } = await axiosInstance.get("/lateness");
+    return toArray(data).map((r: any): LatenessRule => ({
+      id: toId(r),
+      name: r.name,
+      description: r.description,
+      gracePeriodMinutes: r.gracePeriodMinutes,
+      deductionForEachMinute: r.deductionForEachMinute,
+      active: r.active,
+    }));
+  } catch {
+    return [];
+  }
+};
+
+export const getAllNotification = async (): Promise<NotificationLog[]> => {
+  try {
+    const { data } = await axiosInstance.get("/notification");
+    return toArray(data).map((n: any): NotificationLog => ({
+      id: toId(n),
+      to: n.to,
+      type: n.type,
+      message: n.message,
+    }));
+  } catch {
+    return [];
+  }
+};
+
+
+export const getAllOvertime = async (): Promise<OvertimeRule[]> => {
+  try {
+    const { data } = await axiosInstance.get("/overtime");
+    return toArray(data).map((o: any): OvertimeRule => ({
+      id: toId(o),
+      name: o.name,
+      description: o.description,
+      active: o.active,
+      approved: o.approved,
+    }));
+  } catch {
+    return [];
+  }
+};
+
+export const getAllSchedule = async (): Promise<ScheduleRule[]> => {
+  try {
+    const { data } = await axiosInstance.get("/schedule");
+    return toArray(data).map((s: any): ScheduleRule => ({
+      id: toId(s),
+      name: s.name,
+      pattern: s.pattern,
+      active: s.active,
+    }));
+  } catch {
+    return [];
+  }
+};
+
+export const getAllShiftAssignmentsByDepartment =
+  async (): Promise<ShiftAssignment[]> => {
+    try {
+      const { data } = await axiosInstance.get("/shift-assignments/department");
+      return toArray(data).map(mapShiftAssignment);
+    } catch {
+      return [];
+    }
+  };
+
+export const getAllShiftAssignmentsByEmployee =
+  async (): Promise<ShiftAssignment[]> => {
+    try {
+      const { data } = await axiosInstance.get("/shift-assignments/employee");
+      return toArray(data).map(mapShiftAssignment);
+    } catch {
+      return [];
+    }
+  };
+
+export const getAllShiftAssignmentsByPosition =
+  async (): Promise<ShiftAssignment[]> => {
+    try {
+      const { data } = await axiosInstance.get("/shift-assignments/position");
+      return toArray(data).map(mapShiftAssignment);
+    } catch {
+      return [];
+    }
+  };
+
+export const getAllShifts = async (): Promise<Shift[]> => {
+  try {
+    const response = await axiosInstance.get("/shifts");
+
+    const rawData = Array.isArray(response.data)
+      ? response.data
+      : response.data?.data ?? [];
+
+    return rawData.map((item: any): Shift => ({
+      id: String(item.id ?? item._id), // ← FIX
+      name: item.name ?? "",
+      shiftType: item.shiftType,
+      startTime: item.startTime,
+      endTime: item.endTime,
+      punchPolicy: item.punchPolicy,
+      graceInMinutes: item.graceInMinutes ?? 0,
+      graceOutMinutes: item.graceOutMinutes ?? 0,
+      requiresApprovalForOvertime: !!item.requiresApprovalForOvertime,
+      active: item.active ?? true,
+    }));
+  } catch (error) {
+    console.error("Error fetching shifts:", error);
+    return [];
+  }
+};
+
+
+
+export const getAllShiftsType = async (): Promise<ShiftType[]> => {
+  try {
+    const { data } = await axiosInstance.get("/shift-type");
+    return toArray(data).map((s: any): ShiftType => ({
+      id: toId(s),
+      name: s.name,
+      active: s.active,
+    }));
+  } catch {
+    return [];
+  }
+};
+
+
+export const getAllTimeExceptions = async (): Promise<TimeException[]> => {
+  try {
+    const { data } = await axiosInstance.get("/timeException");
+    return toArray(data).map((e: any): TimeException => ({
+      id: toId(e),
+      employeeId: e.employeeId,
+      type: e.type,
+      attendanceRecordId: e.attendanceRecordId,
+      assignedTo: e.assignedTo,
+      status: e.status,
+      reason: e.reason,
+    }));
+  } catch {
+    return [];
+  }
+};
+
+
+// ============================================================
+// Delete
+// ============================================================
+
+export const deleteAttendanceCorrection = async (id: string) => {
+  try {
+    return await axiosInstance.delete(`/attendanceCorrection/${id}`);
   } catch (error: any) {
-    console.error("Error:", error.message);
     return null;
   }
 };
+
+export const deleteAttendanceRecord = async (id: string) => {
+  try {
+    return await axiosInstance.delete(`/attendance/${id}`);
+  } catch (error: any) {
+    return null;
+  }
+};
+
+export const deleteHoliday = async (id: string) => {
+  try {
+    return await axiosInstance.delete(`/holidays/${id}`);
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const deleteLateness = async (id: string) => {
+  try {
+    return await axiosInstance.delete(`/lateness/${id}`);
+  } catch (error: any) {
+    return null;
+  }
+};
+
+export const deleteNotification = async (id: string) => {
+  try {
+    return await axiosInstance.delete(`/notification/${id}`);
+  } catch (error: any) {
+    return null;
+  }
+};
+
+export const deleteOvertime = async (id: string) => {
+  try {
+    return await axiosInstance.delete(`/overtime/${id}`);
+  } catch (error: any) {
+    return null;
+  }
+};
+
+export const deleteShiftAssignmentByDepartment = async (id: string) => {
+  try {
+    return await axiosInstance.delete(`/shift-assignments/department/${id}`);
+  } catch (error: any) {
+    return null;
+  }
+};
+
+export const deleteShiftAssignmentByEmployee = async (id: string) => {
+  try {
+    return await axiosInstance.delete(`/shift-assignments/employee/${id}`);
+  } catch (error: any) {
+    return null;
+  }
+};
+
+export const deleteShiftAssignmentByPosition = async (id: string) => {
+  try {
+    return await axiosInstance.delete(`/shift-assignments/position/${id}`);
+  } catch (error: any) {
+    return null;
+  }
+};
+
+export const deleteShiftType = async (id: string) => {
+  try {
+    return await axiosInstance.delete(`/shift-type/${id}`);
+  } catch (error: any) {
+    return null;
+  }
+};
+
+export const deleteShift = async (id: string) => {
+  try {
+    return await axiosInstance.delete(`/shifts/${id}`);
+  } catch (error: any) {
+    return null;
+  }
+};
+
+export const deleteTimeException = async (id: string) => {
+  try {
+    return await axiosInstance.delete(`/timeException/${id}`);
+  } catch (error: any) {
+    return null;
+  }
+};
+
+//
+//
+//
+
+export async function submitAttendanceCorrection(
+  dto: CreateAttendanceCorrectionRequestDto
+) {
+  const token = localStorage.getItem("token");
+
+  const res = await axiosInstance.post(
+    "/attendanceCorrections",
+    dto,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  return res.data;
+}

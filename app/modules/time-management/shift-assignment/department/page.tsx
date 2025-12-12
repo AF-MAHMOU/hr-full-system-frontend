@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import ShiftAssignmentList from "../components/ShiftAssignmentList";
-import Calendar from "../components/Calendar";
-import s from "../page.module.css";
+import ShiftAssignmentList from "../../components/ShiftAssignmentList";
+import Calendar from "../../components/Calendar";
+import s from "../../page.module.css";
 
 import {
   getAllShiftAssignmentsByDepartment,
@@ -12,19 +12,15 @@ import {
   deleteShiftAssignmentByDepartment,
   deleteShiftAssignmentByEmployee,
   deleteShiftAssignmentByPosition,
-} from "../api";
+} from "../../api";
 
 import {
   ShiftAssignmentWithType,
   AssignmentType,
   ShiftAssignment,
-} from "../types";
+} from "../../types";
 
-import CreateShiftAssignmentDepartmentForm from "../components/CreateShiftAssignmentDepartmentForm";
-import CreateShiftAssignmentEmployeeForm from "../components/CreateShiftAssignmentEmployeeForm";
-import CreateShiftAssignmentPositionForm from "../components/CreateShiftAssignmentPositionForm";
-import { Button } from "@/shared/components";
-import { usePathname, useRouter } from "next/navigation";
+import CreateShiftAssignmentDepartmentForm from "../../components/CreateShiftAssignmentDepartmentForm";
 
 export default function ShiftAssignmentPage() {
   const [shiftassignments, setShiftAssignments] = useState<ShiftAssignmentWithType[]>([]);
@@ -70,34 +66,6 @@ const allAssignments: ShiftAssignmentWithType[] = [
     }
   };
 
-  const router = useRouter();
-  const pathname = usePathname();
-
-  const goToDepartmentPage = () => {
-    const newPath = pathname.endsWith("/")
-      ? pathname + "department"
-      : pathname + "/department";
-      
-    router.push(newPath);
-  };
-
-  const gotoPositionPage = () => {
-    const newPath = pathname.endsWith("/")
-      ? pathname + "position"
-      : pathname + "/position";
-      
-    router.push(newPath);
-  };
-
-  const goToEmployeePage = () => {
-    const newPath = pathname.endsWith("/")
-      ? pathname + "employee"
-      : pathname + "/employee";
-      
-    router.push(newPath);
-  };
-
-
   return (
     <div className={s.container}>
       <h1 className={s.header}>Shift Assignments</h1>
@@ -110,13 +78,7 @@ const allAssignments: ShiftAssignmentWithType[] = [
             shiftassignments={shiftassignments}
             onDelete={handleDelete}
           />
-          <button className={s.button}   onClick={() => goToDepartmentPage()}>Assign by Department</button>
-          <button className={s.button}   onClick={() => goToEmployeePage()}>Assign by Employee</button>
-          <button className={s.button}   onClick={() => gotoPositionPage()}>Assign by Position</button>
-
-          {/*<CreateShiftAssignmentDepartmentForm onCreated={load} />
-          <CreateShiftAssignmentEmployeeForm onCreated={load} />
-          <CreateShiftAssignmentPositionForm onCreated={load} />*/}
+          <CreateShiftAssignmentDepartmentForm onCreated={load} />
 
           <div style={{ marginTop: "3rem" }}>
             <Calendar shiftassignments={shiftassignments} />

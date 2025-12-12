@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ShiftType } from "../types";
+import { PunchPolicy, ShiftType } from "../types";
 import s from "../page.module.css";
 import { createShift, getAllShiftsType } from '../api/index';
 import { useRouter, usePathname } from "next/navigation";
@@ -15,6 +15,7 @@ export default function CreateShiftForm({ onCreated }: CreateShiftFormProps) {
   const [shiftType, setShiftType] = useState("");
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("17:00");
+  const [punchPolicy, setPunchPolicy] = useState<PunchPolicy| "">("");
   const [graceIn, setGraceIn] = useState(0);
   const [graceOut, setGraceOut] = useState(0);
   const [requiresOvertimeApproval, setRequiresOvertimeApproval] = useState(false);
@@ -28,7 +29,6 @@ export default function CreateShiftForm({ onCreated }: CreateShiftFormProps) {
     getAllShiftsType()
       .then(setShiftTypes)
       .catch((err) => {
-        console.error("Failed to load shift types", err);
         setError("Failed to load shift types");
       });
   }, []);
@@ -87,25 +87,15 @@ export default function CreateShiftForm({ onCreated }: CreateShiftFormProps) {
 
   return (
     <form onSubmit={submit} className={s.formContainer}>
-      {error && <div style={{ color: "red", marginBottom: "10px" }}>{error}</div>}
+      {error && <div style={{ color: "red", marginBottom: "1.25rem" }}>{error}</div>}
       
       <div className={s.grid}>
         <div className={s.field}>
           <label className={s.description}>Shift Name</label>
-          <input 
-            type="text" 
-            value={name} 
-            onChange={e => setName(e.target.value)} 
-            required 
-          />
+          <input type="text" value={name} onChange={e => setName(e.target.value)} required />
           
           <label className={s.description}>Shift Type</label>
-          <select 
-            className={s.select}
-            value={shiftType}
-            onChange={e => setShiftType(e.target.value)}
-            required
-          >
+          <select className={s.select}value={shiftType}onChange={e => setShiftType(e.target.value)} required>
             <option value="" disabled>Select a Shift Type</option>
             {shiftTypes.map((st) => (
               <option key={st.id} value={st.id}>
@@ -114,69 +104,43 @@ export default function CreateShiftForm({ onCreated }: CreateShiftFormProps) {
             ))}
           </select>
 
-          <button 
-            type="button"
-            className={s.button}
-            onClick={goToShiftTypePage}
-          >
+          <button type="button" className={s.button} onClick={goToShiftTypePage}>
             Add Shift Type
           </button>
 
           <label className={s.description}>Start Time</label>
-          <input 
-            type="time" 
-            value={startTime} 
-            onChange={e => setStartTime(e.target.value)} 
-            required
-          />
+          <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} required/>
           
           <label className={s.description}>End Time</label>
-          <input 
-            type="time" 
-            value={endTime} 
-            onChange={e => setEndTime(e.target.value)} 
-            required
-          />
+          <input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} required/>
+
+          <label className={s.description}>Policy</label>
+          <select className={s.select} value={punchPolicy} onChange={e => setPunchPolicy(e.target.value as PunchPolicy)} required>
+            <option value="">Policy</option>
+            {Object.values(PunchPolicy).map(t => (
+              <option key={t} value={t}>
+                {t.replace('_', ' ')}
+              </option>
+            ))}
+          </select>
           
           <label className={s.description}>Grace In (min)</label>
-          <input 
-            type="number" 
-            value={graceIn} 
-            onChange={e => setGraceIn(Number(e.target.value))} 
-            min="0"
-          />
+          <input type="number" value={graceIn} onChange={e => setGraceIn(Number(e.target.value))} min="0"/>
           
           <label className={s.description}>Grace Out (min)</label>
-          <input 
-            type="number" 
-            value={graceOut} 
-            onChange={e => setGraceOut(Number(e.target.value))} 
-            min="0"
-          />
+          <input type="number" value={graceOut} onChange={e => setGraceOut(Number(e.target.value))} min="0"/>
           
           <label className={s.description}>
-            <input 
-              type="checkbox" 
-              checked={requiresOvertimeApproval} 
-              onChange={e => setRequiresOvertimeApproval(e.target.checked)} 
-            />
+            <input type="checkbox" checked={requiresOvertimeApproval} onChange={e => setRequiresOvertimeApproval(e.target.checked)} />
             Requires Overtime Approval
           </label>
           
           <label className={s.description}>
-            <input 
-              type="checkbox" 
-              checked={active} 
-              onChange={e => setActive(e.target.checked)} 
-            />
+            <input type="checkbox" checked={active} onChange={e => setActive(e.target.checked)} />
             Active
           </label>
           
-          <button 
-            className={s.button} 
-            type="submit" 
-            disabled={loading}
-          >
+          <button className={s.button} type="submit" disabled={loading}>
             {loading ? "Adding..." : "Add Shift"}
           </button>
         </div>

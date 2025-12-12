@@ -6,6 +6,7 @@ import OvertimeRuleList from "../components/OvertimeRuleList";
 import s from "../page.module.css";
 import { OvertimeRule } from "../types";
 import { deleteOvertime, getOvertime } from '../api/index';
+import { usePathname, useRouter } from "next/navigation";
 
 export default function OvertimeRulePage() {
   const [overtimerules, setOvertimeRules] = useState<OvertimeRule[]>([]);
@@ -32,6 +33,15 @@ export default function OvertimeRulePage() {
     load();
   };
 
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const gotoReportsPage = () => {
+    const parts = pathname.split("/").filter(Boolean);
+    parts[parts.length - 1] = "reports";
+    router.push("/" + parts.join("/"));
+  };
+
   return (
     <div className={s.container}>
       <h1 className={s.header}>OvertimeRules</h1>
@@ -44,6 +54,9 @@ export default function OvertimeRulePage() {
           <CreateOvertimeRuleForm onCreated={load} />
         </>
       )}
+      <button type="button"className={s.button}onClick={gotoReportsPage}>
+        Go to Reports Page
+      </button>
     </div>
   );
 }

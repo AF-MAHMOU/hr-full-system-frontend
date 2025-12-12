@@ -1,42 +1,44 @@
-'use client'
+"use client";
 
-import { Shift, ShiftType } from "../types";
+import { useEffect, useState } from "react";
+import { Shift } from "../types";
 import s from "../page.module.css";
-import { getShiftType } from "../api";
-import React, { useEffect } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { getAllShifts, deleteShift } from "../api/index";
 
-interface ShiftListProps {
-  shifts: Shift[];
-  shiftTypes: ShiftType[];
-  onDelete: (id: string) => void;
-}
+export default function ShiftList() {
+  const [shifts, setShifts] = useState<Shift[]>([]);
+  const [loading, setLoading] = useState(true);
 
-export default function ShiftList({ shifts, shiftTypes, onDelete }: ShiftListProps) {
-  if (!shifts.length) return <p>No shifts found</p>;
+  const load = async () => {
+    setLoading(true);
+    try {
+      const data = await getAllShifts();
+      setShifts(data);
+    } catch (err) {
+      console.error("Failed to load shifts", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const [shiftTypesMap, setShiftTypesMap] = React.useState<{ [key: string]: string }>({}); 
   useEffect(() => {
-    // fetch all shift types for the displayed shifts
-    shifts.forEach(async (shift) => {
-      if (!shiftTypesMap[shift.shiftType]) {
-        const data = await getShiftType(shift.shiftType);
-        if (data) {
-          setShiftTypesMap(prev => ({ ...prev, [shift.shiftType]: data.name }));
-        }
-      }
-    });
-  }, [shifts]);
+    load();
+  }, []);
+
+  const handleDelete = async (id: string) => {
+    if (!id) return;
+    await deleteShift(id);
+    load();
+  };
+
+  if (loading) return <p>Loading shifts...</p>;
+  if (!shifts.length) return <p>No shifts found</p>;
   
   return (
     <div className={s.cardcontainer}>
       {shifts.map((shift, index) => (
   <div key={shift.id || shift.name || `shift-${index}`} className={s.Card}>
           <h4 className={s.header}>{shift.name}</h4>
-
-          <p className={s.description}>
-            Shift Type Name: {shiftTypesMap[shift.shiftType] ?? "Loading..."}
-          </p>
           
           <p className={s.description}>
             Active? {shift.active ? "Yes" : "No"}
@@ -66,7 +68,7 @@ export default function ShiftList({ shifts, shiftTypes, onDelete }: ShiftListPro
             Punch Policy: {shift.punchPolicy}
           </p>
 
-          <button className={s.button} onClick={() => onDelete(shift.id)}>
+          <button className={s.button} onClick={() => handleDelete(shift.id)}>
             Delete
           </button>
         </div>

@@ -10,6 +10,7 @@ import s from "../page.module.css";
 import { ScheduleRule, Shift, ShiftAssignmentStatus } from "../types";
 import { useSearchParams } from "next/navigation";
 import { EmployeeProfile } from "../../hr/api/hrApi";
+import Selections from "./Selections";
 
 interface CreateShiftAssignmentEmployeeFormProps {
   onCreated: () => void;
@@ -25,6 +26,7 @@ export default function CreateShiftAssignmentEmployeeForm({
   onCreated,
 }: CreateShiftAssignmentEmployeeFormProps) {
   const [shifts, setShifts] = useState<Shift[]>([]);
+  const [employeeId, setEmployeeId] = useState("");
   const [scheduleRules, setScheduleRules] = useState<ScheduleRule[]>([]);
   const [employees, setEmployees] = useState<EmployeeProfile[]>([]);
 
@@ -133,21 +135,12 @@ export default function CreateShiftAssignmentEmployeeForm({
       <div className={s.grid}>
         <div className={s.field}>
           <label className={s.description}>Employee</label>
-          <select
-            className={s.select}
-            value={selectedEmployeeId}
-            onChange={(e) => setSelectedEmployeeId(e.target.value)}
-            required
-          >
-            <option value="" disabled>
-              Select a Employee
-            </option>
-            {employees.map((dept) => (
-              <option key={dept.id} value={dept.id}>
-                {dept.name ?? dept.id}
-              </option>
-            ))}
-          </select>
+          <Selections
+                                employeeId={employeeId}
+                                setEmployeeId={setEmployeeId}
+                                employees={employees}
+                                setEmployees={setEmployees}
+                              />
 
           <label className={s.description}>Shift</label>
           <select

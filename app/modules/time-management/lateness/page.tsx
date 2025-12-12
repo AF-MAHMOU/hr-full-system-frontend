@@ -6,6 +6,7 @@ import s from "../page.module.css";
 import { LatenessRule } from "../types";
 import CreateLatenessRuleForm from "../components/CreateLatenessRuleForm";
 import { deleteLatenessRule, getAllLatenessRule } from '../api/index';
+import { usePathname, useRouter } from "next/navigation";
 
 export default function LatenessRulePage() {
   const [latenessrules, setLatenessRules] = useState<LatenessRule[]>([]);
@@ -32,9 +33,21 @@ export default function LatenessRulePage() {
     load();
   };
 
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const gotoReportsPage = () => {
+    const parts = pathname.split("/").filter(Boolean);
+    parts[parts.length - 1] = "reports";
+    router.push("/" + parts.join("/"));
+  };
+
   return (
     <div className={s.container}>
-      <h1 className={s.header}>LatenessRules</h1>
+      <h1 className={s.header}>Lateness Rules</h1>
+      <p className={s.description2}>
+        Late
+      </p>
 
       {loading ? (
         <p>Loading...</p>

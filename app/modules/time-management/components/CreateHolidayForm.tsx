@@ -61,10 +61,10 @@ export default function CreateHolidayForm({ onCreated }: CreateHolidayFormProps)
             onChange={e => setType(e.target.value as HolidayType)}
             required
           >
-            <option value="">Select type</option> {/* optional placeholder */}
+            <option value="">Select type</option>
             {Object.values(HolidayType).map(t => (
               <option key={t} value={t}>
-                {t.replace('_', ' ')} {/* optional: make it prettier */}
+                {t.replace('_', ' ')}
               </option>
             ))}
           </select>

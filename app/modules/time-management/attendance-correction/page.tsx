@@ -35,6 +35,7 @@ export default function AttendanceCorrectionRequestPage() {
   return (
     <div className={s.container}>
       <h1 className={s.header}>Attendance Correction Requests</h1>
+      <p className={s.description}>Had something that caused you to be late/absent? No worries</p>
 
       {loading ? (
         <p>Loading...</p>

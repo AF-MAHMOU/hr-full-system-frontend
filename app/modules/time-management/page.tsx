@@ -11,7 +11,7 @@ import Link from 'next/link';
 export default function TimeManagementPage() {
     const pathname = usePathname();
 
-    const attendanceCorrectionHref = `${pathname}/attendanceCorrection`;
+    const attendanceCorrectionHref = `${pathname}/attendance-correction`;
     const attendanceRecordHref = `${pathname}/attendance`;
     const holidayHref = `${pathname}/holiday`;
     const latenessHref = `${pathname}/lateness`;

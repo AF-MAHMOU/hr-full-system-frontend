@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { PunchPolicy, Shift, ShiftType } from '../types';
+import { CreateOvertimeRuleDto, OvertimeRule, PunchPolicy, Shift, ShiftType } from '../types';
 
 const BASE_URL = 'http://localhost:3000/time-management';
 
@@ -507,13 +507,49 @@ export const getOvertime = async () => {
   }
 };
 
-export const createOvertime = async (payload: any) => {
+export const getAllOvertime = async () => {
   try {
-    const { data } = await axios.post(`${BASE_URL}/overtime`, payload, { withCredentials: true });
+    const response = await axios.get(`${BASE_URL}/overtime`, { 
+      withCredentials: true 
+    });
+
+    let rawData: any[] = [];
+    
+    // Handle different response structures
+    if (Array.isArray(response.data)) {
+      rawData = response.data;
+    } else if (response.data && Array.isArray(response.data.data)) {
+      rawData = response.data.data;
+    } else if (response.data && response.data.shifts) {
+      rawData = response.data.shifts;
+    } else if (response.data && response.data.items) {
+      rawData = response.data.items;
+    }
+    
+    // Map raw data to Shift interface
+    return rawData.map((item: OvertimeRule): OvertimeRule => ({
+      id: item.id || "",
+      name: item.name || "",
+      description: item.description || "",
+      approved: item.approved !== undefined ? item.approved : true,
+      active: item.active !== undefined ? item.active : true
+    }));
+    
+  } catch (error: any) {
+    console.error("Error fetching shifts:", error.message);
+    return [];
+  }
+};
+
+export const createOvertime = async (payload: CreateOvertimeRuleDto) => {
+  try {
+    const { data } = await axios.post(`${BASE_URL}/overtime`, payload, {
+      withCredentials: true,
+    });
     return data;
   } catch (error: any) {
     console.error("Error:", error.message);
-    return null;
+    throw error;
   }
 };
 

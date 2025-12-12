@@ -32,7 +32,7 @@ export default function Calendar({
 
   const holidayEvents = holidays.map((holiday) => ({
     id: `holiday-${holiday.id}`,
-    title: `🎉 ${holiday.name ?? holiday.type}`,
+    title: `Holiday ${holiday.name ?? holiday.type}`,
     start: holiday.startDate,
     end: holiday.endDate ? addDays(holiday.endDate, 1) : undefined,
     color: '#f87171',

@@ -10,7 +10,7 @@ export default function ShiftAssignmentList({ shiftassignments, onDelete }: Prop
   if (!shiftassignments.length) return <p>No shift assignments found</p>;
 
   return (
-    <div className={s.shiftassignmentContainer}>
+    <div className={s.cardcontainer}>
       {shiftassignments.map((sa) => (
         <div key={sa.id} className={s.Card}>
           <h4 className={s.header}>{sa.shiftId}</h4>

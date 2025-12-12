@@ -7,6 +7,7 @@ import Calendar from "../components/Calendar";
 import s from "../page.module.css";
 import { deleteShift, getAllShifts, getAllShiftsType } from '../api/index'; 
 import { Shift, ShiftType } from "../types";
+import { usePathname, useRouter } from "next/navigation";
 
 export default function ShiftPage() {
   const [shifts, setShifts] = useState<Shift[]>([]);
@@ -38,6 +39,15 @@ export default function ShiftPage() {
     load();
   };
 
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const goToShiftAssignmentPage = () => {
+    const parts = pathname.split("/").filter(Boolean);
+    parts[parts.length - 1] = "shift-assignment";
+    router.push("/" + parts.join("/"));
+  };
+
   return (
       <div className={s.container}>
       <h1 className={s.header}>Shifts</h1>
@@ -49,9 +59,9 @@ export default function ShiftPage() {
           {/* Pass shiftTypes array properly */}
           <ShiftList shifts={shifts} shiftTypes={shiftTypes} onDelete={handleDelete} />
           <CreateShiftForm onCreated={load} />
-          <div style={{ marginTop: "3rem" }}>
-            <Calendar shifts={shifts} />
-          </div>
+          <button className={s.button}   onClick={() => goToShiftAssignmentPage()}>
+            Assign
+          </button>
         </>
       )}
     </div>

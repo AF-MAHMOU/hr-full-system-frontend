@@ -529,3 +529,10 @@
     rgba(32, 30, 46, 0.95)
   );
 }
+
+.assignmentselection {
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}

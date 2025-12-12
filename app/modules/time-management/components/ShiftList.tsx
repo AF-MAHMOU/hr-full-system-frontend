@@ -4,10 +4,11 @@ import { Shift, ShiftType } from "../types";
 import s from "../page.module.css";
 import { getShiftType } from "../api";
 import React, { useEffect } from "react";
+import { useRouter, usePathname } from "next/navigation";
 
 interface ShiftListProps {
   shifts: Shift[];
-  shiftTypes: ShiftType[]; // pass all shift types here
+  shiftTypes: ShiftType[];
   onDelete: (id: string) => void;
 }
 
@@ -26,7 +27,7 @@ export default function ShiftList({ shifts, shiftTypes, onDelete }: ShiftListPro
       }
     });
   }, [shifts]);
-
+  
   return (
     <div className={s.cardcontainer}>
       {shifts.map((shift, index) => (

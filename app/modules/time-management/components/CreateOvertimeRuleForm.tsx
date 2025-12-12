@@ -1,43 +1,45 @@
 "use client";
 
 import { useState } from "react";
-import { createOvertime } from '../api/index';
+import { createOvertime } from "../api";
+import { CreateOvertimeRuleDto } from "../types";
 import s from "../page.module.css";
 
 interface CreateOvertimeRuleFormProps {
   onCreated: () => void;
 }
 
-export default function CreateOvertimeRuleForm({ onCreated }: CreateOvertimeRuleFormProps) {
+export default function CreateOvertimeRuleForm({
+  onCreated,
+}: CreateOvertimeRuleFormProps) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [active, setActive] = useState(true);
   const [approved, setApproved] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    setError(null);
     setLoading(true);
-    try {
-      await createOvertime(
-        {
-          name,
-          description,
-          active,
-          approved,
-        }
-      );
 
-      // Reset form to default values
+    const payload: CreateOvertimeRuleDto = {
+      name,
+      description: description.trim() === "" ? undefined : description,
+      active,
+      approved,
+    };
+
+    try {
+      await createOvertime(payload);
       setName("");
       setDescription("");
       setActive(true);
       setApproved(false);
-
       onCreated();
-    } catch (err) {
-      console.error("Error creating overtime rule:", err);
+    } catch (err: any) {
+      setError("Failed to create overtime rule. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -79,6 +81,8 @@ export default function CreateOvertimeRuleForm({ onCreated }: CreateOvertimeRule
             />
             Approved
           </label>
+
+          {error && <p className={s.errorText}>{error}</p>}
 
           <button className={s.button} disabled={loading}>
             {loading ? "Adding..." : "Add"}

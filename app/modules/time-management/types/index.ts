@@ -1,5 +1,3 @@
-import { BaseEntity } from '@/shared/types';
-
 // ============================================================
 // 
 // ============================================================
@@ -60,7 +58,7 @@ export enum TimeExceptionStatus {
 
 export interface Punch {
   timestamp: string; // ISO string
-  type: 'IN' | 'OUT';
+  type: PunchType;
 }
 
 export interface Holiday {
@@ -341,98 +339,3 @@ export interface UpdateShiftTypeDto {
   name?: string;
   active?: boolean;
 }
-
-/*
-Keeping this for when I need it again
-for... some reason... :)
-
-export interface AttendanceCorrectionRequest {
-  id: string;
-  employeeId: string;
-  attendanceRecord: AttendanceRecord;
-  reason?: string;
-  status: CorrectionRequestStatus;
-}
-
-export interface AttendanceRecord {
-  id: string;
-  employeeId: string;
-  punches: Punch[];
-  totalWorkMinutes: number;
-  hasMissedPunch: boolean;
-  exceptionIds: string[];
-  finalisedForPayroll: boolean;
-}
-
-export interface LatenessRule {
-  id: string;
-  name: string;
-  description?: string;
-  gracePeriodMinutes: number;
-  deductionForEachMinute: number;
-  active: boolean;
-}
-
-export interface NotificationLog {
-  id: string;
-  to: string;
-  type: string;
-  message?: string;
-}
-
-export interface OvertimeRule {
-  id: string;
-  name: string;
-  description?: string;
-  active: boolean;
-  approved: boolean;
-}
-
-export interface ScheduleRule {
-  id: string;
-  name: string;
-  pattern: string;
-  active: boolean;
-}
-
-export interface ShiftAssignment {
-  id: string;
-  employeeId?: string;
-  departmentId?: string;
-  positionId?: string;
-  shiftId: string;
-  scheduleRuleId?: string;
-  startDate: Date;
-  endDate?: Date; //null means ongoing
-  status: ShiftAssignmentStatus;
-}
-
-export interface ShiftType {
-  id: string;
-  name: string;
-  active: boolean;
-}
-
-export interface Shift {
-  id: string;
-  name: string;
-  shiftType: string;
-  startTime: string;
-  endTime: string;
-  punchPolicy: PunchPolicy;
-  graceInMinutes: number;
-  graceOutMinutes: number;
-  requiresApprovalForOvertime: boolean;
-  active: boolean;
-}
-
-export interface TimeException {
-  id: string;
-  employeeId: string;
-  type: TimeExceptionType;
-  attendanceRecordId: string;
-  assignedTo: string; // person responsible for handling the exception
-  status: TimeExceptionStatus;
-  reason?: string;
-}
-  */

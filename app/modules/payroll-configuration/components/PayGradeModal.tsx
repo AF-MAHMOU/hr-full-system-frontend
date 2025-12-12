@@ -23,17 +23,17 @@ interface PayGradeModalProps {
 }
 
 interface FormData {
-  name: string;
+  grade: string;
   description: string;
-  minSalary: string;
-  maxSalary: string;
+  baseSalary: string;
+  grossSalary: string;
   currency: string;
 }
 
 interface FormErrors {
-  name?: string;
-  minSalary?: string;
-  maxSalary?: string;
+  grade?: string;
+  baseSalary?: string;
+  grossSalary?: string;
   general?: string;
 }
 
@@ -45,10 +45,10 @@ const PayGradeModal: React.FC<PayGradeModalProps> = ({
   readOnly = false,
 }) => {
   const [formData, setFormData] = useState<FormData>({
-    name: '',
+    grade: '',
     description: '',
-    minSalary: '',
-    maxSalary: '',
+    baseSalary: '',
+    grossSalary: '',
     currency: 'EGP',
   });
   const [errors, setErrors] = useState<FormErrors>({});
@@ -59,18 +59,18 @@ const PayGradeModal: React.FC<PayGradeModalProps> = ({
   useEffect(() => {
     if (payGrade) {
       setFormData({
-        name: payGrade.name,
+        grade: payGrade.grade,
         description: payGrade.description || '',
-        minSalary: payGrade.minSalary.toString(),
-        maxSalary: payGrade.maxSalary.toString(),
+        baseSalary: payGrade.baseSalary?.toString() || '',
+        grossSalary: payGrade.grossSalary?.toString() || '',
         currency: payGrade.currency,
       });
     } else {
       setFormData({
-        name: '',
+        grade: '',
         description: '',
-        minSalary: '',
-        maxSalary: '',
+        baseSalary: '',
+        grossSalary: '',
         currency: 'EGP',
       });
     }
@@ -80,28 +80,28 @@ const PayGradeModal: React.FC<PayGradeModalProps> = ({
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
 
-    if (!formData.name.trim()) {
-      newErrors.name = 'Name is required';
+    if (!formData.grade.trim()) {
+      newErrors.grade = 'Grade is required';
     }
 
-    if (!formData.minSalary || isNaN(Number(formData.minSalary))) {
-      newErrors.minSalary = 'Valid minimum salary is required';
-    } else if (Number(formData.minSalary) < 0) {
-      newErrors.minSalary = 'Minimum salary cannot be negative';
+    if (!formData.baseSalary || isNaN(Number(formData.baseSalary))) {
+      newErrors.baseSalary = 'Valid minimum salary is required';
+    } else if (Number(formData.baseSalary) < 0) {
+      newErrors.baseSalary = 'Minimum salary cannot be negative';
     }
 
-    if (!formData.maxSalary || isNaN(Number(formData.maxSalary))) {
-      newErrors.maxSalary = 'Valid maximum salary is required';
-    } else if (Number(formData.maxSalary) < 0) {
-      newErrors.maxSalary = 'Maximum salary cannot be negative';
+    if (!formData.grossSalary || isNaN(Number(formData.grossSalary))) {
+      newErrors.grossSalary = 'Valid maximum salary is required';
+    } else if (Number(formData.grossSalary) < 0) {
+      newErrors.grossSalary = 'Maximum salary cannot be negative';
     }
 
     if (
-      formData.minSalary &&
-      formData.maxSalary &&
-      Number(formData.minSalary) > Number(formData.maxSalary)
+      formData.baseSalary &&
+      formData.grossSalary &&
+      Number(formData.baseSalary) > Number(formData.grossSalary)
     ) {
-      newErrors.maxSalary = 'Maximum salary must be greater than minimum salary';
+      newErrors.grossSalary = 'Maximum salary must be greater than minimum salary';
     }
 
     setErrors(newErrors);
@@ -119,10 +119,10 @@ const PayGradeModal: React.FC<PayGradeModalProps> = ({
       setErrors({});
 
       const payload: CreatePayGradeDto | UpdatePayGradeDto = {
-        name: formData.name.trim(),
+        grade: formData.grade.trim(),
         description: formData.description.trim() || undefined,
-        minSalary: Number(formData.minSalary),
-        maxSalary: Number(formData.maxSalary),
+        baseSalary: Number(formData.baseSalary),
+        grossSalary: Number(formData.grossSalary),
         currency: formData.currency,
       };
 
@@ -175,14 +175,14 @@ const PayGradeModal: React.FC<PayGradeModalProps> = ({
               </label>
               <input
                 type="text"
-                name="name"
+                name="grade"
                 className={styles.formInput}
-                value={formData.name}
+                value={formData.grade}
                 onChange={handleChange}
                 placeholder="e.g., Grade A, Senior Level"
                 disabled={readOnly}
               />
-              {errors.name && <span className={styles.formError}>{errors.name}</span>}
+              {errors.grade && <span className={styles.formError}>{errors.grade}</span>}
             </div>
 
             <div className={styles.formGroup}>
@@ -208,16 +208,16 @@ const PayGradeModal: React.FC<PayGradeModalProps> = ({
               </label>
               <input
                 type="number"
-                name="minSalary"
+                name="baseSalary"
                 className={styles.formInput}
-                value={formData.minSalary}
+                value={formData.baseSalary}
                 onChange={handleChange}
                 placeholder="e.g., 5000"
                 min="0"
                 step="100"
                 disabled={readOnly}
               />
-              {errors.minSalary && <span className={styles.formError}>{errors.minSalary}</span>}
+              {errors.baseSalary && <span className={styles.formError}>{errors.baseSalary}</span>}
             </div>
 
             <div className={styles.formGroup}>
@@ -226,16 +226,16 @@ const PayGradeModal: React.FC<PayGradeModalProps> = ({
               </label>
               <input
                 type="number"
-                name="maxSalary"
+                name="grossSalary"
                 className={styles.formInput}
-                value={formData.maxSalary}
+                value={formData.grossSalary}
                 onChange={handleChange}
                 placeholder="e.g., 10000"
                 min="0"
                 step="100"
                 disabled={readOnly}
               />
-              {errors.maxSalary && <span className={styles.formError}>{errors.maxSalary}</span>}
+              {errors.grossSalary && <span className={styles.formError}>{errors.grossSalary}</span>}
             </div>
 
             <div className={`${styles.formGroup} ${styles.formGroupFull}`}>

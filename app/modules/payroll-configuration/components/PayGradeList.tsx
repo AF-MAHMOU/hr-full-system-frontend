@@ -10,6 +10,8 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/shared/components';
+import { useAuth } from '@/shared/hooks/useAuth';
+import { SystemRole } from '@/shared/types/auth';
 import { payGradeApi } from '../api/payrollConfigApi';
 import type { PayGrade, FilterPayGradeDto, ApprovalStatus } from '../types';
 import PayGradeModal from './PayGradeModal';
@@ -20,6 +22,7 @@ interface PayGradeListProps {
 }
 
 const PayGradeList: React.FC<PayGradeListProps> = ({ userRole }) => {
+  const { user } = useAuth();
   const [payGrades, setPayGrades] = useState<PayGrade[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -28,8 +31,12 @@ const PayGradeList: React.FC<PayGradeListProps> = ({ userRole }) => {
   const [selectedPayGrade, setSelectedPayGrade] = useState<PayGrade | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  const isManager = userRole === 'payroll_manager' || userRole === 'hr_manager';
-  const isSpecialist = userRole === 'payroll_specialist';
+  const isPayrollManager = userRole === SystemRole.PAYROLL_MANAGER;
+  const isHRManager = userRole === SystemRole.HR_MANAGER;
+  const isSpecialist = userRole === SystemRole.PAYROLL_SPECIALIST;
+  const canEdit = isSpecialist || isPayrollManager;
+  const canDelete = isSpecialist || isPayrollManager;
+  const canApprove = isPayrollManager;
 
   const fetchPayGrades = useCallback(async () => {
     try {
@@ -84,9 +91,10 @@ const PayGradeList: React.FC<PayGradeListProps> = ({ userRole }) => {
   };
 
   const handleApprove = async (id: string) => {
+    if (!user?.userid) return;
     try {
       setActionLoading(id);
-      await payGradeApi.approve(id);
+      await payGradeApi.approve(id, { approvedBy: user.userid });
       await fetchPayGrades();
     } catch (err: any) {
       alert(err.response?.data?.message || 'Failed to approve pay grade');
@@ -120,10 +128,9 @@ const PayGradeList: React.FC<PayGradeListProps> = ({ userRole }) => {
 
   const getStatusClass = (status: ApprovalStatus): string => {
     const statusClasses: Record<ApprovalStatus, string> = {
-      DRAFT: styles.statusDraft,
-      PENDING_APPROVAL: styles.statusPending,
-      APPROVED: styles.statusApproved,
-      REJECTED: styles.statusRejected,
+      draft: styles.statusDraft,
+      approved: styles.statusApproved,
+      rejected: styles.statusRejected,
     };
     return `${styles.statusBadge} ${statusClasses[status] || ''}`;
   };
@@ -168,10 +175,10 @@ const PayGradeList: React.FC<PayGradeListProps> = ({ userRole }) => {
       <div className={styles.filterBar}>
         <input
           type="text"
-          placeholder="Search by name..."
+          placeholder="Search by grade..."
           className={styles.filterInput}
-          value={filter.name || ''}
-          onChange={(e) => setFilter({ ...filter, name: e.target.value || undefined })}
+          value={filter.grade || ''}
+          onChange={(e) => setFilter({ ...filter, grade: e.target.value || undefined })}
         />
         <select
           className={styles.filterSelect}
@@ -181,10 +188,9 @@ const PayGradeList: React.FC<PayGradeListProps> = ({ userRole }) => {
           }
         >
           <option value="">All Statuses</option>
-          <option value="DRAFT">Draft</option>
-          <option value="PENDING_APPROVAL">Pending Approval</option>
-          <option value="APPROVED">Approved</option>
-          <option value="REJECTED">Rejected</option>
+          <option value="draft">Draft (Pending Approval)</option>
+          <option value="approved">Approved</option>
+          <option value="rejected">Rejected</option>
         </select>
       </div>
 
@@ -208,9 +214,9 @@ const PayGradeList: React.FC<PayGradeListProps> = ({ userRole }) => {
           <table className={styles.table}>
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Salary Range</th>
-                <th>Currency</th>
+                <th>Grade</th>
+                <th>Base Salary</th>
+                <th>Gross Salary</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
@@ -219,27 +225,26 @@ const PayGradeList: React.FC<PayGradeListProps> = ({ userRole }) => {
               {payGrades.map((payGrade) => (
                 <tr key={payGrade._id}>
                   <td>
-                    <strong>{payGrade.name}</strong>
+                    <strong>{payGrade.grade}</strong>
                     {payGrade.description && (
                       <div style={{ fontSize: '0.875rem', color: '#666', marginTop: '0.25rem' }}>
                         {payGrade.description}
                       </div>
                     )}
                   </td>
-                  <td>
-                    <span className={styles.currency}>
-                      {formatCurrency(payGrade.minSalary, payGrade.currency)} -{' '}
-                      {formatCurrency(payGrade.maxSalary, payGrade.currency)}
-                    </span>
+                  <td className={styles.currency}>
+                    {formatCurrency(payGrade.baseSalary, 'EGP')}
                   </td>
-                  <td>{payGrade.currency}</td>
+                  <td className={styles.currency}>
+                    {formatCurrency(payGrade.grossSalary, 'EGP')}
+                  </td>
                   <td>
                     <span className={getStatusClass(payGrade.status)}>{payGrade.status}</span>
                   </td>
                   <td>
                     <div className={styles.actionButtons}>
-                      {/* Edit/Delete only for DRAFT */}
-                      {payGrade.status === 'DRAFT' && isSpecialist && (
+                      {/* Edit/Delete for DRAFT - Specialist or Payroll Manager */}
+                      {payGrade.status === 'draft' && canEdit && (
                         <>
                           <button
                             className={styles.iconButton}
@@ -249,6 +254,10 @@ const PayGradeList: React.FC<PayGradeListProps> = ({ userRole }) => {
                           >
                             ✏️
                           </button>
+                        </>
+                      )}
+                      {payGrade.status === 'draft' && canDelete && (
+                        <>
                           <button
                             className={`${styles.iconButton} ${styles.iconButtonDanger}`}
                             onClick={() => handleDelete(payGrade._id)}
@@ -257,6 +266,10 @@ const PayGradeList: React.FC<PayGradeListProps> = ({ userRole }) => {
                           >
                             🗑️
                           </button>
+                        </>
+                      )}
+                      {payGrade.status === 'draft' && isSpecialist && (
+                        <>
                           <button
                             className={`${styles.iconButton} ${styles.iconButtonSuccess}`}
                             onClick={() => handleSubmit(payGrade._id)}
@@ -268,8 +281,8 @@ const PayGradeList: React.FC<PayGradeListProps> = ({ userRole }) => {
                         </>
                       )}
 
-                      {/* Approve/Reject for PENDING */}
-                      {payGrade.status === 'PENDING_APPROVAL' && isManager && (
+                      {/* Approve/Reject for DRAFT - Payroll Manager only */}
+                      {payGrade.status === 'draft' && canApprove && (
                         <>
                           <button
                             className={`${styles.iconButton} ${styles.iconButtonSuccess}`}
@@ -290,8 +303,8 @@ const PayGradeList: React.FC<PayGradeListProps> = ({ userRole }) => {
                         </>
                       )}
 
-                      {/* View only for APPROVED */}
-                      {payGrade.status === 'APPROVED' && (
+                      {/* View for APPROVED */}
+                      {payGrade.status === 'approved' && (
                         <button
                           className={styles.iconButton}
                           onClick={() => handleEdit(payGrade)}
@@ -302,7 +315,7 @@ const PayGradeList: React.FC<PayGradeListProps> = ({ userRole }) => {
                       )}
 
                       {/* REJECTED - can edit again */}
-                      {payGrade.status === 'REJECTED' && isSpecialist && (
+                      {payGrade.status === 'rejected' && isSpecialist && (
                         <button
                           className={styles.iconButton}
                           onClick={() => handleEdit(payGrade)}
@@ -327,7 +340,7 @@ const PayGradeList: React.FC<PayGradeListProps> = ({ userRole }) => {
         onClose={handleModalClose}
         onSave={handleModalSave}
         payGrade={selectedPayGrade}
-        readOnly={selectedPayGrade?.status === 'APPROVED'}
+        readOnly={selectedPayGrade?.status === 'approved'}
       />
     </div>
   );

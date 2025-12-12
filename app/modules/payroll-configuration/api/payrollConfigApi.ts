@@ -22,6 +22,35 @@ import type {
   CreateTaxRuleDto,
   UpdateTaxRuleDto,
   FilterTaxRuleDto,
+  InsuranceBracket,
+  CreateInsuranceBracketDto,
+  UpdateInsuranceBracketDto,
+  FilterInsuranceBracketDto,
+  PayrollPolicy,
+  CreatePayrollPolicyDto,
+  UpdatePayrollPolicyDto,
+  FilterPayrollPolicyDto,
+  PolicyType,
+  PolicyApplicability,
+  SigningBonus,
+  CreateSigningBonusDto,
+  UpdateSigningBonusDto,
+  FilterSigningBonusDto,
+  PayType,
+  CreatePayTypeDto,
+  UpdatePayTypeDto,
+  FilterPayTypeDto,
+  TerminationBenefit,
+  CreateTerminationBenefitDto,
+  UpdateTerminationBenefitDto,
+  FilterTerminationBenefitDto,
+  CompanySettings,
+  CreateCompanySettingsDto,
+  UpdateCompanySettingsDto,
+  FilterCompanySettingsDto,
+  AuditLog,
+  FilterAuditLogDto,
+  EntityType,
   ApproveDto,
   PendingApprovalsDashboard,
   ApprovedConfigurations,
@@ -295,9 +324,362 @@ export const approvalApi = {
 // ========================== END EMAD ==========================
 
 // ========================== JOHN WASFY ==========================
-// Add Insurance Brackets, Payroll Policies API here
+// Insurance Brackets, Payroll Policies, Signing Bonuses API
+// ========================== JOHN WASFY ==========================
+
+// ==========================================
+// INSURANCE BRACKET API
+// ==========================================
+
+export const insuranceBracketApi = {
+  create: async (data: CreateInsuranceBracketDto): Promise<InsuranceBracket> => {
+    const response = await apiClient.post<InsuranceBracket>(`${BASE_URL}/insurance-brackets`, data);
+    return response.data;
+  },
+
+  getAll: async (filter?: FilterInsuranceBracketDto): Promise<InsuranceBracket[]> => {
+    const response = await apiClient.get<InsuranceBracket[]>(`${BASE_URL}/insurance-brackets`, {
+      params: filter,
+    });
+    return response.data;
+  },
+
+  getApproved: async (): Promise<InsuranceBracket[]> => {
+    const response = await apiClient.get<InsuranceBracket[]>(`${BASE_URL}/insurance-brackets/approved`);
+    return response.data;
+  },
+
+  getById: async (id: string): Promise<InsuranceBracket> => {
+    const response = await apiClient.get<InsuranceBracket>(`${BASE_URL}/insurance-brackets/${id}`);
+    return response.data;
+  },
+
+  update: async (id: string, data: UpdateInsuranceBracketDto): Promise<InsuranceBracket> => {
+    const response = await apiClient.put<InsuranceBracket>(`${BASE_URL}/insurance-brackets/${id}`, data);
+    return response.data;
+  },
+
+  delete: async (id: string): Promise<void> => {
+    await apiClient.delete(`${BASE_URL}/insurance-brackets/${id}`);
+  },
+
+  submit: async (id: string): Promise<InsuranceBracket> => {
+    const response = await apiClient.post<InsuranceBracket>(`${BASE_URL}/insurance-brackets/${id}/submit`);
+    return response.data;
+  },
+
+  approve: async (id: string, data?: ApproveDto): Promise<InsuranceBracket> => {
+    const response = await apiClient.post<InsuranceBracket>(`${BASE_URL}/insurance-brackets/${id}/approve`, data);
+    return response.data;
+  },
+
+  reject: async (id: string): Promise<InsuranceBracket> => {
+    const response = await apiClient.post<InsuranceBracket>(`${BASE_URL}/insurance-brackets/${id}/reject`);
+    return response.data;
+  },
+};
+
+// ==========================================
+// PAYROLL POLICY API
+// ==========================================
+
+export const payrollPolicyApi = {
+  create: async (data: CreatePayrollPolicyDto): Promise<PayrollPolicy> => {
+    const response = await apiClient.post<PayrollPolicy>(`${BASE_URL}/payroll-policies`, data);
+    return response.data;
+  },
+
+  getAll: async (filter?: FilterPayrollPolicyDto): Promise<PayrollPolicy[]> => {
+    const response = await apiClient.get<PayrollPolicy[]>(`${BASE_URL}/payroll-policies`, {
+      params: filter,
+    });
+    return response.data;
+  },
+
+  getApproved: async (): Promise<PayrollPolicy[]> => {
+    const response = await apiClient.get<PayrollPolicy[]>(`${BASE_URL}/payroll-policies/approved`);
+    return response.data;
+  },
+
+  getByType: async (type: PolicyType): Promise<PayrollPolicy[]> => {
+    const response = await apiClient.get<PayrollPolicy[]>(`${BASE_URL}/payroll-policies/type/${type}`);
+    return response.data;
+  },
+
+  getByApplicability: async (applicability: PolicyApplicability): Promise<PayrollPolicy[]> => {
+    const response = await apiClient.get<PayrollPolicy[]>(`${BASE_URL}/payroll-policies/applicability/${applicability}`);
+    return response.data;
+  },
+
+  getById: async (id: string): Promise<PayrollPolicy> => {
+    const response = await apiClient.get<PayrollPolicy>(`${BASE_URL}/payroll-policies/${id}`);
+    return response.data;
+  },
+
+  update: async (id: string, data: UpdatePayrollPolicyDto): Promise<PayrollPolicy> => {
+    const response = await apiClient.put<PayrollPolicy>(`${BASE_URL}/payroll-policies/${id}`, data);
+    return response.data;
+  },
+
+  delete: async (id: string): Promise<void> => {
+    await apiClient.delete(`${BASE_URL}/payroll-policies/${id}`);
+  },
+
+  submit: async (id: string): Promise<PayrollPolicy> => {
+    const response = await apiClient.post<PayrollPolicy>(`${BASE_URL}/payroll-policies/${id}/submit`);
+    return response.data;
+  },
+
+  approve: async (id: string, data?: ApproveDto): Promise<PayrollPolicy> => {
+    const response = await apiClient.post<PayrollPolicy>(`${BASE_URL}/payroll-policies/${id}/approve`, data);
+    return response.data;
+  },
+
+  reject: async (id: string): Promise<PayrollPolicy> => {
+    const response = await apiClient.post<PayrollPolicy>(`${BASE_URL}/payroll-policies/${id}/reject`);
+    return response.data;
+  },
+};
+
+// ==========================================
+// SIGNING BONUS API
+// ==========================================
+
+export const signingBonusApi = {
+  create: async (data: CreateSigningBonusDto): Promise<SigningBonus> => {
+    const response = await apiClient.post<SigningBonus>(`${BASE_URL}/signing-bonuses`, data);
+    return response.data;
+  },
+
+  getAll: async (filter?: FilterSigningBonusDto): Promise<SigningBonus[]> => {
+    const response = await apiClient.get<SigningBonus[]>(`${BASE_URL}/signing-bonuses`, {
+      params: filter,
+    });
+    return response.data;
+  },
+
+  getApproved: async (): Promise<SigningBonus[]> => {
+    const response = await apiClient.get<SigningBonus[]>(`${BASE_URL}/signing-bonuses/approved`);
+    return response.data;
+  },
+
+  getByPosition: async (positionName: string): Promise<SigningBonus> => {
+    const response = await apiClient.get<SigningBonus>(`${BASE_URL}/signing-bonuses/position/${encodeURIComponent(positionName)}`);
+    return response.data;
+  },
+
+  getById: async (id: string): Promise<SigningBonus> => {
+    const response = await apiClient.get<SigningBonus>(`${BASE_URL}/signing-bonuses/${id}`);
+    return response.data;
+  },
+
+  update: async (id: string, data: UpdateSigningBonusDto): Promise<SigningBonus> => {
+    const response = await apiClient.put<SigningBonus>(`${BASE_URL}/signing-bonuses/${id}`, data);
+    return response.data;
+  },
+
+  delete: async (id: string): Promise<void> => {
+    await apiClient.delete(`${BASE_URL}/signing-bonuses/${id}`);
+  },
+
+  submit: async (id: string): Promise<SigningBonus> => {
+    const response = await apiClient.post<SigningBonus>(`${BASE_URL}/signing-bonuses/${id}/submit`);
+    return response.data;
+  },
+
+  approve: async (id: string, data?: ApproveDto): Promise<SigningBonus> => {
+    const response = await apiClient.post<SigningBonus>(`${BASE_URL}/signing-bonuses/${id}/approve`, data);
+    return response.data;
+  },
+
+  reject: async (id: string): Promise<SigningBonus> => {
+    const response = await apiClient.post<SigningBonus>(`${BASE_URL}/signing-bonuses/${id}/reject`);
+    return response.data;
+  },
+};
+
 // ========================== END JOHN WASFY ==========================
 
 // ========================== ESLAM ==========================
-// Add Signing Bonus, Pay Types, Termination Benefits, Company Settings, Audit Logs API here
+// Pay Types, Termination Benefits, Company Settings, Audit Logs API
+// ========================== ESLAM ==========================
+
+// ==========================================
+// PAY TYPE API
+// ==========================================
+
+export const payTypeApi = {
+  create: async (data: CreatePayTypeDto): Promise<PayType> => {
+    const response = await apiClient.post<PayType>(`${BASE_URL}/pay-types`, data);
+    return response.data;
+  },
+
+  getAll: async (filter?: FilterPayTypeDto): Promise<PayType[]> => {
+    const response = await apiClient.get<PayType[]>(`${BASE_URL}/pay-types`, {
+      params: filter,
+    });
+    return response.data;
+  },
+
+  getApproved: async (): Promise<PayType[]> => {
+    const response = await apiClient.get<PayType[]>(`${BASE_URL}/pay-types/approved`);
+    return response.data;
+  },
+
+  getById: async (id: string): Promise<PayType> => {
+    const response = await apiClient.get<PayType>(`${BASE_URL}/pay-types/${id}`);
+    return response.data;
+  },
+
+  update: async (id: string, data: UpdatePayTypeDto): Promise<PayType> => {
+    const response = await apiClient.put<PayType>(`${BASE_URL}/pay-types/${id}`, data);
+    return response.data;
+  },
+
+  delete: async (id: string, deletedBy?: string): Promise<void> => {
+    await apiClient.delete(`${BASE_URL}/pay-types/${id}`, {
+      data: deletedBy ? { deletedBy } : undefined,
+    });
+  },
+
+  submit: async (id: string): Promise<PayType> => {
+    const response = await apiClient.post<PayType>(`${BASE_URL}/pay-types/${id}/submit`);
+    return response.data;
+  },
+
+  approve: async (id: string, data?: ApproveDto): Promise<PayType> => {
+    const response = await apiClient.post<PayType>(`${BASE_URL}/pay-types/${id}/approve`, data);
+    return response.data;
+  },
+
+  reject: async (id: string): Promise<PayType> => {
+    const response = await apiClient.post<PayType>(`${BASE_URL}/pay-types/${id}/reject`);
+    return response.data;
+  },
+};
+
+// ==========================================
+// TERMINATION BENEFIT API
+// ==========================================
+
+export const terminationBenefitApi = {
+  create: async (data: CreateTerminationBenefitDto): Promise<TerminationBenefit> => {
+    const response = await apiClient.post<TerminationBenefit>(`${BASE_URL}/termination-benefits`, data);
+    return response.data;
+  },
+
+  getAll: async (filter?: FilterTerminationBenefitDto): Promise<TerminationBenefit[]> => {
+    const response = await apiClient.get<TerminationBenefit[]>(`${BASE_URL}/termination-benefits`, {
+      params: filter,
+    });
+    return response.data;
+  },
+
+  getApproved: async (): Promise<TerminationBenefit[]> => {
+    const response = await apiClient.get<TerminationBenefit[]>(`${BASE_URL}/termination-benefits/approved`);
+    return response.data;
+  },
+
+  getById: async (id: string): Promise<TerminationBenefit> => {
+    const response = await apiClient.get<TerminationBenefit>(`${BASE_URL}/termination-benefits/${id}`);
+    return response.data;
+  },
+
+  update: async (id: string, data: UpdateTerminationBenefitDto): Promise<TerminationBenefit> => {
+    const response = await apiClient.put<TerminationBenefit>(`${BASE_URL}/termination-benefits/${id}`, data);
+    return response.data;
+  },
+
+  delete: async (id: string, deletedBy?: string): Promise<void> => {
+    await apiClient.delete(`${BASE_URL}/termination-benefits/${id}`, {
+      data: deletedBy ? { deletedBy } : undefined,
+    });
+  },
+
+  submit: async (id: string): Promise<TerminationBenefit> => {
+    const response = await apiClient.post<TerminationBenefit>(`${BASE_URL}/termination-benefits/${id}/submit`);
+    return response.data;
+  },
+
+  approve: async (id: string, data?: ApproveDto): Promise<TerminationBenefit> => {
+    const response = await apiClient.post<TerminationBenefit>(`${BASE_URL}/termination-benefits/${id}/approve`, data);
+    return response.data;
+  },
+
+  reject: async (id: string): Promise<TerminationBenefit> => {
+    const response = await apiClient.post<TerminationBenefit>(`${BASE_URL}/termination-benefits/${id}/reject`);
+    return response.data;
+  },
+};
+
+// ==========================================
+// COMPANY SETTINGS API
+// ==========================================
+
+export const companySettingsApi = {
+  create: async (data: CreateCompanySettingsDto): Promise<CompanySettings> => {
+    const response = await apiClient.post<CompanySettings>(`${BASE_URL}/company-settings`, data);
+    return response.data;
+  },
+
+  getAll: async (filter?: FilterCompanySettingsDto): Promise<CompanySettings[]> => {
+    const response = await apiClient.get<CompanySettings[]>(`${BASE_URL}/company-settings`, {
+      params: filter,
+    });
+    return response.data;
+  },
+
+  getActive: async (): Promise<CompanySettings> => {
+    const response = await apiClient.get<CompanySettings>(`${BASE_URL}/company-settings/active`);
+    return response.data;
+  },
+
+  getById: async (id: string): Promise<CompanySettings> => {
+    const response = await apiClient.get<CompanySettings>(`${BASE_URL}/company-settings/${id}`);
+    return response.data;
+  },
+
+  update: async (id: string, data: UpdateCompanySettingsDto): Promise<CompanySettings> => {
+    const response = await apiClient.put<CompanySettings>(`${BASE_URL}/company-settings/${id}`, data);
+    return response.data;
+  },
+
+  delete: async (id: string): Promise<void> => {
+    await apiClient.delete(`${BASE_URL}/company-settings/${id}`);
+  },
+
+  submit: async (id: string): Promise<CompanySettings> => {
+    const response = await apiClient.post<CompanySettings>(`${BASE_URL}/company-settings/${id}/submit`);
+    return response.data;
+  },
+
+  approve: async (id: string, data?: ApproveDto): Promise<CompanySettings> => {
+    const response = await apiClient.post<CompanySettings>(`${BASE_URL}/company-settings/${id}/approve`, data);
+    return response.data;
+  },
+
+  reject: async (id: string): Promise<CompanySettings> => {
+    const response = await apiClient.post<CompanySettings>(`${BASE_URL}/company-settings/${id}/reject`);
+    return response.data;
+  },
+};
+
+// ==========================================
+// AUDIT LOG API
+// ==========================================
+
+export const auditLogApi = {
+  getAll: async (filter?: FilterAuditLogDto): Promise<AuditLog[]> => {
+    const response = await apiClient.get<AuditLog[]>(`${BASE_URL}/audit-logs`, {
+      params: filter,
+    });
+    return response.data;
+  },
+
+  getByEntity: async (entityType: EntityType, entityId: string): Promise<AuditLog[]> => {
+    const response = await apiClient.get<AuditLog[]>(`${BASE_URL}/audit-logs/entity/${entityType}/${entityId}`);
+    return response.data;
+  },
+};
+
 // ========================== END ESLAM ==========================

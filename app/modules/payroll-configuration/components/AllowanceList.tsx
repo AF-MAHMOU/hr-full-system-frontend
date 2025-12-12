@@ -10,6 +10,9 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/shared/components';
+import { useAuth } from '@/shared/hooks/useAuth';
+import { formatCurrency } from '@/shared/utils/format';
+import { SystemRole } from '@/shared/types/auth';
 import { allowanceApi } from '../api/payrollConfigApi';
 import type {
   Allowance,
@@ -26,6 +29,7 @@ interface AllowanceListProps {
 }
 
 const AllowanceList: React.FC<AllowanceListProps> = ({ userRole }) => {
+  const { user } = useAuth();
   const [allowances, setAllowances] = useState<Allowance[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -34,8 +38,12 @@ const AllowanceList: React.FC<AllowanceListProps> = ({ userRole }) => {
   const [selectedAllowance, setSelectedAllowance] = useState<Allowance | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  const isManager = userRole === 'payroll_manager' || userRole === 'hr_manager';
-  const isSpecialist = userRole === 'payroll_specialist';
+  const isPayrollManager = userRole === SystemRole.PAYROLL_MANAGER;
+  const isHRManager = userRole === SystemRole.HR_MANAGER;
+  const isSpecialist = userRole === SystemRole.PAYROLL_SPECIALIST;
+  const canEdit = isSpecialist || isPayrollManager;
+  const canDelete = isSpecialist || isPayrollManager;
+  const canApprove = isPayrollManager;
 
   const fetchAllowances = useCallback(async () => {
     try {
@@ -90,9 +98,10 @@ const AllowanceList: React.FC<AllowanceListProps> = ({ userRole }) => {
   };
 
   const handleApprove = async (id: string) => {
+    if (!user?.userid) return;
     try {
       setActionLoading(id);
-      await allowanceApi.approve(id);
+      await allowanceApi.approve(id, { approvedBy: user.userid });
       await fetchAllowances();
     } catch (err: any) {
       alert(err.response?.data?.message || 'Failed to approve allowance');
@@ -126,34 +135,14 @@ const AllowanceList: React.FC<AllowanceListProps> = ({ userRole }) => {
 
   const getStatusClass = (status: ApprovalStatus): string => {
     const statusClasses: Record<ApprovalStatus, string> = {
-      DRAFT: styles.statusDraft,
-      PENDING_APPROVAL: styles.statusPending,
-      APPROVED: styles.statusApproved,
-      REJECTED: styles.statusRejected,
+      draft: styles.statusDraft,
+      approved: styles.statusApproved,
+      rejected: styles.statusRejected,
     };
     return `${styles.statusBadge} ${statusClasses[status] || ''}`;
   };
 
-  const formatValue = (allowance: Allowance): string => {
-    if (allowance.type === 'PERCENTAGE') {
-      return `${allowance.value}%`;
-    }
-    return new Intl.NumberFormat('en-EG', {
-      style: 'currency',
-      currency: 'EGP',
-      minimumFractionDigits: 0,
-    }).format(allowance.value);
-  };
 
-  const formatFrequency = (frequency: AllowanceFrequency): string => {
-    const labels: Record<AllowanceFrequency, string> = {
-      MONTHLY: 'Monthly',
-      QUARTERLY: 'Quarterly',
-      ANNUALLY: 'Annually',
-      ONE_TIME: 'One-Time',
-    };
-    return labels[frequency] || frequency;
-  };
 
   if (loading) {
     return <div className={styles.loading}>Loading allowances...</div>;
@@ -199,22 +188,11 @@ const AllowanceList: React.FC<AllowanceListProps> = ({ userRole }) => {
           }
         >
           <option value="">All Statuses</option>
-          <option value="DRAFT">Draft</option>
-          <option value="PENDING_APPROVAL">Pending Approval</option>
-          <option value="APPROVED">Approved</option>
-          <option value="REJECTED">Rejected</option>
+          <option value="draft">Draft (Pending Approval)</option>
+          <option value="approved">Approved</option>
+          <option value="rejected">Rejected</option>
         </select>
-        <select
-          className={styles.filterSelect}
-          value={filter.type || ''}
-          onChange={(e) =>
-            setFilter({ ...filter, type: (e.target.value as AllowanceType) || undefined })
-          }
-        >
-          <option value="">All Types</option>
-          <option value="FIXED">Fixed Amount</option>
-          <option value="PERCENTAGE">Percentage</option>
-        </select>
+
       </div>
 
       {/* Data Table */}
@@ -238,10 +216,7 @@ const AllowanceList: React.FC<AllowanceListProps> = ({ userRole }) => {
             <thead>
               <tr>
                 <th>Name</th>
-                <th>Type</th>
-                <th>Value</th>
-                <th>Frequency</th>
-                <th>Taxable</th>
+                <th>Amount</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
@@ -251,23 +226,15 @@ const AllowanceList: React.FC<AllowanceListProps> = ({ userRole }) => {
                 <tr key={allowance._id}>
                   <td>
                     <strong>{allowance.name}</strong>
-                    {allowance.description && (
-                      <div style={{ fontSize: '0.875rem', color: '#666', marginTop: '0.25rem' }}>
-                        {allowance.description}
-                      </div>
-                    )}
                   </td>
-                  <td>{allowance.type === 'FIXED' ? 'Fixed' : 'Percentage'}</td>
-                  <td className={styles.currency}>{formatValue(allowance)}</td>
-                  <td>{formatFrequency(allowance.frequency)}</td>
-                  <td>{allowance.isTaxable ? '✓ Yes' : '✗ No'}</td>
+                  <td className={styles.currency}>{formatCurrency(allowance.amount, 'EGP')}</td>
                   <td>
                     <span className={getStatusClass(allowance.status)}>{allowance.status}</span>
                   </td>
                   <td>
                     <div className={styles.actionButtons}>
                       {/* Edit/Delete only for DRAFT */}
-                      {allowance.status === 'DRAFT' && isSpecialist && (
+                      {allowance.status === 'draft' && isSpecialist && (
                         <>
                           <button
                             className={styles.iconButton}
@@ -297,7 +264,7 @@ const AllowanceList: React.FC<AllowanceListProps> = ({ userRole }) => {
                       )}
 
                       {/* Approve/Reject for PENDING */}
-                      {allowance.status === 'PENDING_APPROVAL' && isManager && (
+                      {allowance.status === 'draft' && isManager && (
                         <>
                           <button
                             className={`${styles.iconButton} ${styles.iconButtonSuccess}`}
@@ -319,7 +286,7 @@ const AllowanceList: React.FC<AllowanceListProps> = ({ userRole }) => {
                       )}
 
                       {/* View only for APPROVED */}
-                      {allowance.status === 'APPROVED' && (
+                      {allowance.status === 'approved' && (
                         <button
                           className={styles.iconButton}
                           onClick={() => handleEdit(allowance)}
@@ -330,7 +297,7 @@ const AllowanceList: React.FC<AllowanceListProps> = ({ userRole }) => {
                       )}
 
                       {/* REJECTED - can edit again */}
-                      {allowance.status === 'REJECTED' && isSpecialist && (
+                      {allowance.status === 'rejected' && isSpecialist && (
                         <button
                           className={styles.iconButton}
                           onClick={() => handleEdit(allowance)}
@@ -355,7 +322,7 @@ const AllowanceList: React.FC<AllowanceListProps> = ({ userRole }) => {
         onClose={handleModalClose}
         onSave={handleModalSave}
         allowance={selectedAllowance}
-        readOnly={selectedAllowance?.status === 'APPROVED'}
+        readOnly={selectedAllowance?.status === 'approved'}
       />
     </div>
   );

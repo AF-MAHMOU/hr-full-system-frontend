@@ -32,17 +32,12 @@ interface AllowanceModalProps {
 
 interface FormData {
   name: string;
-  description: string;
-  type: AllowanceType;
-  value: string;
-  frequency: AllowanceFrequency;
-  isTaxable: boolean;
-  isActive: boolean;
+  amount: string;
 }
 
 interface FormErrors {
   name?: string;
-  value?: string;
+  amount?: string;
   general?: string;
 }
 
@@ -55,12 +50,7 @@ const AllowanceModal: React.FC<AllowanceModalProps> = ({
 }) => {
   const [formData, setFormData] = useState<FormData>({
     name: '',
-    description: '',
-    type: AllowanceType.FIXED,
-    value: '',
-    frequency: AllowanceFrequency.MONTHLY,
-    isTaxable: true,
-    isActive: true,
+    amount: '',
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [loading, setLoading] = useState(false);
@@ -71,22 +61,12 @@ const AllowanceModal: React.FC<AllowanceModalProps> = ({
     if (allowance) {
       setFormData({
         name: allowance.name,
-        description: allowance.description || '',
-        type: allowance.type,
-        value: allowance.value.toString(),
-        frequency: allowance.frequency,
-        isTaxable: allowance.isTaxable,
-        isActive: allowance.isActive,
+        amount: allowance.amount.toString() || '',
       });
     } else {
       setFormData({
         name: '',
-        description: '',
-        type: AllowanceType.FIXED,
-        value: '',
-        frequency: AllowanceFrequency.MONTHLY,
-        isTaxable: true,
-        isActive: true,
+        amount: '',
       });
     }
     setErrors({});
@@ -99,12 +79,10 @@ const AllowanceModal: React.FC<AllowanceModalProps> = ({
       newErrors.name = 'Name is required';
     }
 
-    if (!formData.value || isNaN(Number(formData.value))) {
-      newErrors.value = 'Valid value is required';
-    } else if (Number(formData.value) < 0) {
-      newErrors.value = 'Value cannot be negative';
-    } else if (formData.type === 'PERCENTAGE' && Number(formData.value) > 100) {
-      newErrors.value = 'Percentage cannot exceed 100%';
+    if (!formData.amount || isNaN(Number(formData.amount))) {
+      newErrors.amount = 'Valid amount is required';
+    } else if (Number(formData.amount) < 0) {
+      newErrors.amount = 'Amount cannot be negative';
     }
 
     setErrors(newErrors);
@@ -123,12 +101,7 @@ const AllowanceModal: React.FC<AllowanceModalProps> = ({
 
       const payload: CreateAllowanceDto | UpdateAllowanceDto = {
         name: formData.name.trim(),
-        description: formData.description.trim() || undefined,
-        type: formData.type,
-        value: Number(formData.value),
-        frequency: formData.frequency,
-        isTaxable: formData.isTaxable,
-        isActive: formData.isActive,
+        amount: parseFloat(formData.amount),
       };
 
       if (isEditing && allowance) {
@@ -197,102 +170,20 @@ const AllowanceModal: React.FC<AllowanceModalProps> = ({
 
             <div className={styles.formGroup}>
               <label className={styles.formLabel}>
-                Type <span>*</span>
-              </label>
-              <select
-                name="type"
-                className={styles.formSelect}
-                value={formData.type}
-                onChange={handleChange}
-                disabled={readOnly}
-              >
-                <option value="FIXED">Fixed Amount</option>
-                <option value="PERCENTAGE">Percentage of Salary</option>
-              </select>
-            </div>
-
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel}>
-                Value <span>*</span>
+                Amount (EGP) <span>*</span>
               </label>
               <input
                 type="number"
-                name="value"
+                name="amount"
                 className={styles.formInput}
-                value={formData.value}
+                value={formData.amount}
                 onChange={handleChange}
-                placeholder={formData.type === 'PERCENTAGE' ? 'e.g., 10' : 'e.g., 1000'}
+                placeholder="e.g., 1000"
                 min="0"
-                max={formData.type === 'PERCENTAGE' ? '100' : undefined}
-                step={formData.type === 'PERCENTAGE' ? '0.5' : '100'}
+                step="0.01"
                 disabled={readOnly}
               />
-              <span style={{ fontSize: '0.75rem', color: '#666' }}>
-                {formData.type === 'PERCENTAGE' ? 'Percentage (%)' : 'Amount (EGP)'}
-              </span>
-              {errors.value && <span className={styles.formError}>{errors.value}</span>}
-            </div>
-
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel}>
-                Frequency <span>*</span>
-              </label>
-              <select
-                name="frequency"
-                className={styles.formSelect}
-                value={formData.frequency}
-                onChange={handleChange}
-                disabled={readOnly}
-              >
-                <option value="MONTHLY">Monthly</option>
-                <option value="QUARTERLY">Quarterly</option>
-                <option value="ANNUALLY">Annually</option>
-                <option value="ONE_TIME">One-Time</option>
-              </select>
-            </div>
-
-            <div className={styles.formGroup}>
-              <label className={styles.formCheckbox}>
-                <input
-                  type="checkbox"
-                  name="isTaxable"
-                  checked={formData.isTaxable}
-                  onChange={handleChange}
-                  disabled={readOnly}
-                />
-                <span>Taxable Allowance</span>
-              </label>
-              <span style={{ fontSize: '0.75rem', color: '#666' }}>
-                Subject to income tax deduction
-              </span>
-            </div>
-
-            <div className={styles.formGroup}>
-              <label className={styles.formCheckbox}>
-                <input
-                  type="checkbox"
-                  name="isActive"
-                  checked={formData.isActive}
-                  onChange={handleChange}
-                  disabled={readOnly}
-                />
-                <span>Active</span>
-              </label>
-              <span style={{ fontSize: '0.75rem', color: '#666' }}>
-                Available for payroll calculation
-              </span>
-            </div>
-
-            <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
-              <label className={styles.formLabel}>Description</label>
-              <textarea
-                name="description"
-                className={styles.formTextarea}
-                value={formData.description}
-                onChange={handleChange}
-                placeholder="Optional description for this allowance..."
-                disabled={readOnly}
-              />
+              {errors.amount && <span className={styles.formError}>{errors.amount}</span>}
             </div>
           </div>
 

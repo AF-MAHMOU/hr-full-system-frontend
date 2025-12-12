@@ -10,16 +10,20 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/shared/components';
+import { useAuth } from '@/shared/hooks/useAuth';
+import { SystemRole } from '@/shared/types/auth';
 import { taxRuleApi } from '../api/payrollConfigApi';
 import type { TaxRule, FilterTaxRuleDto, ApprovalStatus, TaxCalculationType } from '../types';
 import TaxRuleModal from './TaxRuleModal';
 import styles from '../page.module.css';
+import { formatCurrency } from '@/shared/utils/format';
 
 interface TaxRuleListProps {
   userRole?: string;
 }
 
 const TaxRuleList: React.FC<TaxRuleListProps> = ({ userRole }) => {
+  const { user } = useAuth();
   const [taxRules, setTaxRules] = useState<TaxRule[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -28,8 +32,8 @@ const TaxRuleList: React.FC<TaxRuleListProps> = ({ userRole }) => {
   const [selectedTaxRule, setSelectedTaxRule] = useState<TaxRule | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  const isManager = userRole === 'payroll_manager' || userRole === 'hr_manager';
-  const isSpecialist = userRole === 'payroll_specialist' || userRole === 'legal_policy_admin';
+  const isManager = userRole === SystemRole.PAYROLL_MANAGER || userRole === SystemRole.HR_MANAGER;
+  const isSpecialist = userRole === SystemRole.PAYROLL_SPECIALIST || userRole === SystemRole.LEGAL_POLICY_ADMIN;
 
   const fetchTaxRules = useCallback(async () => {
     try {
@@ -84,9 +88,10 @@ const TaxRuleList: React.FC<TaxRuleListProps> = ({ userRole }) => {
   };
 
   const handleApprove = async (id: string) => {
+    if (!user?.userid) return;
     try {
       setActionLoading(id);
-      await taxRuleApi.approve(id);
+      await taxRuleApi.approve(id, { approvedBy: user.userid });
       await fetchTaxRules();
     } catch (err: any) {
       alert(err.response?.data?.message || 'Failed to approve tax rule');
@@ -120,10 +125,9 @@ const TaxRuleList: React.FC<TaxRuleListProps> = ({ userRole }) => {
 
   const getStatusClass = (status: ApprovalStatus): string => {
     const statusClasses: Record<ApprovalStatus, string> = {
-      DRAFT: styles.statusDraft,
-      PENDING_APPROVAL: styles.statusPending,
-      APPROVED: styles.statusApproved,
-      REJECTED: styles.statusRejected,
+      draft: styles.statusDraft,
+      approved: styles.statusApproved,
+      rejected: styles.statusRejected,
     };
     return `${styles.statusBadge} ${statusClasses[status] || ''}`;
   };
@@ -189,25 +193,9 @@ const TaxRuleList: React.FC<TaxRuleListProps> = ({ userRole }) => {
           }
         >
           <option value="">All Statuses</option>
-          <option value="DRAFT">Draft</option>
-          <option value="PENDING_APPROVAL">Pending Approval</option>
-          <option value="APPROVED">Approved</option>
-          <option value="REJECTED">Rejected</option>
-        </select>
-        <select
-          className={styles.filterSelect}
-          value={filter.calculationType || ''}
-          onChange={(e) =>
-            setFilter({
-              ...filter,
-              calculationType: (e.target.value as TaxCalculationType) || undefined,
-            })
-          }
-        >
-          <option value="">All Calculation Types</option>
-          <option value="FLAT">Flat Rate</option>
-          <option value="PROGRESSIVE">Progressive</option>
-          <option value="TIERED">Tiered Brackets</option>
+          <option value="draft">Draft (Pending Approval)</option>
+          <option value="approved">Approved</option>
+          <option value="rejected">Rejected</option>
         </select>
       </div>
 
@@ -232,10 +220,9 @@ const TaxRuleList: React.FC<TaxRuleListProps> = ({ userRole }) => {
             <thead>
               <tr>
                 <th>Name</th>
-                <th>Calculation Type</th>
-                <th>Rate / Brackets</th>
-                <th>Effective Period</th>
-                <th>Active</th>
+                <th>Tax Rate (%)</th>
+                <th>Min Salary</th>
+                <th>Max Salary</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
@@ -251,28 +238,16 @@ const TaxRuleList: React.FC<TaxRuleListProps> = ({ userRole }) => {
                       </div>
                     )}
                   </td>
-                  <td>{formatCalculationType(taxRule.calculationType)}</td>
-                  <td>
-                    {taxRule.calculationType === 'FLAT' && taxRule.rate !== undefined ? (
-                      <span className={styles.currency}>{taxRule.rate}%</span>
-                    ) : taxRule.brackets && taxRule.brackets.length > 0 ? (
-                      <span>{taxRule.brackets.length} bracket(s)</span>
-                    ) : (
-                      '-'
-                    )}
-                  </td>
-                  <td>
-                    {formatDate(taxRule.effectiveFrom)}
-                    {taxRule.effectiveTo ? ` - ${formatDate(taxRule.effectiveTo)}` : ' - Present'}
-                  </td>
-                  <td>{taxRule.isActive ? '✓ Active' : '✗ Inactive'}</td>
+                  <td>{taxRule.rate !== undefined ? `${taxRule.rate}%` : '-'}</td>
+                  <td className={styles.currency}>{formatCurrency(taxRule.minSalary, 'EGP')}</td>
+                  <td className={styles.currency}>{taxRule.maxSalary ? formatCurrency(taxRule.maxSalary, 'EGP') : 'No limit'}</td>
                   <td>
                     <span className={getStatusClass(taxRule.status)}>{taxRule.status}</span>
                   </td>
                   <td>
                     <div className={styles.actionButtons}>
                       {/* Edit/Delete only for DRAFT */}
-                      {taxRule.status === 'DRAFT' && isSpecialist && (
+                      {taxRule.status === 'draft' && isSpecialist && (
                         <>
                           <button
                             className={styles.iconButton}
@@ -302,7 +277,7 @@ const TaxRuleList: React.FC<TaxRuleListProps> = ({ userRole }) => {
                       )}
 
                       {/* Approve/Reject for PENDING */}
-                      {taxRule.status === 'PENDING_APPROVAL' && isManager && (
+                      {taxRule.status === 'draft' && isManager && (
                         <>
                           <button
                             className={`${styles.iconButton} ${styles.iconButtonSuccess}`}
@@ -324,7 +299,7 @@ const TaxRuleList: React.FC<TaxRuleListProps> = ({ userRole }) => {
                       )}
 
                       {/* View only for APPROVED */}
-                      {taxRule.status === 'APPROVED' && (
+                      {taxRule.status === 'approved' && (
                         <button
                           className={styles.iconButton}
                           onClick={() => handleEdit(taxRule)}
@@ -335,7 +310,7 @@ const TaxRuleList: React.FC<TaxRuleListProps> = ({ userRole }) => {
                       )}
 
                       {/* REJECTED - can edit again */}
-                      {taxRule.status === 'REJECTED' && isSpecialist && (
+                      {taxRule.status === 'rejected' && isSpecialist && (
                         <button
                           className={styles.iconButton}
                           onClick={() => handleEdit(taxRule)}
@@ -360,7 +335,7 @@ const TaxRuleList: React.FC<TaxRuleListProps> = ({ userRole }) => {
         onClose={handleModalClose}
         onSave={handleModalSave}
         taxRule={selectedTaxRule}
-        readOnly={selectedTaxRule?.status === 'APPROVED'}
+        readOnly={selectedTaxRule?.status === 'approved'}
       />
     </div>
   );

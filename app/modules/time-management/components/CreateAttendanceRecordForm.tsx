@@ -17,8 +17,6 @@ export default function CreateAttendanceRecordForm({ onCreated }: CreateAttendan
   const [employees, setEmployees] = useState<EmployeeProfile[]>([]);
   const [employeeId, setEmployeeId] = useState("");
   const [punches, setPunches] = useState<Punch[]>([]);
-  const [totalWorkMinutes, setTotalWorkMinutes] = useState<number | undefined>(0);
-  const [hasMissedPunch, setHasMissedPunch] = useState<boolean>(false);
   const [finalisedForPayroll, setFinalisedForPayroll] = useState<boolean>(false);
   const [loading, setLoading] = useState(false);
   const [selectedTimeExceptionId, setSelectedTimeExceptionId] = useState("");
@@ -38,8 +36,8 @@ export default function CreateAttendanceRecordForm({ onCreated }: CreateAttendan
     await createAttendanceRecord({
       employeeId,
       punches: punches.length > 0 ? punches : undefined,
-      totalWorkMinutes,
-      hasMissedPunch,
+      totalWorkMinutes: 0,
+      hasMissedPunch: false,
       exceptionIds: exceptionIds.length > 0 ? exceptionIds : undefined,
       finalisedForPayroll
     });
@@ -47,8 +45,6 @@ export default function CreateAttendanceRecordForm({ onCreated }: CreateAttendan
       // Reset form fields
       setEmployeeId("");
       setPunches([]);
-      setTotalWorkMinutes(undefined);
-      setHasMissedPunch(false);
       setExceptionIds("");
       setFinalisedForPayroll(false);
 
@@ -125,14 +121,7 @@ export default function CreateAttendanceRecordForm({ onCreated }: CreateAttendan
             </button>
           </div>
 
-
-          <label className={s.description}>Total Work Minutes (optional)</label>
-          <input type="number" value={totalWorkMinutes} onChange={e => setTotalWorkMinutes(Number(e.target.value))} />
-
-          <label className={s.description}>Has Missed Punch</label>
-          <input type="checkbox" checked={hasMissedPunch} onChange={e => setHasMissedPunch(e.target.checked)} />
-
-          <label className={s.description}>Time Exceptions (optional)</label>
+          <label className={s.description}>Time Exceptions</label>
           <select
             className={s.select}
             value={selectedTimeExceptionId}
@@ -148,7 +137,6 @@ export default function CreateAttendanceRecordForm({ onCreated }: CreateAttendan
               </option>
             ))}
           </select>
-
 
           <label className={s.description}>Finalised for Payroll</label>
           <input type="checkbox" checked={finalisedForPayroll} onChange={e => setFinalisedForPayroll(e.target.checked)} />

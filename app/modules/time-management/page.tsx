@@ -12,14 +12,14 @@ export default function TimeManagementPage() {
     const pathname = usePathname();
 
     const attendanceCorrectionHref = `${pathname}/attendance-correction`;
-    const attendanceRecordHref = `${pathname}/attendance`;
+    const attendanceRecordHref = `${pathname}/attendance-record`;
     const holidayHref = `${pathname}/holiday`;
     const latenessHref = `${pathname}/lateness`;
     const notificationHref = `${pathname}/notification`;
     const overtimeHref = `${pathname}/overtime`;
     const scheduleRuleHref = `${pathname}/schedule`;
     const shiftHref = `${pathname}/shifts`;
-    const timeExceptionHref = `${pathname}/timeException`;
+    const timeExceptionHref = `${pathname}/time-exception`;
     
     return (
         <div className={s.container}>

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { AttendanceRecord, AttendanceCorrectionRequest,CreateOvertimeRuleDto, OvertimeRule, PunchPolicy, Shift, ShiftType, Holiday, ShiftAssignment, TimeException, ScheduleRule, NotificationLog, LatenessRule, CreateAttendanceCorrectionRequestDto, Punch } from '../types';
+import { AttendanceRecord, AttendanceCorrectionRequest,CreateOvertimeRuleDto, OvertimeRule, PunchPolicy, Shift, ShiftType, Holiday, ShiftAssignment, TimeException, ScheduleRule, NotificationLog, LatenessRule, CreateAttendanceCorrectionRequestDto, Punch, UpdateAttendanceRecordDto, CreateAttendanceRecordDto } from '../types';
 import { mapIds } from './utils';
 import HolidayList from '../components/HolidayList';
 import axiosInstance from './axiosinstance';
@@ -134,25 +134,24 @@ export const getAttendanceRecord = async (id: string) => {
   }
 };
 
-export const createAttendanceRecord = async (payload: any) => {
+export const createAttendanceRecord = async (payload: CreateAttendanceRecordDto) => {
   try {
-    const { data } = await axios.post(`${BASE_URL}/attendance`, payload, { withCredentials: true });
-    return data;
-  } catch (error: any) {
-    console.error("Error:", error.message);
-    return null;
+    return (await axiosInstance.post("/attendance", payload, { withCredentials: true })).data;
+  } catch (err: any) {
+    console.error("Create attendance error:", err.message);
+    throw err;
   }
 };
 
-export const updateAttendanceRecord = async (id: string, payload: any) => {
+export const updateAttendanceRecord = async (id: string, payload: UpdateAttendanceRecordDto) => {
   try {
-    const { data } = await axios.put(`${BASE_URL}/attendance/${id}`, payload, { withCredentials: true });
-    return data;
-  } catch (error: any) {
-    console.error("Error:", error.message);
-    return null;
+    return (await axiosInstance.put(`/attendance/${id}`, payload, { withCredentials: true })).data;
+  } catch (err: any) {
+    console.error("Update attendance error:", err.message);
+    throw err;
   }
 };
+
 
 export const getTimeException = async (id: string) => {
   try {
@@ -661,6 +660,23 @@ export const getAllTimeExceptions = async (): Promise<TimeException[]> => {
     return [];
   }
 };
+
+// ============================================================
+// Get One
+// ============================================================
+
+
+
+// ============================================================
+// Create
+// ============================================================
+
+
+
+// ============================================================
+// Update
+// ============================================================
+
 
 
 // ============================================================

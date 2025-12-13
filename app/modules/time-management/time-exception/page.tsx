@@ -11,7 +11,6 @@ export default function timeExceptionPage() {
   const [timeexceptions, setTimeExceptions] = useState([]);
   const [loading, setLoading] = useState(true);
   const pathname = usePathname();
-    const href = `${pathname}/timeexceptions`;
 
   const load = async () => {
     setLoading(true);

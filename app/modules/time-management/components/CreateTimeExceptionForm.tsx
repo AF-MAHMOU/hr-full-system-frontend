@@ -104,7 +104,7 @@ export default function CreateTimeExceptionForm({ onCreated }: CreateTimeExcepti
             ))}
           </select>
 
-          <label className={s.description}>Assign to</label>
+          <label className={s.description}>person responsible for handling the exception</label>
           <select className={s.select}value={assignedTo} onChange={(e) => setAssignedTo(e.target.value)}required>
             <option value="" disabled>Select employee</option>
             {employees.map(emp => (

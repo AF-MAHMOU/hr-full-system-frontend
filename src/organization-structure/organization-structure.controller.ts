@@ -15,6 +15,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { Response } from 'express';
+import { Types } from 'mongoose';
 import { OrganizationStructureService } from './organization-structure.service';
 import {
   CreateDepartmentDto,
@@ -900,5 +901,107 @@ export class OrganizationStructureController {
       `attachment; filename="org-chart-${Date.now()}.csv"`,
     );
     res.send(csv);
+  }
+
+  // =====================================
+  // NOTIFICATION ENDPOINTS
+  // =====================================
+
+  @Get('notifications')
+  async getNotifications(
+    @CurrentUser() user: JwtPayload,
+    @Query('type') type?: string,
+    @Query('limit') limit?: number,
+  ) {
+    // Handle both ObjectId and string formats
+    const userId = user.userid?.toString ? user.userid.toString() : String(user.userid);
+    
+    console.log('[getNotifications Controller] User from JWT:', {
+      userid: user.userid,
+      useridType: typeof user.userid,
+      useridString: userId,
+      email: user.email,
+    });
+
+    const notifications = await this.orgStructureService.getNotifications(
+      userId,
+      type,
+      limit || 50,
+    );
+
+    console.log('[getNotifications Controller] Returning notifications:', notifications.length);
+
+    return {
+      success: true,
+      message: 'Notifications retrieved successfully',
+      data: notifications,
+    };
+  }
+
+  @Put('notifications/:id/read')
+  async markNotificationAsRead(
+    @Param('id') id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    const userId = user.userid?.toString ? user.userid.toString() : String(user.userid);
+    await this.orgStructureService.markNotificationAsRead(id, userId);
+
+    return {
+      success: true,
+      message: 'Notification marked as read',
+    };
+  }
+
+  @Put('notifications/read-all')
+  async markAllNotificationsAsRead(@CurrentUser() user: JwtPayload) {
+    const userId = user.userid?.toString ? user.userid.toString() : String(user.userid);
+    await this.orgStructureService.markAllNotificationsAsRead(userId);
+
+    return {
+      success: true,
+      message: 'All notifications marked as read',
+    };
+  }
+
+  @Get('notifications/debug')
+  async debugNotifications(@CurrentUser() user: JwtPayload) {
+    const userId = user.userid?.toString ? user.userid.toString() : String(user.userid);
+    
+    // Get all notifications for this user (no filter)
+    const allNotifications = await this.orgStructureService.getNotifications(
+      userId,
+      undefined,
+      100,
+    );
+
+    // Also check raw query
+    const { NotificationLog } = await import(
+      '../time-management/models/notification-log.schema'
+    );
+    const NotificationLogModel = this.orgStructureService['notificationLogModel'];
+    
+    const rawQuery = await NotificationLogModel.find({
+      to: new Types.ObjectId(userId),
+    }).lean();
+
+    return {
+      success: true,
+      debug: {
+        userId: userId,
+        userIdType: typeof user.userid,
+        useridRaw: user.userid,
+        email: user.email,
+        allNotificationsCount: allNotifications.length,
+        rawQueryCount: rawQuery.length,
+        allNotifications: allNotifications,
+        rawQuery: rawQuery.map((n: any) => ({
+          _id: n._id,
+          to: n.to,
+          toString: n.to?.toString(),
+          type: n.type,
+          message: n.message,
+        })),
+      },
+    };
   }
 }

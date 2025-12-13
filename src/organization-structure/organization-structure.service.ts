@@ -48,6 +48,8 @@ import {
   ApprovalDecision,
   ChangeLogAction,
 } from './enums/organization-structure.enums';
+import { OrganizationNotificationService } from './services/notification.service';
+import { NotificationLog, NotificationLogDocument } from '../time-management/models/notification-log.schema';
 
 @Injectable()
 export class OrganizationStructureService {
@@ -64,6 +66,9 @@ export class OrganizationStructureService {
     private changeLogModel: Model<StructureChangeLogDocument>,
     @InjectModel(PositionAssignment.name)
     private positionAssignmentModel: Model<PositionAssignmentDocument>,
+    @InjectModel(NotificationLog.name)
+    private notificationLogModel: Model<NotificationLogDocument>,
+    private notificationService: OrganizationNotificationService,
   ) {}
 
   // =====================================
@@ -120,7 +125,16 @@ export class OrganizationStructureService {
       isActive: true,
     });
 
-    return department.save();
+    const savedDepartment = await department.save();
+
+    // Send notifications (non-blocking)
+    this.notificationService
+      .notifyDepartmentCreated(savedDepartment, userId)
+      .catch((error) => {
+        console.error('Failed to send department creation notifications:', error);
+      });
+
+    return savedDepartment;
   }
 
   async findAllDepartments(queryDto: QueryDepartmentDto): Promise<{
@@ -243,6 +257,18 @@ export class OrganizationStructureService {
       await this.validatePositionExists(updateDepartmentDto.headPositionId);
     }
 
+    // Track changes for notification
+    const changes: string[] = [];
+    if (updateDepartmentDto.name && updateDepartmentDto.name !== department.name) {
+      changes.push(`name changed to "${updateDepartmentDto.name}"`);
+    }
+    if (updateDepartmentDto.description !== undefined && updateDepartmentDto.description !== department.description) {
+      changes.push('description updated');
+    }
+    if (updateDepartmentDto.headPositionId && updateDepartmentDto.headPositionId !== department.headPositionId?.toString()) {
+      changes.push('head position changed');
+    }
+
     const updatedDepartment = await this.departmentModel
       .findByIdAndUpdate(id, updateDepartmentDto, {
         new: true,
@@ -250,6 +276,15 @@ export class OrganizationStructureService {
       })
       .populate('headPositionId', 'code title')
       .exec();
+
+    // Send notifications (non-blocking)
+    if (changes.length > 0) {
+      this.notificationService
+        .notifyDepartmentUpdated(updatedDepartment as DepartmentDocument, changes, userId)
+        .catch((error) => {
+          console.error('Failed to send department update notifications:', error);
+        });
+    }
 
     return updatedDepartment;
   }
@@ -267,7 +302,16 @@ export class OrganizationStructureService {
     const departmentDoc = department as DepartmentDocument;
     departmentDoc.isActive = false;
 
-    return departmentDoc.save();
+    const savedDepartment = await departmentDoc.save();
+
+    // Send notifications (non-blocking)
+    this.notificationService
+      .notifyDepartmentDeleted(savedDepartment, userId)
+      .catch((error) => {
+        console.error('Failed to send department deletion notifications:', error);
+      });
+
+    return savedDepartment;
   }
 
   async getDepartmentHierarchy(departmentId?: string): Promise<any> {
@@ -418,6 +462,19 @@ export class OrganizationStructureService {
         throw new Error('Failed to retrieve created position');
       }
       
+      // Send notifications (non-blocking)
+      // Populate departmentId if it's not already populated
+      const positionForNotification = await this.positionModel
+        .findById(createdPosition._id)
+        .populate('departmentId', 'name')
+        .lean();
+      
+      this.notificationService
+        .notifyPositionCreated(positionForNotification as PositionDocument, userId)
+        .catch((error) => {
+          console.error('Failed to send position creation notifications:', error);
+        });
+      
       return createdPosition;
     } catch (insertErr) {
       // If insertOne fails, try to register the model and use create
@@ -431,7 +488,22 @@ export class OrganizationStructureService {
         }
         
         // Now try create - the hook might work if model is registered
-        return this.positionModel.create(positionData);
+        const createdPosition = await this.positionModel.create(positionData);
+        
+        // Send notifications (non-blocking)
+        // Populate departmentId if it's not already populated
+        const positionForNotification2 = await this.positionModel
+          .findById(createdPosition._id)
+          .populate('departmentId', 'name')
+          .lean();
+        
+        this.notificationService
+          .notifyPositionCreated(positionForNotification2 as PositionDocument, userId)
+          .catch((error) => {
+            console.error('Failed to send position creation notifications:', error);
+          });
+        
+        return createdPosition;
       } catch (createErr) {
         // If create also fails, throw the original insertOne error
         throw insertErr;
@@ -592,6 +664,9 @@ export class OrganizationStructureService {
       console.warn('Could not ensure Department model is accessible for update:', err);
     }
 
+    // Track old values for notification
+    const oldReportingPositionId = position.reportsToPositionId?.toString() || null;
+
     const updatedPosition = await this.positionModel
       .findByIdAndUpdate(id, updateData, {
         new: true,
@@ -600,6 +675,28 @@ export class OrganizationStructureService {
       .populate('departmentId', 'code name')
       .populate('reportsToPositionId', 'code title')
       .exec();
+
+    // Track changes for notification
+    const changes: string[] = [];
+    if (updatePositionDto.title && updatePositionDto.title !== position.title) {
+      changes.push(`title changed to "${updatePositionDto.title}"`);
+    }
+    if (updatePositionDto.description !== undefined && updatePositionDto.description !== position.description) {
+      changes.push('description updated');
+    }
+    const newReportingPositionId = updatedPosition.reportsToPositionId?.toString() || null;
+    if (newReportingPositionId !== oldReportingPositionId) {
+      changes.push('reporting relationship changed');
+    }
+
+    // Send notifications (non-blocking)
+    if (changes.length > 0) {
+      this.notificationService
+        .notifyPositionUpdated(updatedPosition as PositionDocument, changes, userId)
+        .catch((error) => {
+          console.error('Failed to send position update notifications:', error);
+        });
+    }
 
     return updatedPosition;
   }
@@ -621,7 +718,16 @@ export class OrganizationStructureService {
     const positionDoc = position as PositionDocument;
     positionDoc.isActive = false;
 
-    return positionDoc.save();
+    const savedPosition = await positionDoc.save();
+
+    // Send notifications (non-blocking)
+    this.notificationService
+      .notifyPositionDeleted(savedPosition, userId)
+      .catch((error) => {
+        console.error('Failed to send position deletion notifications:', error);
+      });
+
+    return savedPosition;
   }
 
   async assignReportingPosition(
@@ -659,6 +765,24 @@ export class OrganizationStructureService {
 
     if (!updatedPosition) {
       throw new NotFoundException('Position not found');
+    }
+
+    // Track old reporting position for notification
+    const oldReportingPositionId = position.reportsToPositionId?.toString() || null;
+    const newReportingPositionId = updatedPosition.reportsToPositionId?.toString() || null;
+
+    // Send notifications if reporting relationship changed (non-blocking)
+    if (oldReportingPositionId !== newReportingPositionId) {
+      this.notificationService
+        .notifyPositionReportingChanged(
+          updatedPosition as PositionDocument,
+          oldReportingPositionId,
+          newReportingPositionId,
+          userId,
+        )
+        .catch((error) => {
+          console.error('Failed to send position reporting change notifications:', error);
+        });
     }
 
     return updatedPosition;
@@ -1013,7 +1137,16 @@ export class OrganizationStructureService {
     changeRequestDoc.submittedByEmployeeId = new Types.ObjectId(userId) as any;
     changeRequestDoc.submittedAt = new Date();
 
-    return changeRequestDoc.save();
+    const savedChangeRequest = await changeRequestDoc.save();
+
+    // Send notifications (non-blocking)
+    this.notificationService
+      .notifyChangeRequestSubmitted(savedChangeRequest, userId)
+      .catch((error) => {
+        console.error('Failed to send change request submission notifications:', error);
+      });
+
+    return savedChangeRequest;
   }
 
   async reviewChangeRequest(
@@ -1074,6 +1207,21 @@ export class OrganizationStructureService {
     const changeRequestDoc = changeRequest as StructureChangeRequestDocument;
     changeRequestDoc.status = finalStatus;
     
+    // Send notifications (non-blocking)
+    if (reviewDto.approved) {
+      this.notificationService
+        .notifyChangeRequestApproved(changeRequestDoc, userId)
+        .catch((error) => {
+          console.error('Failed to send change request approval notifications:', error);
+        });
+    } else {
+      this.notificationService
+        .notifyChangeRequestRejected(changeRequestDoc, userId, reviewDto.comments || 'No reason provided')
+        .catch((error) => {
+          console.error('Failed to send change request rejection notifications:', error);
+        });
+    }
+    
     return changeRequestDoc;
   }
 
@@ -1125,6 +1273,13 @@ export class OrganizationStructureService {
     // Return the document we already have, but update its status
     const changeRequestDoc = changeRequest as StructureChangeRequestDocument;
     changeRequestDoc.status = StructureRequestStatus.IMPLEMENTED;
+    
+    // Send notifications (non-blocking)
+    this.notificationService
+      .notifyChangeRequestApproved(changeRequestDoc, userId)
+      .catch((error) => {
+        console.error('Failed to send change request approval notifications:', error);
+      });
     
     return changeRequestDoc;
   }
@@ -1262,6 +1417,13 @@ export class OrganizationStructureService {
     // Return the document we already have, but update its status
     const changeRequestDoc = changeRequest as StructureChangeRequestDocument;
     changeRequestDoc.status = StructureRequestStatus.REJECTED;
+
+    // Send notifications (non-blocking)
+    this.notificationService
+      .notifyChangeRequestRejected(changeRequestDoc, userId, reason)
+      .catch((error) => {
+        console.error('Failed to send change request rejection notifications:', error);
+      });
 
     return changeRequestDoc;
   }
@@ -1514,5 +1676,132 @@ export class OrganizationStructureService {
     }
 
     return `${prefix}${sequence.toString().padStart(4, '0')}`;
+  }
+
+  // =====================================
+  // NOTIFICATION METHODS
+  // =====================================
+
+  async getNotifications(
+    userId: string,
+    type?: string,
+    limit: number = 50,
+  ): Promise<any[]> {
+    // Convert userId to ObjectId - handle both string and ObjectId formats
+    let userIdObj: Types.ObjectId;
+    try {
+      if (!Types.ObjectId.isValid(userId)) {
+        console.error(`[getNotifications] Invalid userId format: ${userId}`);
+        return [];
+      }
+      userIdObj = new Types.ObjectId(userId);
+    } catch (error) {
+      console.error(`[getNotifications] Error converting userId to ObjectId: ${userId}`, error);
+      return [];
+    }
+
+    const query: any = {
+      to: userIdObj,
+    };
+
+    if (type) {
+      // Filter by notification type prefix
+      if (type === 'department') {
+        query.type = {
+          $in: [
+            'department_created',
+            'department_updated',
+            'department_deleted',
+          ],
+        };
+      } else if (type === 'change_request') {
+        query.type = {
+          $in: [
+            'change_request_submitted',
+            'change_request_approved',
+            'change_request_rejected',
+          ],
+        };
+      } else {
+        query.type = type;
+      }
+    }
+
+    // Use injected NotificationLog model
+    // Try query with ObjectId first, if that fails try string comparison
+    let notifications = await this.notificationLogModel.find(query)
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .lean();
+
+    // If no notifications found, try querying with string format (in case of type mismatch)
+    if (notifications.length === 0) {
+      const stringQuery: any = {
+        to: userId,
+      };
+      if (type) {
+        if (type === 'department') {
+          stringQuery.type = {
+            $in: [
+              'department_created',
+              'department_updated',
+              'department_deleted',
+            ],
+          };
+        } else if (type === 'change_request') {
+          stringQuery.type = {
+            $in: [
+              'change_request_submitted',
+              'change_request_approved',
+              'change_request_rejected',
+            ],
+          };
+        } else {
+          stringQuery.type = type;
+        }
+      }
+      notifications = await this.notificationLogModel.find(stringQuery)
+        .sort({ createdAt: -1 })
+        .limit(limit)
+        .lean();
+    }
+
+    // Debug logging
+    console.log(`[getNotifications] Query for userId: ${userId} (ObjectId: ${userIdObj})`);
+    console.log(`[getNotifications] Found ${notifications.length} notifications`);
+
+    return notifications.map((notif: any) => ({
+      _id: notif._id,
+      type: notif.type,
+      message: notif.message,
+      createdAt: notif.createdAt,
+      read: notif.read || false,
+    }));
+  }
+
+  async markNotificationAsRead(
+    notificationId: string,
+    userId: string,
+  ): Promise<void> {
+    await this.notificationLogModel.updateOne(
+      {
+        _id: new Types.ObjectId(notificationId),
+        to: new Types.ObjectId(userId),
+      },
+      {
+        $set: { read: true, readAt: new Date() },
+      },
+    );
+  }
+
+  async markAllNotificationsAsRead(userId: string): Promise<void> {
+    await this.notificationLogModel.updateMany(
+      {
+        to: new Types.ObjectId(userId),
+      },
+      {
+        $set: { read: true, readAt: new Date() },
+      },
+    );
   }
 }

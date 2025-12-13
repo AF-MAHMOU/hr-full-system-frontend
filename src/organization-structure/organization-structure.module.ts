@@ -22,11 +22,26 @@ import {
   PositionAssignmentSchema,
 } from './models/position-assignment.schema';
 
+// Notification and Employee Schemas
+import {
+  NotificationLog,
+  NotificationLogSchema,
+} from '../time-management/models/notification-log.schema';
+import {
+  EmployeeProfile,
+  EmployeeProfileSchema,
+} from '../employee-profile/models/employee-profile.schema';
+import {
+  EmployeeSystemRole,
+  EmployeeSystemRoleSchema,
+} from '../employee-profile/models/employee-system-role.schema';
+
 // Controllers
 import { OrganizationStructureController } from './organization-structure.controller';
 
 // Services
 import { OrganizationStructureService } from './organization-structure.service';
+import { OrganizationNotificationService } from './services/notification.service';
 
 @Module({
   imports: [
@@ -42,10 +57,14 @@ import { OrganizationStructureService } from './organization-structure.service';
       { name: StructureApproval.name, schema: StructureApprovalSchema },
       { name: StructureChangeLog.name, schema: StructureChangeLogSchema },
       { name: PositionAssignment.name, schema: PositionAssignmentSchema },
+      // Notification and Employee schemas
+      { name: NotificationLog.name, schema: NotificationLogSchema },
+      { name: EmployeeProfile.name, schema: EmployeeProfileSchema },
+      { name: EmployeeSystemRole.name, schema: EmployeeSystemRoleSchema },
     ]),
   ],
   controllers: [OrganizationStructureController],
-  providers: [OrganizationStructureService],
+  providers: [OrganizationStructureService, OrganizationNotificationService],
   exports: [OrganizationStructureService],
 })
 export class OrganizationStructureModule {}

@@ -14,6 +14,12 @@ export class NotificationLog {
 
   @Prop()
   message?: string;
+
+  @Prop({ type: Boolean, default: false })
+  read?: boolean;
+
+  @Prop({ type: Date })
+  readAt?: Date;
 }
 
 export const NotificationLogSchema =

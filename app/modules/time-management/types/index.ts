@@ -146,7 +146,7 @@ export interface ShiftType {
 export interface Shift {
   id: string;
   name: string;
-  shiftType: string;
+  shiftType: ShiftType;
   startTime: string;
   endTime: string;
   punchPolicy: PunchPolicy;

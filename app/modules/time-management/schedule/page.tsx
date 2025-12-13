@@ -33,18 +33,30 @@ export default function ScheduleRulePage() {
     load();
   };
 
+  const handleToggleStatus = (id: string) => {
+  setScheduleRules((prev) =>
+    prev.map((r) =>
+      r.id === id ? { ...r, active: !r.active } : r
+    )
+  );
+};
+
   return (
     <div className={s.container}>
-      <h1 className={s.header}>ScheduleRules</h1>
+      <h1 className={s.header}>Schedule Rules</h1>
+      <p className={s.description}>Choose what days are on which are not</p>
 
       {loading ? (
         <p>Loading...</p>
       ) : (
         <>
-          <ScheduleRuleList schedulerules={schedulerules} onDelete={handleDelete} />
-          <CreateScheduleRuleForm onCreated={load} />
-        </>
+      <ScheduleRuleList
+        schedulerules={schedulerules}
+        onDelete={handleDelete}
+        onToggleStatus={handleToggleStatus}
+      />        </>
       )}
+          <CreateScheduleRuleForm onCreated={load} />
     </div>
   );
 }

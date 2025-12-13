@@ -42,9 +42,9 @@ export default function ShiftTypePage() {
       ) : (
         <>
           <ShiftTypeList shifttypes={shifttypes} onToggleStatus={load} onDelete={handleDelete} />
-          <CreateShiftTypeForm onCreated={load} />
         </>
       )}
+      <CreateShiftTypeForm onCreated={load} />
     </div>
   );
 }

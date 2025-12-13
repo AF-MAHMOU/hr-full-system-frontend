@@ -89,17 +89,17 @@ export default function CreateTimeExceptionForm({ onCreated }: CreateTimeExcepti
             ))}
           </select>
 
-          <label className={s.description}>Employee</label>
+          <label className={s.description}>Attendance Record (By Employee ID)</label>
           <select
             className={s.select}
-            value={employeeId}
+            value={attendanceRecordId}
             onChange={(e) => setEmployeeId(e.target.value)}
             required
           >
-            <option value="" disabled>Select employee</option>
-            {employees.map(emp => (
-              <option key={emp._id} value={emp._id}>
-                {emp.firstName} {emp.lastName}
+            <option value="" disabled>Select Record</option>
+            {attendanceRecords.map(a => (
+              <option key={a.id} value={a.id}>
+                {a.employeeId}
               </option>
             ))}
           </select>

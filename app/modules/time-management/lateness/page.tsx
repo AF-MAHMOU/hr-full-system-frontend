@@ -46,7 +46,7 @@ export default function LatenessRulePage() {
     <div className={s.container}>
       <h1 className={s.header}>Lateness Rules</h1>
       <p className={s.description2}>
-        Late
+        Is s/he late? Well, you decide... or something
       </p>
 
       {loading ? (

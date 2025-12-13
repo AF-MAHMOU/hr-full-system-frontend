@@ -6,6 +6,7 @@ import { AttendanceCorrectionRequest } from "../types";
 import { deleteAttendanceCorrection, getAllAttendanceCorrections } from '../api/index';
 import CreateAttendanceCorrectionForm from "../components/CreateAttendanceCorrectionForm";
 import AttendanceCorrectionRequestList from "../components/AttendanceCorrectionList";
+import { AttendanceCorrectionManagementForHRManager } from "../components/AttendanceCorrectionManagement";
 
 export default function AttendanceCorrectionRequestPage() {
   const [attendancecorrectionrequests, setAttendanceCorrectionRequests] = useState<AttendanceCorrectionRequest[]>([]);
@@ -42,9 +43,12 @@ export default function AttendanceCorrectionRequestPage() {
       ) : (
         <>
           <AttendanceCorrectionRequestList attendancecorrectionrequests={attendancecorrectionrequests} onDelete={handleDelete} />
-          <CreateAttendanceCorrectionForm onCreated={load} />
         </>
       )}
+      <CreateAttendanceCorrectionForm onCreated={load} />
+      <AttendanceCorrectionManagementForHRManager/>
+
+
     </div>
   );
 }

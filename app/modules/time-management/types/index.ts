@@ -342,3 +342,47 @@ export interface UpdateShiftTypeDto {
   name?: string;
   active?: boolean;
 }
+
+//
+//
+//
+
+export interface AttendanceCorrectionReview {
+  id: string;
+
+  employeeId: string;
+  employeeName: string;
+  employeeNumber: string;
+
+  punches: Punch[];
+  hasMissedPunch: boolean;
+  totalWorkMinutes: number;
+
+  reason?: string;
+  status: CorrectionRequestStatus;
+}
+
+export interface CreateAttendanceCorrectionRequestDto {
+  attendanceRecordId: string;
+  reason?: string;
+}
+
+export interface CorrectAttendanceRecordDto {
+  punches: Punch[];
+}
+
+//
+//
+//
+
+export interface AttendanceCorrectionReview {
+  id: string; // correction request id
+  employeeId: string;
+  employeeName: string;
+  employeeNumber: string;
+  punches: Punch[];
+  hasMissedPunch: boolean;
+  totalWorkMinutes: number;
+  reason?: string;
+  status: CorrectionRequestStatus;
+}

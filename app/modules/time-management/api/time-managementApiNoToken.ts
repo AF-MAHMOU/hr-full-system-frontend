@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { AttendanceRecord, AttendanceCorrectionRequest,CreateOvertimeRuleDto, OvertimeRule, PunchPolicy, Shift, ShiftType, Holiday, ShiftAssignment, TimeException, ScheduleRule, NotificationLog, LatenessRule, CreateAttendanceCorrectionRequestDto } from '../types';
+import { AttendanceRecord, AttendanceCorrectionRequest,CreateOvertimeRuleDto, OvertimeRule, PunchPolicy, Shift, ShiftType, Holiday, ShiftAssignment, TimeException, ScheduleRule, NotificationLog, LatenessRule, CreateAttendanceCorrectionRequestDto, Punch } from '../types';
 import { mapIds } from './utils';
 import HolidayList from '../components/HolidayList';
 import axiosInstance from './axiosinstance';
@@ -767,20 +767,64 @@ export const deleteTimeException = async (id: string) => {
 //
 //
 
-export async function submitAttendanceCorrection(
-  dto: CreateAttendanceCorrectionRequestDto
-) {
-  const token = localStorage.getItem("token");
+export async function submitAttendanceCorrection(dto: CreateAttendanceCorrectionRequestDto) {
 
   const res = await axiosInstance.post(
     "/attendanceCorrections",
     dto,
     {
       headers: {
-        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        // Authorization: `Bearer ${localStorage.getItem('token')}`,
       },
     }
   );
 
   return res.data;
+}
+
+export async function getPendingCorrectionsForManager() {
+  const res = await axiosInstance.get(
+    '/attendanceCorrections/pending',
+    {
+      headers: {
+        // Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
+    }
+  );
+
+  return res.data;
+}
+export async function approveAttendanceCorrection(id: string) {
+  const res = await axiosInstance.post(
+    `/attendanceCorrections/approve/${id}`,
+    {}
+  );
+  return res.data;
+}
+
+export async function rejectAttendanceCorrection(id: string) {
+  const res = await axiosInstance.post(
+    `/attendanceCorrections/reject/${id}`,
+    {}
+  );
+  return res.data;
+}
+
+
+//
+//
+//
+
+export async function correctAttendanceRecord(attendanceRecordId: string,updatedPunches: Punch[]) {
+  const response = await axiosInstance.patch(`/attendance/${attendanceRecordId}/correct`,{punches: updatedPunches,},
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        // Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
+    }
+  );
+
+  return response.data;
 }

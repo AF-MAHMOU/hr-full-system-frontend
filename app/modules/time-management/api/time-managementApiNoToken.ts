@@ -136,7 +136,7 @@ export const getAttendanceRecord = async (id: string) => {
 
 export const createAttendanceRecord = async (payload: CreateAttendanceRecordDto) => {
   try {
-    return (await axiosInstance.post("/attendance", payload, { withCredentials: true })).data;
+    return (await axiosInstance.post('/attendance', payload, { withCredentials: true })).data;
   } catch (err: any) {
     console.error("Create attendance error:", err.message);
     throw err;

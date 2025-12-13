@@ -53,9 +53,9 @@ export default function AttendanceRecordPage() {
       ) : (
         <>
           <AttendanceRecordList attendancerecords={attendancerecords} onDelete={handleDelete} />
-          <CreateAttendanceRecordForm onCreated={load} />
         </>
       )}
+      <CreateAttendanceRecordForm onCreated={load} />
 
       <button type="button"className={s.button}onClick={gotoReportsPage}>
         Go to Reports Page

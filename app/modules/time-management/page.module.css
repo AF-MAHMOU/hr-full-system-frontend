@@ -23,6 +23,15 @@
   box-sizing: border-box;
 }
 
+.textBox {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, #4e860e 0%, #95e43a 25%, #89d531 50%, #6fb421 75%, #6fb421 100%);
+  /*background-color: #eff6ff;*/
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+}
+
 .header {
   font-size: 4rem;
   font-weight: 700;

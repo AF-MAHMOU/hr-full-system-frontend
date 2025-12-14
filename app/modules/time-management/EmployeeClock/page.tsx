@@ -1,6 +1,6 @@
 "use client";  // This tells Next.js that this component is a Client Component
 
-import { useState } from "react";  
+import { useEffect, useState } from "react";  
 import { useAuth } from "@/shared/hooks"; 
 import { useRouter } from "next/navigation"; 
 import { createAttendanceRecord } from "../api";  
@@ -41,8 +41,17 @@ export default function EmployeeClock() {
       finalisedForPayroll: true,
     };
 
-    console.log("Attendance Data:", attendanceData); // Log the data before sending
+    if (!navigator.onLine) {
+      const savedAttendance = JSON.parse(localStorage.getItem("offlineAttendance") || "[]");
+      savedAttendance.push(attendanceData);
+      localStorage.setItem("offlineAttendance", JSON.stringify(savedAttendance));
+      setMessage("Attendance recorded (offline). It will be synced when you're back online.");
+      return;
+    }
+
     await createAttendanceRecord(attendanceData);
+    setMessage(`Attendance recorded (${punchType}) successfully`);
+    setPunchType(punchType === PunchType.IN ? PunchType.OUT : PunchType.IN);
 
     setMessage(`Attendance recorded (${punchType}) successfully`);
     setPunchType(punchType === PunchType.IN ? PunchType.OUT : PunchType.IN);
@@ -54,6 +63,70 @@ export default function EmployeeClock() {
  finally {
     setLoading(false);
   }
+
+  useEffect(() => {
+  const handleOnline = async () => {
+    const savedAttendance = JSON.parse(localStorage.getItem("offlineAttendance") || "[]");
+    if (savedAttendance.length > 0) {
+      try {
+        // Retry sending all the saved attendance data one by one
+        for (let i = 0; i < savedAttendance.length; i++) {
+          try {
+            await createAttendanceRecord(savedAttendance[i]);
+            // Remove the successfully uploaded record
+            savedAttendance.splice(i, 1); 
+            i--; // Adjust the index after removal to avoid skipping the next item
+            localStorage.setItem("offlineAttendance", JSON.stringify(savedAttendance));
+          } catch (error) {
+            // Log any individual record that failed to upload
+            console.error(`Failed to sync record at index ${i}:`, error);
+          }
+        }
+
+        // Once all data is synced, clear the local storage
+        if (savedAttendance.length === 0) {
+          localStorage.removeItem("offlineAttendance");
+          setMessage("All offline attendance data synced successfully!");
+        }
+      } catch (error) {
+        console.error("Failed to sync offline data:", error);
+        setMessage("There was an issue syncing attendance records.");
+      }
+    }
+  };
+
+  // Add event listeners for network status changes
+  window.addEventListener("online", handleOnline);
+  window.addEventListener("offline", () => {
+    setMessage("You're offline. Attendance will be recorded when you're back online.");
+  });
+
+  return () => {
+    window.removeEventListener("online", handleOnline);
+    window.removeEventListener("offline", () => {
+      setMessage("You're offline. Attendance will be recorded when you're back online.");
+    });
+  };
+}, []);
+
+
+
+  /*
+  // ====================================================================================================
+  // Credit to Ahmed Fouad
+  // ====================================================================================================
+  useEffect(() => {
+      if (user) {
+        if (user.userType === 'employee') {checkPendingAcknowledgments();}
+        whateverIWillAdd();
+        
+        // Refresh every 30 seconds
+        const interval = setInterval(() => {
+          if (user.userType === 'employee') {checkPendingAcknowledgments();}
+          whateverIWillAdd();
+        }, 30000);
+        return () => clearInterval(interval);
+      } */
 };
 
 
@@ -67,7 +140,6 @@ export default function EmployeeClock() {
     setMessage(""); 
 
     try { 
-      // Read the Excel file into JSON format 
       const data = await file.arrayBuffer(); 
       const workbook = XLSX.read(data); 
       const sheetName = workbook.SheetNames[0]; 
@@ -81,9 +153,8 @@ export default function EmployeeClock() {
 
       for (let i = 0; i < jsonData.length; i++) { 
         const row = jsonData[i]; 
-        const rowNum = i + 2; // Adjust for header row 
+        const rowNum = i + 2; 
         try { 
-          // Extract and validate data from Excel row 
           const punchTypeStr = row.punchType?.toString().toUpperCase() || row.PunchType?.toString().toUpperCase(); 
           const timestampStr = row.timestamp || row.Timestamp || row.Time; 
 
@@ -98,7 +169,6 @@ export default function EmployeeClock() {
           const punches = [{ type: punchTypeStr as PunchType, timestamp }]; 
 
           if (!user?.userid) { 
-            // Redirect to login if user is not authenticated
             router.push("/login");
             throw new Error("User ID not found"); 
           } 
@@ -156,17 +226,17 @@ export default function EmployeeClock() {
       <h1 className={s.header}>Employee Clock In/Out</h1> 
 
       <div style={{ marginBottom: '2rem' }}> 
-        <h2 style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>Manual Clock In/Out</h2> 
+        <h2 className={s.description}>Manual Clock In/Out</h2> 
         <button className={s.button} onClick={handlePunch} disabled={loading}> 
           {loading ? "Processing..." : `Clock ${punchType}`} 
         </button> 
       </div> 
 
       <div style={{ borderTop: '2px solid #e5e7eb', paddingTop: '2rem', marginTop: '2rem' }}> 
-        <h2 style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>Bulk Import from Excel</h2> 
+        <h2 className={s.description}>Bulk Import from Excel</h2> 
 
         <div style={{ marginBottom: '1rem' }}> 
-          <button onClick={downloadTemplate} style={{ padding: '0.5rem 1rem', backgroundColor: '#6b7280', color: 'white', border: 'none', borderRadius: '0.375rem', cursor: 'pointer', fontSize: '0.875rem' }}> 
+          <button onClick={downloadTemplate} className={s.button}> 
             Download Template 
           </button> 
         </div> 
@@ -174,15 +244,7 @@ export default function EmployeeClock() {
         <div style={{ marginBottom: '1rem' }}> 
           <label 
             htmlFor="excel-upload" 
-            style={{ 
-              display: 'inline-block', 
-              padding: '0.75rem 1.5rem', 
-              backgroundColor: '#3b82f6', 
-              color: 'white', 
-              borderRadius: '0.375rem', 
-              cursor: importLoading ? 'not-allowed' : 'pointer', 
-              opacity: importLoading ? 0.6 : 1, 
-            }} 
+            className={s.button}
           > 
             {importLoading ? 'Importing...' : 'Upload Excel File'} 
           </label> 
@@ -233,13 +295,7 @@ export default function EmployeeClock() {
           </div> 
         )} 
 
-        <div style={{ 
-          marginTop: '1rem', 
-          padding: '1rem', 
-          backgroundColor: '#eff6ff', 
-          borderRadius: '0.375rem', 
-          fontSize: '0.875rem', 
-        }}> 
+        <div className={s.textBox}> 
           <p style={{ fontWeight: '600', marginBottom: '0.5rem' }}> 
             Excel Format Requirements: 
           </p> 

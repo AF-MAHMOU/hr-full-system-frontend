@@ -11,6 +11,9 @@ import { performanceApi } from '../api/performanceApi';
 import type { AppraisalAssignment, AppraisalCycle } from '../types';
 import { AppraisalAssignmentStatus } from '../types';
 import SelfAssessmentForm from './SelfAssessmentForm';
+import CreateDisputeModal from './CreateDisputeModal';
+import AcknowledgmentModal from './AcknowledgmentModal';
+import { useNotification } from '@/shared/hooks';
 import styles from './EmployeeAssignmentsView.module.css';
 
 interface EmployeeAssignmentsViewProps {
@@ -25,6 +28,11 @@ export default function EmployeeAssignmentsView({ employeeId }: EmployeeAssignme
   const [selectedCycleId, setSelectedCycleId] = useState<string>('');
   const [selectedAssignment, setSelectedAssignment] = useState<AppraisalAssignment | null>(null);
   const [isSelfAssessmentOpen, setIsSelfAssessmentOpen] = useState(false);
+  const [isDisputeModalOpen, setIsDisputeModalOpen] = useState(false);
+  const [disputeEvaluationId, setDisputeEvaluationId] = useState<string | undefined>(undefined);
+  const [isAcknowledgmentModalOpen, setIsAcknowledgmentModalOpen] = useState(false);
+  const [acknowledgmentEvaluationId, setAcknowledgmentEvaluationId] = useState<string | undefined>(undefined);
+  const { showInfo } = useNotification('performance');
 
   const fetchData = useCallback(async () => {
     try {
@@ -39,13 +47,27 @@ export default function EmployeeAssignmentsView({ employeeId }: EmployeeAssignme
       console.log('Fetched cycles:', cyclesData);
       setAssignments(assignmentsData);
       setCycles(cyclesData);
+      
+      // Show notification for published appraisals that need acknowledgment
+      const publishedAssignments = assignmentsData.filter(
+        (a: AppraisalAssignment) => a.status === AppraisalAssignmentStatus.PUBLISHED
+      );
+      if (publishedAssignments.length > 0) {
+        showInfo(
+          `You have ${publishedAssignments.length} published appraisal${publishedAssignments.length > 1 ? 's' : ''} ready for acknowledgment`,
+          {
+            title: 'New Appraisal Results',
+            duration: 7000,
+          }
+        );
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to load assignments');
       console.error('Error fetching data:', err);
     } finally {
       setLoading(false);
     }
-  }, [employeeId]);
+  }, [employeeId, showInfo]);
 
   const fetchAssignments = useCallback(async (cycleId?: string) => {
     try {
@@ -219,6 +241,33 @@ export default function EmployeeAssignmentsView({ employeeId }: EmployeeAssignme
                       ? 'Start Assessment'
                       : 'View/Edit Assessment'}
                   </Button>
+                  {assignment.status === AppraisalAssignmentStatus.PUBLISHED && (
+                    <Button
+                      variant="success"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedAssignment(assignment);
+                        setAcknowledgmentEvaluationId((assignment as any).latestAppraisalId);
+                        setIsAcknowledgmentModalOpen(true);
+                      }}
+                    >
+                      Acknowledge
+                    </Button>
+                  )}
+                  {(assignment.status === AppraisalAssignmentStatus.SUBMITTED ||
+                    assignment.status === AppraisalAssignmentStatus.PUBLISHED) && (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedAssignment(assignment);
+                        setDisputeEvaluationId((assignment as any).latestAppraisalId);
+                        setIsDisputeModalOpen(true);
+                      }}
+                    >
+                      Flag Concern
+                    </Button>
+                  )}
                 </div>
               </Card>
             );
@@ -227,19 +276,53 @@ export default function EmployeeAssignmentsView({ employeeId }: EmployeeAssignme
       )}
 
       {selectedAssignment && (
-        <SelfAssessmentForm
-          assignment={selectedAssignment}
-          isOpen={isSelfAssessmentOpen}
-          onClose={() => {
-            setIsSelfAssessmentOpen(false);
-            setSelectedAssignment(null);
-          }}
-          onSuccess={() => {
-            setIsSelfAssessmentOpen(false);
-            setSelectedAssignment(null);
-            fetchAssignments(selectedCycleId || undefined);
-          }}
-        />
+        <>
+          <SelfAssessmentForm
+            assignment={selectedAssignment}
+            isOpen={isSelfAssessmentOpen}
+            onClose={() => {
+              setIsSelfAssessmentOpen(false);
+              setSelectedAssignment(null);
+            }}
+            onSuccess={() => {
+              setIsSelfAssessmentOpen(false);
+              setSelectedAssignment(null);
+              fetchAssignments(selectedCycleId || undefined);
+            }}
+          />
+          <AcknowledgmentModal
+            assignment={selectedAssignment}
+            evaluationId={acknowledgmentEvaluationId}
+            isOpen={isAcknowledgmentModalOpen}
+            onClose={() => {
+              setIsAcknowledgmentModalOpen(false);
+              setSelectedAssignment(null);
+              setAcknowledgmentEvaluationId(undefined);
+            }}
+            onSuccess={() => {
+              setIsAcknowledgmentModalOpen(false);
+              setSelectedAssignment(null);
+              setAcknowledgmentEvaluationId(undefined);
+              fetchAssignments(selectedCycleId || undefined);
+            }}
+          />
+          <CreateDisputeModal
+            assignment={selectedAssignment}
+            evaluationId={disputeEvaluationId}
+            isOpen={isDisputeModalOpen}
+            onClose={() => {
+              setIsDisputeModalOpen(false);
+              setSelectedAssignment(null);
+              setDisputeEvaluationId(undefined);
+            }}
+            onSuccess={() => {
+              setIsDisputeModalOpen(false);
+              setSelectedAssignment(null);
+              setDisputeEvaluationId(undefined);
+              fetchAssignments(selectedCycleId || undefined);
+            }}
+          />
+        </>
       )}
     </div>
   );

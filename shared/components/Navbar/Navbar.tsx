@@ -12,6 +12,7 @@ import { useAuth } from '@/shared/hooks/useAuth';
 import { SystemRole } from '@/shared/types/auth';
 import { ROUTES } from '@/shared/constants';
 import { Button } from '../Button';
+import { NotificationBell } from '../NotificationBell';
 import styles from './Navbar.module.css';
 
 interface NavItem {
@@ -196,6 +197,7 @@ export function Navbar() {
 
             {/* User Section */}
             <div className={styles.rightSection}>
+              <NotificationBell />
               <div className={styles.userInfo}>
                 <span className={styles.userName}>{getUserDisplayName()}</span>
                 {user?.userType && (

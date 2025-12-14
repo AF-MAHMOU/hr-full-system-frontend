@@ -190,3 +190,76 @@ export interface CreateAppraisalCycleDto {
   targetPositionIds?: string[];
   excludeEmployeeIds?: string[];
 }
+
+/**
+ * CycleProgress - matches backend getCycleProgress response
+ */
+export interface CycleProgress {
+  total: number;
+  notStarted: number;
+  inProgress: number;
+  submitted: number;
+  acknowledged: number;
+  completed: number;
+  completionRate: number;
+}
+
+/**
+ * AppraisalDisputeStatus - matches backend enum
+ */
+export enum AppraisalDisputeStatus {
+  OPEN = 'OPEN',
+  UNDER_REVIEW = 'UNDER_REVIEW',
+  ADJUSTED = 'ADJUSTED',
+  REJECTED = 'REJECTED',
+}
+
+/**
+ * AppraisalDispute - matches backend schema
+ */
+export interface AppraisalDispute {
+  _id?: string;
+  appraisalId: string | any;
+  assignmentId: string | any;
+  cycleId: string | any;
+  raisedByEmployeeId: string | any;
+  reason: string;
+  details?: string;
+  status: AppraisalDisputeStatus;
+  submittedAt?: string;
+  assignedReviewerEmployeeId?: string | any;
+  resolutionSummary?: string;
+  resolvedAt?: string;
+  resolvedByEmployeeId?: string | any;
+  // Populated fields
+  appraisal?: any;
+  cycle?: AppraisalCycle;
+  assignment?: AppraisalAssignment;
+  raisedBy?: any;
+  resolvedBy?: any;
+  reviewer?: any;
+}
+
+/**
+ * CreateAppraisalDisputeDto - matches backend DTO
+ */
+export interface CreateAppraisalDisputeDto {
+  evaluationId: string;
+  disputeReason: string;
+  disputedSections?: string[];
+  disputedCriteria?: string[];
+  proposedRating?: number;
+  supportingDocumentIds?: string[];
+  additionalComments?: string;
+}
+
+/**
+ * ResolveAppraisalDisputeDto - matches backend DTO
+ */
+export interface ResolveAppraisalDisputeDto {
+  status: 'RESOLVED' | 'REJECTED' | 'ADJUSTED' | 'REJECTED';
+  resolutionType?: string;
+  adjustedRating?: number;
+  resolutionNotes?: string;
+  reviewComments?: string;
+}

@@ -18,6 +18,9 @@ import AssignmentList from './components/AssignmentList';
 import CycleList from './components/CycleList';
 import EmployeeAssignmentsView from './components/EmployeeAssignmentsView';
 import ManagerReviewsView from './components/ManagerReviewsView';
+import CycleProgressDashboard from './components/CycleProgressDashboard';
+import DisputeList from './components/DisputeList';
+import HRManagerDashboard from './components/HRManagerDashboard';
 import styles from './page.module.css';
 
 function PerformanceContent() {
@@ -26,7 +29,7 @@ function PerformanceContent() {
   const [cycles, setCycles] = useState<AppraisalCycle[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'templates' | 'cycles' | 'assignments' | 'my-performance' | 'team-reviews'>('templates');
+  const [activeTab, setActiveTab] = useState<'templates' | 'cycles' | 'assignments' | 'dashboard' | 'consolidated' | 'disputes' | 'my-performance' | 'team-reviews'>('templates');
   const [hasTeamReviews, setHasTeamReviews] = useState(false);
 
   // Check user roles
@@ -228,6 +231,24 @@ function PerformanceContent() {
           >
             Assignments
           </button>
+          <button
+            className={`${styles.tab} ${activeTab === 'dashboard' ? styles.active : ''}`}
+            onClick={() => setActiveTab('dashboard')}
+          >
+            Progress Dashboard
+          </button>
+          <button
+            className={`${styles.tab} ${activeTab === 'consolidated' ? styles.active : ''}`}
+            onClick={() => setActiveTab('consolidated')}
+          >
+            Consolidated Dashboard
+          </button>
+          <button
+            className={`${styles.tab} ${activeTab === 'disputes' ? styles.active : ''}`}
+            onClick={() => setActiveTab('disputes')}
+          >
+            Disputes
+          </button>
           {hasTeamReviews && (
             <button
               className={`${styles.tab} ${activeTab === 'team-reviews' ? styles.active : ''}`}
@@ -268,6 +289,18 @@ function PerformanceContent() {
 
         {activeTab === 'assignments' && (
           <AssignmentList />
+        )}
+
+        {activeTab === 'dashboard' && (
+          <CycleProgressDashboard cycles={cycles} onRefresh={fetchCycles} />
+        )}
+
+        {activeTab === 'consolidated' && (
+          <HRManagerDashboard />
+        )}
+
+        {activeTab === 'disputes' && (
+          <DisputeList />
         )}
 
         {activeTab === 'team-reviews' && (

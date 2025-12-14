@@ -16,6 +16,10 @@ import type {
   UpdateAppraisalAssignmentDto,
   AppraisalCycle,
   CreateAppraisalCycleDto,
+  AppraisalDispute,
+  CreateAppraisalDisputeDto,
+  ResolveAppraisalDisputeDto,
+  AppraisalDisputeStatus,
 } from '../types';
 
 /**
@@ -350,6 +354,114 @@ export const submitManagerEvaluation = async (
   return response.data;
 };
 
+/**
+ * Get cycle progress dashboard
+ */
+export const getCycleProgress = async (cycleId: string): Promise<{
+  total: number;
+  notStarted: number;
+  inProgress: number;
+  submitted: number;
+  acknowledged: number;
+  completed: number;
+  completionRate: number;
+}> => {
+  const response = await apiClient.get(
+    `${API_ENDPOINTS.PERFORMANCE}/cycles/${cycleId}/progress`
+  );
+  return response.data;
+};
+
+/**
+ * Create a dispute for an appraisal evaluation
+ */
+export const createDispute = async (
+  employeeId: string,
+  data: CreateAppraisalDisputeDto
+): Promise<AppraisalDispute> => {
+  const response = await apiClient.post<AppraisalDispute | { success: boolean; message: string; data: AppraisalDispute }>(
+    `${API_ENDPOINTS.PERFORMANCE}/disputes`,
+    { employeeId, ...data }
+  );
+  if (response.data && '_id' in response.data) {
+    return response.data as AppraisalDispute;
+  }
+  return (response.data as any).data;
+};
+
+/**
+ * Get all disputes
+ */
+export const getDisputes = async (status?: AppraisalDisputeStatus): Promise<AppraisalDispute[]> => {
+  const params = status ? { status } : {};
+  const response = await apiClient.get<AppraisalDispute[] | { success: boolean; message: string; data: AppraisalDispute[] }>(
+    `${API_ENDPOINTS.PERFORMANCE}/disputes`,
+    { params }
+  );
+  if (Array.isArray(response.data)) {
+    return response.data;
+  }
+  return (response.data as any).data || [];
+};
+
+/**
+ * Get disputes for a specific employee
+ */
+export const getEmployeeDisputes = async (employeeId: string): Promise<AppraisalDispute[]> => {
+  const response = await apiClient.get<AppraisalDispute[] | { success: boolean; message: string; data: AppraisalDispute[] }>(
+    `${API_ENDPOINTS.PERFORMANCE}/employees/${employeeId}/disputes`
+  );
+  if (Array.isArray(response.data)) {
+    return response.data;
+  }
+  return (response.data as any).data || [];
+};
+
+/**
+ * Get a single dispute by ID
+ */
+export const getDisputeById = async (id: string): Promise<AppraisalDispute> => {
+  const response = await apiClient.get<AppraisalDispute | { success: boolean; message: string; data: AppraisalDispute }>(
+    `${API_ENDPOINTS.PERFORMANCE}/disputes/${id}`
+  );
+  if (response.data && '_id' in response.data) {
+    return response.data as AppraisalDispute;
+  }
+  return (response.data as any).data;
+};
+
+/**
+ * Resolve a dispute (HR Manager action)
+ */
+export const resolveDispute = async (
+  disputeId: string,
+  reviewerId: string,
+  data: ResolveAppraisalDisputeDto
+): Promise<AppraisalDispute> => {
+  const response = await apiClient.post<AppraisalDispute | { success: boolean; message: string; data: AppraisalDispute }>(
+    `${API_ENDPOINTS.PERFORMANCE}/disputes/${disputeId}/resolve`,
+    { reviewerId, ...data }
+  );
+  if (response.data && '_id' in response.data) {
+    return response.data as AppraisalDispute;
+  }
+  return (response.data as any).data;
+};
+
+/**
+ * Acknowledge an appraisal evaluation (Employee action)
+ */
+export const acknowledgeEvaluation = async (
+  evaluationId: string,
+  comment?: string
+): Promise<any> => {
+  const response = await apiClient.post(
+    `${API_ENDPOINTS.PERFORMANCE}/evaluations/${evaluationId}/acknowledge`,
+    { comment }
+  );
+  return response.data;
+};
+
 export const performanceApi = {
   getTemplates,
   getTemplateById,
@@ -370,5 +482,12 @@ export const performanceApi = {
   submitSelfAssessment,
   getEvaluationByCycleAndEmployee,
   submitManagerEvaluation,
+  getCycleProgress,
+  createDispute,
+  getDisputes,
+  getEmployeeDisputes,
+  getDisputeById,
+  resolveDispute,
+  acknowledgeEvaluation,
 };
 

@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import '../shared/styles/globals.css';
-import { Navbar } from '@/shared/components';
+import { Navbar, NotificationContainer } from '@/shared/components';
+import { NotificationProvider } from '@/shared/contexts/NotificationContext';
+import { NotificationPosition } from '@/shared/types';
 
 export const metadata: Metadata = {
   title: 'HR Management System',
@@ -15,8 +17,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <Navbar />
-        {children}
+        <NotificationProvider defaultDuration={5000} maxNotifications={5}>
+          <Navbar />
+          {children}
+          <NotificationContainer position={NotificationPosition.TOP_RIGHT} maxNotifications={5} />
+        </NotificationProvider>
       </body>
     </html>
   );

@@ -13,7 +13,7 @@ import AskForCorrection from "../components/AskForCorrection";
 
 export default function AttendanceCorrectionRequestPage() {  
   const [attendancecorrectionrequests, setAttendanceCorrectionRequests] = useState<AttendanceCorrectionRequest[]>([]);  
-  const [loading, setLoading] = useState(true);  
+  const [loading, setLoading] = useState(true);
 
   const { user } = useAuth();  
 
@@ -30,10 +30,7 @@ export default function AttendanceCorrectionRequestPage() {
   };  
 
   useEffect(() => {  
-    load();  
-    console.log("OVER HERE") 
-    const condition = user?.roles.includes(SystemRole.DEPARTMENT_EMPLOYEE) && user?.roles.includes(SystemRole.HR_EMPLOYEE)
-    console.log(condition);  
+    load();
   }, [user]); // Make sure `user` is properly updated  
 
   const handleDelete = async (id: string) => {  

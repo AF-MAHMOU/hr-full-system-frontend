@@ -6,8 +6,10 @@ import s from './page.module.css';
 import { getAllLatenessRule, getAllSchedule, getAllShifts, getAllShiftsType } from './api/index';
 import { LatenessRule, ScheduleRule, Shift, ShiftType } from './types';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { set } from 'zod';
+import { useAuth } from '@/shared/hooks';
+import { SystemRole } from '@/shared/types';
 
 export default function TimeManagementPage() {
     const [shiftTypes, setShiftTypes] = useState<ShiftType[]>([]);
@@ -24,26 +26,44 @@ export default function TimeManagementPage() {
     const latenessHref = `${pathname}/lateness`;
     const scheduleHref = `${pathname}/schedule`;
 
+    const router = useRouter();
+    const { user } = useAuth();
+
     useEffect(() => {
-        async function fetchThem() {
-            try {
-                const st = await getAllShiftsType();
-                const s = await getAllShifts();
-                const l = await getAllLatenessRule();
-                const sr = await getAllSchedule();
-                
-                setShiftTypes(st);
-                setShifts(s);
-                setLatenessRules(l);
-                setScheduleRules(sr);
-            } catch (err) {
-                console.error('Failed to fetch', err);
-            } finally {
-                setLoading(false);
-            }
+    console.log("hello");
+    console.log(user?.roles);
+
+    // Check if user exists and has roles before proceeding
+    if (user && user.roles) {
+        if (user.roles.includes(SystemRole.DEPARTMENT_EMPLOYEE)) {
+            setTimeout(() => {
+                router.push('/');
+            }, 1);
         }
-        fetchThem();
-    }, []);
+    } else {
+        console.log('User is not fully loaded or no roles available.');
+    }
+
+    async function fetchThem() {
+        try {
+            const st = await getAllShiftsType();
+            const s = await getAllShifts();
+            const l = await getAllLatenessRule();
+            const sr = await getAllSchedule();
+
+            setShiftTypes(st);
+            setShifts(s);
+            setLatenessRules(l);
+            setScheduleRules(sr);
+        } catch (err) {
+            console.error('Failed to fetch', err);
+        } finally {
+            setLoading(false);
+        }
+    }
+    fetchThem();
+}, [user, router]); // Include `user` in dependencies to re-run if it changes
+
 
     const nextStep = (() => {
         const label = 'Get started';

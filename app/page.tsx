@@ -139,6 +139,8 @@ export default function Home() {
   }, [user]);
 
   useEffect(() => {
+    console.log("Hello")
+    console.log(user?.roles)
     if (isAuthenticated && user) {
       fetchDashboardStats();
     }

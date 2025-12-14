@@ -66,7 +66,7 @@ export default function AskForCorrection({
         if (filteredRecords.length < 1) {
           setMessage("You are employed, but you do not have a shift haha (get a job).");
           setTimeout(() => {
-            router.push('/time-management'); 
+            router.push('/modules/time-management'); 
           }, 3000); 
         }
 

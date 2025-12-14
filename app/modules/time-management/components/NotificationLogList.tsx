@@ -17,7 +17,7 @@ export default function NotificationLogList({ notifications, onDelete }: Notific
 */
 
   return (
-    <div className={s.notificationContainer}>
+    <div className={s.cardcontainer}>
       {notifications.map((notification) => (
         <div key={notification.id} className={s.Card}>
           <h4 className={s.header}>{notification.to}</h4>

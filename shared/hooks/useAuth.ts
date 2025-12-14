@@ -80,6 +80,7 @@ export const useAuth = () => {
     setError(null);
     setIsLoading(true);
     try {
+      console.log("here")
       const data = await authApi.login(loginDto);
       setUser(data.user);
       return data;

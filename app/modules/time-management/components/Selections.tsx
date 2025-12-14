@@ -1,25 +1,48 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react"; // Added useState for loading state
 import s from "../page.module.css";
 import { EmployeeProfile, getAllEmployees } from "../../hr/api/hrApi";
 
 interface Props {
   employeeId: string;
   setEmployeeId: (id: string) => void;
-  employees: EmployeeProfile[];
-  setEmployees: (e: EmployeeProfile[]) => void;
 }
 
 export default function Selections({
   employeeId,
   setEmployeeId,
-  employees,
-  setEmployees,
 }: Props) {
+  const [employees, setEmployees] = useState<EmployeeProfile[]>([]);
+  const [loading, setLoading] = useState<boolean>(true); // Loading state to track if data is being fetched
+  const [error, setError] = useState<string | null>(null); // Error state for handling failures
+
   useEffect(() => {
-    getAllEmployees().then(setEmployees).catch(() => {});
-  }, [setEmployees]);
+  getAllEmployees()
+    .then((data) => {
+      setEmployees(data);
+      setLoading(false);
+      
+      // Set employeeId to the first employee if available
+      if (data.length > 0) {
+        setEmployeeId(data[0]._id); // Default to the first employee's ID
+      }
+    })
+    .catch((err) => {
+      console.error("Error fetching employees:", err);
+      setError("Failed to load employees");
+      setLoading(false);
+    });
+}, []);
+
+
+  if (loading) {
+    return <div>Loading...</div>; // Display loading text while fetching
+  }
+
+  if (error) {
+    return <div>{error}</div>; // Display error message if fetching fails
+  }
 
   return (
     <select

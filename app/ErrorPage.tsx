@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import s from './page.module.css';
 
-export default function Error({
+export default function ErrorPage({
   error,
   reset,
 }: {

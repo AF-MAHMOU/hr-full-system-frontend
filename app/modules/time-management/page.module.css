@@ -1,6 +1,7 @@
 .wrapper {
   position: fixed;
   inset: 0;
+  
   background: linear-gradient(135deg, #0f0e1a 0%, #1a1825 25%, #2f2c3c 50%, #25242d 75%, #181623 100%);
   overflow-y: auto;
   overflow-x: hidden;

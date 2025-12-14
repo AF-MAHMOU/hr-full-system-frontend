@@ -22,17 +22,17 @@ export default function ReportsPage() {
   const [employeeId, setEmployeeId] = useState("");
     
   const exportReport = async () => {
-    try {
-      setExporting(true);
+  try {
+    setExporting(true);
 
-      let data: any[] = [];
+    let data: any[] = [];
 
-      if (reportType === "attendance") {
-        data = await getAllAttendanceRecord();
-      } else if (reportType === "lateness") {
+    if (reportType === "attendance") {
+      data = await getAllAttendanceRecord();
+    } else if (reportType === "lateness") {
       const attendance = await getAllAttendanceRecord();
       const exceptions = await getAllTimeExceptions();
-          
+
       data = exceptions
         .filter(e => e.type === TimeExceptionType.LATE)
         .filter(e => e.employeeId === employeeId || !employeeId)
@@ -40,54 +40,61 @@ export default function ReportsPage() {
           const record = attendance.find(
             r => r.id === e.attendanceRecordId
           );
-        
+
           return {
             employeeId: e.employeeId,
             attendanceRecordId: e.attendanceRecordId,
             status: e.status,
             reason: e.reason ?? "",
+            // Serialize punches properly (assuming punches is an array or object)
+            punches: JSON.stringify(record?.punches),  // Serialize the punches to a string
+            totalWorkMinutes: record?.totalWorkMinutes ?? 0,
+            hasMissedPunch: record?.hasMissedPunch ? "true" : "false",
+            exceptionIds: e.exceptionIds ?? "",
+            finalisedForPayroll: record?.finalisedForPayroll ? "true" : "false",
           };
         });
+    } else if (reportType === "overtime") {
+      data = await getAllOvertime();
     }
 
-
-      else if (reportType === "overtime") {
-        data = await getAllOvertime();
-      }
-
-      if (employeeId) {
-        data = data.filter((row) => row.employeeId === employeeId);
-      }
-
-      if (!data.length) {
-        alert("No data to export for selected employee");
-        return;
-      }
-
-      const headers = Object.keys(data[0]);
-      const rows = data.map((row) =>
-        headers.map((h) => `"${row[h] ?? ""}"`).join(",")
-      );
-
-      const csv = [headers.join(","), ...rows].join("\n");
-      const blob = new Blob([csv], { type: "text/plain;charset=utf-8;" });
-      const url = window.URL.createObjectURL(blob);
-
-      const a = document.createElement("a");
-      a.href = url;
-      a.download =
-        format === "text"
-          ? `${reportType}-report.txt`
-          : `${reportType}-report.csv`;
-
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
-    } finally {
-      setExporting(false);
+    // Filter by employee if selected
+    if (employeeId) {
+      data = data.filter((row) => row.employeeId === employeeId);
     }
-  };
+
+    if (!data.length) {
+      alert("No data to export for selected employee");
+      return;
+    }
+
+    // Prepare CSV headers and rows
+    const headers = Object.keys(data[0]);
+    const rows = data.map((row) =>
+      headers.map((h) => `"${row[h] ?? ""}"`).join(",")
+    );
+
+    // Create CSV content
+    const csv = [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csv], { type: "text/plain;charset=utf-8;" });
+    const url = window.URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download =
+      format === "text"
+        ? `${reportType}-report.txt`
+        : `${reportType}-report.csv`;
+
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+  } finally {
+    setExporting(false);
+  }
+};
+
 
   return (
     <div className={s.container}>

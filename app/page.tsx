@@ -295,6 +295,16 @@ export default function Home() {
       });
     }
 
+    // Time Management
+    if (userType === 'employee') {
+      actions.push({
+        label: 'Time Management',
+        route: ROUTES.TIME_MANAGEMENT,
+        icon: '📈',
+        userTypes: ['employee'],
+      });
+    }
+
     return actions;
   };
 

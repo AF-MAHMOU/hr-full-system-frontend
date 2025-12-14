@@ -542,7 +542,6 @@ export const getAllNotification = async (): Promise<NotificationLog[]> => {
   }
 };
 
-
 export const getAllOvertime = async (): Promise<OvertimeRule[]> => {
   try {
     const { data } = await axiosInstance.get("/overtime");
@@ -826,7 +825,6 @@ export async function rejectAttendanceCorrection(id: string) {
   );
   return res.data;
 }
-
 
 //
 //

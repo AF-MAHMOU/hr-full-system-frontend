@@ -264,7 +264,7 @@ const AllowanceList: React.FC<AllowanceListProps> = ({ userRole }) => {
                       )}
 
                       {/* Approve/Reject for PENDING */}
-                      {allowance.status === 'draft' && isManager && (
+                      {allowance.status === 'draft' && isHRManager && (
                         <>
                           <button
                             className={`${styles.iconButton} ${styles.iconButtonSuccess}`}

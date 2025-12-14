@@ -13,7 +13,7 @@ import { Button } from '@/shared/components';
 import { useAuth } from '@/shared/hooks/useAuth';
 import { SystemRole } from '@/shared/types/auth';
 import { taxRuleApi } from '../api/payrollConfigApi';
-import type { TaxRule, FilterTaxRuleDto, ApprovalStatus, TaxCalculationType } from '../types';
+import type { TaxRule, FilterTaxRuleDto, ApprovalStatus } from '../types';
 import TaxRuleModal from './TaxRuleModal';
 import styles from '../page.module.css';
 import { formatCurrency } from '@/shared/utils/format';
@@ -130,15 +130,6 @@ const TaxRuleList: React.FC<TaxRuleListProps> = ({ userRole }) => {
       rejected: styles.statusRejected,
     };
     return `${styles.statusBadge} ${statusClasses[status] || ''}`;
-  };
-
-  const formatCalculationType = (type: TaxCalculationType): string => {
-    const labels: Record<TaxCalculationType, string> = {
-      FLAT: 'Flat Rate',
-      PROGRESSIVE: 'Progressive',
-      TIERED: 'Tiered Brackets',
-    };
-    return labels[type] || type;
   };
 
   const formatDate = (dateString: string): string => {

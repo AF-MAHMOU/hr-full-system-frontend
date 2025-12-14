@@ -530,6 +530,52 @@
 
 /* ========================== END EMAD ========================== */
 
+/* ==========================================
+   STATUS BADGES
+   Author: Mohammed Emad
+   ========================================== */
+
+.statusBadge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.statusDraft {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fcd34d;
+}
+
+.statusPending {
+  background: #dbeafe;
+  color: #1e40af;
+  border: 1px solid #93c5fd;
+}
+
+.statusApproved {
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #6ee7b7;
+}
+
+.statusRejected {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+
+.iconButtonPrimary:hover {
+  background: #dbeafe;
+  border-color: #3b82f6;
+  color: #3b82f6;
+}
+
+/* ========================== END STATUS BADGES ========================== */
+
 /* ========================== JOHN WASFY ==========================
    Add Insurance Brackets, Payroll Policies styles here
    ========================== END JOHN WASFY ====================== */
@@ -537,3 +583,237 @@
 /* ========================== ESLAM ==========================
    Add Signing Bonus, Pay Types, Termination Benefits styles here
    ========================== END ESLAM ====================== */
+
+/* ==========================================
+   PAYROLL PERIOD - FRONTEND-ONLY WORKFLOW
+   REQ-PY-24: Review Payroll period (Approve or Reject)
+   REQ-PY-26: Edit payroll initiation (period) if rejected
+   Author: Mohammed Emad
+   ========================================== */
+
+.payrollPeriodContainer {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.sectionDescription {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin-bottom: 1.5rem;
+}
+
+.periodCard {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.periodCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.periodCardHeader h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #111827;
+}
+
+.periodDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.detailRow {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px dashed #e5e7eb;
+}
+
+.detailRow:last-child {
+  border-bottom: none;
+}
+
+.detailLabel {
+  font-weight: 500;
+  color: #374151;
+}
+
+.detailValue {
+  color: #6b7280;
+}
+
+.approvalInfo,
+.rejectionInfo {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+}
+
+.approvalInfo {
+  background: #d1fae5;
+  border: 1px solid #6ee7b7;
+}
+
+.rejectionInfo {
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+}
+
+.approvalLabel,
+.rejectionLabel {
+  font-weight: 600;
+  margin-right: 0.5rem;
+}
+
+.approvalValue {
+  color: #065f46;
+}
+
+.rejectionValue {
+  color: #991b1b;
+}
+
+.periodActions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+  flex-wrap: wrap;
+}
+
+.editForm {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.formGroup label {
+  font-weight: 500;
+  color: #374151;
+  font-size: 0.875rem;
+}
+
+.dateInput {
+  padding: 0.625rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.dateInput:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.editActions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: #ffffff;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.modal h3 {
+  margin: 0 0 0.5rem 0;
+  color: #111827;
+}
+
+.modal p {
+  color: #6b7280;
+  margin-bottom: 1rem;
+}
+
+.rejectionTextarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  resize: vertical;
+  min-height: 100px;
+}
+
+.rejectionTextarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.modalActions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  justify-content: flex-end;
+}
+
+.workflowInfo {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.workflowInfo h4 {
+  margin: 0 0 0.75rem 0;
+  color: #374151;
+  font-size: 0.875rem;
+}
+
+.workflowInfo ul {
+  margin: 0;
+  padding-left: 1.25rem;
+  list-style-type: disc;
+}
+
+.workflowInfo li {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+}
+
+.workflowInfo li:last-child {
+  margin-bottom: 0;
+}
+
+/* ========================== END PAYROLL PERIOD ========================== */

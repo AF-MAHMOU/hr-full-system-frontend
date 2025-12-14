@@ -2,13 +2,14 @@
  * ========================== EMAD ==========================
  * Payroll Configuration Module - Main Page
  * This module handles payroll configuration and policy setup
- * 
+ *
  * Tabs implemented by Emad:
  * - Dashboard (Approval Dashboard)
  * - Pay Grades
  * - Allowances
  * - Tax Rules
- * 
+ * - Payroll Periods (NEW - Approval Workflow)
+ *
  * Author: Mohammed Emad
  * ========================== EMAD ==========================
  */
@@ -29,10 +30,22 @@ import SigningBonusList from './components/SigningBonusList';
 import PayTypeList from './components/PayTypeList';
 import TerminationBenefitList from './components/TerminationBenefitList';
 import CompanySettingsList from './components/CompanySettingsList';
+import PayrollPeriodList from './components/PayrollPeriodList';
 import styles from './page.module.css';
 
 // ========================== EMAD - Tab Configuration ==========================
-type TabId = 'dashboard' | 'payGrades' | 'allowances' | 'taxRules' | 'insuranceBrackets' | 'payrollPolicies' | 'signingBonuses' | 'payTypes' | 'terminationBenefits' | 'companySettings';
+type TabId =
+  | 'dashboard'
+  | 'payGrades'
+  | 'allowances'
+  | 'taxRules'
+  | 'insuranceBrackets'
+  | 'payrollPolicies'
+  | 'signingBonuses'
+  | 'payTypes'
+  | 'terminationBenefits'
+  | 'companySettings'
+  | 'payrollPeriods';
 
 interface Tab {
   id: TabId;
@@ -42,6 +55,7 @@ interface Tab {
 
 const EMAD_TABS: Tab[] = [
   { id: 'dashboard', label: 'Dashboard', icon: '📊' },
+  { id: 'payrollPeriods', label: 'Payroll Periods', icon: '📅' },
   { id: 'payGrades', label: 'Pay Grades', icon: '💰' },
   { id: 'allowances', label: 'Allowances', icon: '🎁' },
   { id: 'taxRules', label: 'Tax Rules', icon: '📋' },
@@ -75,6 +89,8 @@ function PayrollConfigurationContent() {
       // ========================== EMAD - Tab Content ==========================
       case 'dashboard':
         return <ApprovalDashboard userRole={userRole} />;
+      case 'payrollPeriods':
+        return <PayrollPeriodList userRole={userRole} />;
       case 'payGrades':
         return <PayGradeList />;
       case 'allowances':
@@ -112,7 +128,8 @@ function PayrollConfigurationContent() {
       <div className={styles.pageHeader}>
         <h1 className={styles.pageTitle}>Payroll Configuration</h1>
         <p className={styles.pageSubtitle}>
-          Manage pay grades, allowances, tax rules, insurance brackets, payroll policies, signing bonuses, pay types, termination benefits, and company settings
+          Manage payroll periods, pay grades, allowances, tax rules, insurance brackets, payroll
+          policies, signing bonuses, pay types, termination benefits, and company settings
         </p>
       </div>
 

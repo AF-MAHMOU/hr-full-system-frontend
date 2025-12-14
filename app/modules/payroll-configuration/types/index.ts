@@ -32,12 +32,6 @@ export enum AllowanceFrequency {
   ONE_TIME = 'ONE_TIME',
 }
 
-export enum TaxCalculationType {
-  FLAT = 'FLAT',
-  PROGRESSIVE = 'PROGRESSIVE',
-  TIERED = 'TIERED',
-}
-
 // ==========================================
 // PAY GRADE TYPES
 // ==========================================
@@ -105,13 +99,6 @@ export interface FilterAllowanceDto {
 // ==========================================
 // TAX RULE TYPES
 // ==========================================
-
-export interface TaxBracket {
-  minAmount: number;
-  maxAmount: number;
-  rate: number;
-  fixedAmount?: number;
-}
 
 export interface TaxRule extends BaseEntity {
   name: string;
@@ -512,3 +499,79 @@ export interface FilterAuditLogDto {
 
 // ========================== END ESLAM ==========================
 
+// ========================== MOHAMMED EMAD ==========================
+// Payroll Period Approval – Frontend-Only Workflow Types
+// REQ-PY-24: Review Payroll period (Approve or Reject)
+// REQ-PY-26: Edit payroll initiation (period) if rejected
+//
+// This is a FRONTEND-ONLY workflow:
+// - Period data is generated on the frontend based on current date
+// - Approval state is managed in React state (with localStorage persistence)
+// - NO backend storage for payroll periods
+// - Only status values: draft, approved, rejected (NO pending_approval)
+// ========================== MOHAMMED EMAD ==========================
+
+/**
+ * Payroll Period Status (Frontend-Only)
+ * Only three statuses: draft, approved, rejected
+ */
+export enum PayrollPeriodStatus {
+  DRAFT = 'draft',
+  APPROVED = 'approved',
+  REJECTED = 'rejected',
+}
+
+/**
+ * Payroll Period data structure (Frontend-Only)
+ * Generated on the frontend based on current month/year
+ */
+export interface PayrollPeriod {
+  id: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+  paymentDate: string;
+  year: number;
+  month: number;
+  status: PayrollPeriodStatus;
+  currency: string;
+  workingDays: number;
+  approvedBy?: string;
+  approvedAt?: string;
+  rejectedBy?: string;
+  rejectedAt?: string;
+  rejectionReason?: string;
+}
+
+/**
+ * Frontend workflow state for the Payroll Period Approval
+ * Manages the entire approval flow on the frontend
+ */
+export interface PayrollPeriodWorkflowState {
+  currentPeriod: PayrollPeriod | null;
+  isApproved: boolean;
+  isRejected: boolean;
+  canCreatePayrollRun: boolean;
+  approvedBy?: string;
+  approvedAt?: string;
+  rejectedBy?: string;
+  rejectedAt?: string;
+  rejectionReason?: string;
+}
+
+/**
+ * Initial workflow state
+ */
+export const INITIAL_WORKFLOW_STATE: PayrollPeriodWorkflowState = {
+  currentPeriod: null,
+  isApproved: false,
+  isRejected: false,
+  canCreatePayrollRun: false,
+};
+
+/**
+ * LocalStorage key for persisting workflow state
+ */
+export const PAYROLL_PERIOD_STORAGE_KEY = 'payroll_period_workflow_state';
+
+// ========================== END MOHAMMED EMAD ==========================

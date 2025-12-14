@@ -1,7 +1,7 @@
 /**
  * ========================== EMAD ==========================
  * TaxRuleModal Component
- * Modal for creating and editing tax rules with bracket support
+ * Modal for creating and editing tax rules
  * Author: Mohammed Emad
  * ========================== EMAD ==========================
  */
@@ -9,16 +9,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Modal, Button } from '@/shared/components';
+import { Modal, Button, Input } from '@/shared/components';
 import { taxRuleApi } from '../api/payrollConfigApi';
-import {
-  TaxCalculationType,
-} from '../types';
 import type {
   TaxRule,
   CreateTaxRuleDto,
   UpdateTaxRuleDto,
-  TaxBracket,
 } from '../types';
 import styles from '../page.module.css';
 
@@ -33,23 +29,20 @@ interface TaxRuleModalProps {
 interface FormData {
   name: string;
   description: string;
-  calculationType: TaxCalculationType;
   rate: string;
-  brackets: TaxBracket[];
-  effectiveFrom: string;
-  effectiveTo: string;
-  isActive: boolean;
+  minSalary: string;
+  maxSalary: string;
+  taxRate: string;
 }
 
 interface FormErrors {
   name?: string;
   rate?: string;
-  brackets?: string;
-  effectiveFrom?: string;
+  minSalary?: string;
+  maxSalary?: string;
+  taxRate?: string;
   general?: string;
 }
-
-const EMPTY_BRACKET: TaxBracket = { minAmount: 0, maxAmount: 0, rate: 0, fixedAmount: 0 };
 
 const TaxRuleModal: React.FC<TaxRuleModalProps> = ({
   isOpen,
@@ -61,12 +54,10 @@ const TaxRuleModal: React.FC<TaxRuleModalProps> = ({
   const [formData, setFormData] = useState<FormData>({
     name: '',
     description: '',
-    calculationType: TaxCalculationType.FLAT,
     rate: '',
-    brackets: [],
-    effectiveFrom: '',
-    effectiveTo: '',
-    isActive: true,
+    minSalary: '0',
+    maxSalary: '',
+    taxRate: '',
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [loading, setLoading] = useState(false);
@@ -78,27 +69,19 @@ const TaxRuleModal: React.FC<TaxRuleModalProps> = ({
       setFormData({
         name: taxRule.name,
         description: taxRule.description || '',
-        calculationType: taxRule.calculationType,
         rate: taxRule.rate?.toString() || '',
-        brackets: taxRule.brackets || [],
-        effectiveFrom: taxRule.effectiveFrom
-          ? new Date(taxRule.effectiveFrom).toISOString().split('T')[0]
-          : '',
-        effectiveTo: taxRule.effectiveTo
-          ? new Date(taxRule.effectiveTo).toISOString().split('T')[0]
-          : '',
-        isActive: taxRule.isActive,
+        minSalary: taxRule.minSalary?.toString() || '0',
+        maxSalary: taxRule.maxSalary?.toString() || '',
+        taxRate: taxRule.taxRate?.toString() || '',
       });
     } else {
       setFormData({
         name: '',
         description: '',
-        calculationType: TaxCalculationType.FLAT,
         rate: '',
-        brackets: [],
-        effectiveFrom: new Date().toISOString().split('T')[0],
-        effectiveTo: '',
-        isActive: true,
+        minSalary: '0',
+        maxSalary: '',
+        taxRate: '',
       });
     }
     setErrors({});
@@ -111,63 +94,50 @@ const TaxRuleModal: React.FC<TaxRuleModalProps> = ({
       newErrors.name = 'Name is required';
     }
 
-    if (!formData.effectiveFrom) {
-      newErrors.effectiveFrom = 'Effective from date is required';
+    if (!formData.rate || isNaN(Number(formData.rate))) {
+      newErrors.rate = 'Valid rate is required';
+    } else if (Number(formData.rate) < 0 || Number(formData.rate) > 100) {
+      newErrors.rate = 'Rate must be between 0 and 100';
     }
 
-    if (formData.calculationType === 'FLAT') {
-      if (!formData.rate || isNaN(Number(formData.rate))) {
-        newErrors.rate = 'Valid tax rate is required for flat calculation';
-      } else if (Number(formData.rate) < 0 || Number(formData.rate) > 100) {
-        newErrors.rate = 'Tax rate must be between 0 and 100';
-      }
-    } else {
-      // Progressive or Tiered
-      if (formData.brackets.length === 0) {
-        newErrors.brackets = 'At least one tax bracket is required';
-      } else {
-        // Validate brackets
-        for (let i = 0; i < formData.brackets.length; i++) {
-          const bracket = formData.brackets[i];
-          if (bracket.minAmount < 0 || bracket.maxAmount < 0 || bracket.rate < 0) {
-            newErrors.brackets = 'All bracket values must be non-negative';
-            break;
-          }
-          if (bracket.maxAmount <= bracket.minAmount && bracket.maxAmount !== 0) {
-            newErrors.brackets = 'Max amount must be greater than min amount (or 0 for unlimited)';
-            break;
-          }
-          if (bracket.rate > 100) {
-            newErrors.brackets = 'Bracket rate cannot exceed 100%';
-            break;
-          }
-        }
-      }
+    if (!formData.taxRate || isNaN(Number(formData.taxRate))) {
+      newErrors.taxRate = 'Valid tax rate is required';
+    } else if (Number(formData.taxRate) < 0 || Number(formData.taxRate) > 100) {
+      newErrors.taxRate = 'Tax rate must be between 0 and 100';
+    }
+
+    if (formData.minSalary && isNaN(Number(formData.minSalary))) {
+      newErrors.minSalary = 'Min salary must be a valid number';
+    }
+
+    if (formData.maxSalary && isNaN(Number(formData.maxSalary))) {
+      newErrors.maxSalary = 'Max salary must be a valid number';
+    }
+
+    if (
+      formData.minSalary &&
+      formData.maxSalary &&
+      Number(formData.minSalary) >= Number(formData.maxSalary)
+    ) {
+      newErrors.maxSalary = 'Max salary must be greater than min salary';
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (readOnly) return;
+  const handleSubmit = async () => {
     if (!validateForm()) return;
 
+    setLoading(true);
     try {
-      setLoading(true);
-      setErrors({});
-
       const payload: CreateTaxRuleDto | UpdateTaxRuleDto = {
         name: formData.name.trim(),
         description: formData.description.trim() || undefined,
-        calculationType: formData.calculationType,
-        rate: formData.calculationType === 'FLAT' ? Number(formData.rate) : undefined,
-        brackets: formData.calculationType !== 'FLAT' ? formData.brackets : undefined,
-        effectiveFrom: formData.effectiveFrom,
-        effectiveTo: formData.effectiveTo || undefined,
-        isActive: formData.isActive,
+        rate: Number(formData.rate),
+        minSalary: Number(formData.minSalary) || 0,
+        maxSalary: formData.maxSalary ? Number(formData.maxSalary) : undefined,
+        taxRate: Number(formData.taxRate),
       };
 
       if (isEditing && taxRule) {
@@ -177,67 +147,20 @@ const TaxRuleModal: React.FC<TaxRuleModalProps> = ({
       }
 
       onSave();
-    } catch (err: any) {
+      onClose();
+    } catch (error: any) {
       setErrors({
-        general: err.response?.data?.message || 'Failed to save tax rule',
+        general: error.response?.data?.message || 'Failed to save tax rule',
       });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => {
-    const { name, value, type } = e.target;
-    const checked = (e.target as HTMLInputElement).checked;
-
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
-
-    if (errors[name as keyof FormErrors]) {
-      setErrors((prev) => ({ ...prev, [name]: undefined }));
-    }
-  };
-
-  const handleCalculationTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newType = e.target.value as TaxCalculationType;
-    setFormData((prev) => ({
-      ...prev,
-      calculationType: newType,
-      rate: newType === 'FLAT' ? prev.rate : '',
-      brackets: newType !== 'FLAT' && prev.brackets.length === 0 ? [{ ...EMPTY_BRACKET }] : prev.brackets,
-    }));
-    setErrors({});
-  };
-
-  const addBracket = () => {
-    const lastBracket = formData.brackets[formData.brackets.length - 1];
-    const newMinAmount = lastBracket ? lastBracket.maxAmount : 0;
-    setFormData((prev) => ({
-      ...prev,
-      brackets: [...prev.brackets, { ...EMPTY_BRACKET, minAmount: newMinAmount }],
-    }));
-  };
-
-  const removeBracket = (index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      brackets: prev.brackets.filter((_, i) => i !== index),
-    }));
-  };
-
-  const updateBracket = (index: number, field: keyof TaxBracket, value: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      brackets: prev.brackets.map((bracket, i) =>
-        i === index ? { ...bracket, [field]: value } : bracket
-      ),
-    }));
-    if (errors.brackets) {
-      setErrors((prev) => ({ ...prev, brackets: undefined }));
+  const handleChange = (field: keyof FormData, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    if (errors[field as keyof FormErrors]) {
+      setErrors((prev) => ({ ...prev, [field]: undefined }));
     }
   };
 
@@ -245,253 +168,132 @@ const TaxRuleModal: React.FC<TaxRuleModalProps> = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={readOnly ? 'View Tax Rule' : isEditing ? 'Edit Tax Rule' : 'Create Tax Rule'}
-      size="lg"
+      title={
+        readOnly
+          ? 'View Tax Rule'
+          : isEditing
+          ? 'Edit Tax Rule'
+          : 'Create Tax Rule'
+      }
     >
       <div className={styles.modalContent}>
-        <form className={styles.form} onSubmit={handleSubmit}>
-          {errors.general && (
-            <div className={styles.formError} style={{ marginBottom: '1rem' }}>
-              {errors.general}
-            </div>
-          )}
+        {errors.general && (
+          <div className={styles.errorBanner}>{errors.general}</div>
+        )}
 
-          <div className={styles.formGrid}>
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel}>
-                Name <span>*</span>
-              </label>
-              <input
-                type="text"
-                name="name"
-                className={styles.formInput}
-                value={formData.name}
-                onChange={handleChange}
-                placeholder="e.g., Standard Income Tax 2024"
-                disabled={readOnly}
-              />
-              {errors.name && <span className={styles.formError}>{errors.name}</span>}
-            </div>
+        <div className={styles.formGroup}>
+          <label htmlFor="name">Name *</label>
+          <Input
+            id="name"
+            value={formData.name}
+            onChange={(e) => handleChange('name', e.target.value)}
+            placeholder="Enter tax rule name"
+            disabled={readOnly}
+          />
+          {errors.name && <span className={styles.fieldError}>{errors.name}</span>}
+        </div>
 
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel}>
-                Calculation Type <span>*</span>
-              </label>
-              <select
-                name="calculationType"
-                className={styles.formSelect}
-                value={formData.calculationType}
-                onChange={handleCalculationTypeChange}
-                disabled={readOnly}
-              >
-                <option value="FLAT">Flat Rate</option>
-                <option value="PROGRESSIVE">Progressive</option>
-                <option value="TIERED">Tiered Brackets</option>
-              </select>
-            </div>
+        <div className={styles.formGroup}>
+          <label htmlFor="description">Description</label>
+          <textarea
+            id="description"
+            value={formData.description}
+            onChange={(e) => handleChange('description', e.target.value)}
+            placeholder="Enter description (optional)"
+            disabled={readOnly}
+            className={styles.textarea}
+            rows={3}
+          />
+        </div>
 
-            {formData.calculationType === 'FLAT' && (
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>
-                  Tax Rate (%) <span>*</span>
-                </label>
-                <input
-                  type="number"
-                  name="rate"
-                  className={styles.formInput}
-                  value={formData.rate}
-                  onChange={handleChange}
-                  placeholder="e.g., 15"
-                  min="0"
-                  max="100"
-                  step="0.5"
-                  disabled={readOnly}
-                />
-                {errors.rate && <span className={styles.formError}>{errors.rate}</span>}
-              </div>
-            )}
-
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel}>
-                Effective From <span>*</span>
-              </label>
-              <input
-                type="date"
-                name="effectiveFrom"
-                className={styles.formInput}
-                value={formData.effectiveFrom}
-                onChange={handleChange}
-                disabled={readOnly}
-              />
-              {errors.effectiveFrom && (
-                <span className={styles.formError}>{errors.effectiveFrom}</span>
-              )}
-            </div>
-
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Effective To</label>
-              <input
-                type="date"
-                name="effectiveTo"
-                className={styles.formInput}
-                value={formData.effectiveTo}
-                onChange={handleChange}
-                disabled={readOnly}
-              />
-              <span style={{ fontSize: '0.75rem', color: '#666' }}>
-                Leave empty for no end date
-              </span>
-            </div>
-
-            <div className={styles.formGroup}>
-              <label className={styles.formCheckbox}>
-                <input
-                  type="checkbox"
-                  name="isActive"
-                  checked={formData.isActive}
-                  onChange={handleChange}
-                  disabled={readOnly}
-                />
-                <span>Active</span>
-              </label>
-              <span style={{ fontSize: '0.75rem', color: '#666' }}>
-                Used in payroll calculations
-              </span>
-            </div>
-
-            <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
-              <label className={styles.formLabel}>Description</label>
-              <textarea
-                name="description"
-                className={styles.formTextarea}
-                value={formData.description}
-                onChange={handleChange}
-                placeholder="Optional description for this tax rule..."
-                disabled={readOnly}
-              />
-            </div>
+        <div className={styles.formRow}>
+          <div className={styles.formGroup}>
+            <label htmlFor="rate">Rate (%) *</label>
+            <Input
+              id="rate"
+              type="number"
+              value={formData.rate}
+              onChange={(e) => handleChange('rate', e.target.value)}
+              placeholder="e.g., 10"
+              disabled={readOnly}
+              min="0"
+              max="100"
+              step="0.01"
+            />
+            {errors.rate && <span className={styles.fieldError}>{errors.rate}</span>}
           </div>
 
-          {/* Tax Brackets Section */}
-          {formData.calculationType !== 'FLAT' && (
-            <div className={styles.formGroup} style={{ marginTop: '1.5rem' }}>
-              <label className={styles.formLabel}>
-                Tax Brackets <span>*</span>
-              </label>
-              {errors.brackets && <span className={styles.formError}>{errors.brackets}</span>}
+          <div className={styles.formGroup}>
+            <label htmlFor="taxRate">Tax Rate (%) *</label>
+            <Input
+              id="taxRate"
+              type="number"
+              value={formData.taxRate}
+              onChange={(e) => handleChange('taxRate', e.target.value)}
+              placeholder="e.g., 15"
+              disabled={readOnly}
+              min="0"
+              max="100"
+              step="0.01"
+            />
+            {errors.taxRate && (
+              <span className={styles.fieldError}>{errors.taxRate}</span>
+            )}
+          </div>
+        </div>
 
-              {formData.brackets.length > 0 && (
-                <table className={styles.bracketsTable}>
-                  <thead>
-                    <tr>
-                      <th>Min Amount (EGP)</th>
-                      <th>Max Amount (EGP)</th>
-                      <th>Rate (%)</th>
-                      <th>Fixed Amount (EGP)</th>
-                      {!readOnly && <th>Action</th>}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {formData.brackets.map((bracket, index) => (
-                      <tr key={index}>
-                        <td>
-                          <input
-                            type="number"
-                            className={styles.formInput}
-                            value={bracket.minAmount}
-                            onChange={(e) =>
-                              updateBracket(index, 'minAmount', Number(e.target.value))
-                            }
-                            min="0"
-                            step="100"
-                            disabled={readOnly}
-                            style={{ width: '100%' }}
-                          />
-                        </td>
-                        <td>
-                          <input
-                            type="number"
-                            className={styles.formInput}
-                            value={bracket.maxAmount}
-                            onChange={(e) =>
-                              updateBracket(index, 'maxAmount', Number(e.target.value))
-                            }
-                            min="0"
-                            step="100"
-                            disabled={readOnly}
-                            style={{ width: '100%' }}
-                            placeholder="0 for unlimited"
-                          />
-                        </td>
-                        <td>
-                          <input
-                            type="number"
-                            className={styles.formInput}
-                            value={bracket.rate}
-                            onChange={(e) => updateBracket(index, 'rate', Number(e.target.value))}
-                            min="0"
-                            max="100"
-                            step="0.5"
-                            disabled={readOnly}
-                            style={{ width: '100%' }}
-                          />
-                        </td>
-                        <td>
-                          <input
-                            type="number"
-                            className={styles.formInput}
-                            value={bracket.fixedAmount || 0}
-                            onChange={(e) =>
-                              updateBracket(index, 'fixedAmount', Number(e.target.value))
-                            }
-                            min="0"
-                            step="100"
-                            disabled={readOnly}
-                            style={{ width: '100%' }}
-                          />
-                        </td>
-                        {!readOnly && (
-                          <td>
-                            <button
-                              type="button"
-                              className={styles.removeBracketButton}
-                              onClick={() => removeBracket(index)}
-                            >
-                              Remove
-                            </button>
-                          </td>
-                        )}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
+        <div className={styles.formRow}>
+          <div className={styles.formGroup}>
+            <label htmlFor="minSalary">Min Salary (EGP)</label>
+            <Input
+              id="minSalary"
+              type="number"
+              value={formData.minSalary}
+              onChange={(e) => handleChange('minSalary', e.target.value)}
+              placeholder="e.g., 0"
+              disabled={readOnly}
+              min="0"
+            />
+            {errors.minSalary && (
+              <span className={styles.fieldError}>{errors.minSalary}</span>
+            )}
+          </div>
 
-              {!readOnly && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={addBracket}
-                  className={styles.addBracketButton}
-                >
-                  + Add Bracket
-                </Button>
-              )}
-            </div>
-          )}
+          <div className={styles.formGroup}>
+            <label htmlFor="maxSalary">Max Salary (EGP)</label>
+            <Input
+              id="maxSalary"
+              type="number"
+              value={formData.maxSalary}
+              onChange={(e) => handleChange('maxSalary', e.target.value)}
+              placeholder="No limit"
+              disabled={readOnly}
+              min="0"
+            />
+            {errors.maxSalary && (
+              <span className={styles.fieldError}>{errors.maxSalary}</span>
+            )}
+          </div>
+        </div>
 
-          <div className={styles.formActions}>
-            <Button type="button" variant="outline" onClick={onClose}>
-              {readOnly ? 'Close' : 'Cancel'}
+        {!readOnly && (
+          <div className={styles.modalActions}>
+            <Button variant="secondary" onClick={onClose} disabled={loading}>
+              Cancel
             </Button>
-            {!readOnly && (
-              <Button type="submit" variant="primary" isLoading={loading}>
-                {isEditing ? 'Update' : 'Create'} Tax Rule
-              </Button>
-            )}
+            <Button variant="primary" onClick={handleSubmit} disabled={loading}>
+              {loading ? 'Saving...' : isEditing ? 'Update' : 'Create'}
+            </Button>
           </div>
-        </form>
+        )}
+
+        {readOnly && (
+          <div className={styles.modalActions}>
+            <Button variant="secondary" onClick={onClose}>
+              Close
+            </Button>
+          </div>
+        )}
       </div>
     </Modal>
   );

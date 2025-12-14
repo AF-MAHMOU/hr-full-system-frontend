@@ -21,7 +21,7 @@ export default function LatenessRuleList({ latenessrules, onDelete }: LatenessRu
   */
 
   return (
-    <div className={s.latenessruleContainer}>
+    <div className={s.cardcontainer}>
       {latenessrules.map((rule) => (
         <div key={rule.id} className={s.Card}>
           <h4 className={s.header}>{rule.name}</h4>

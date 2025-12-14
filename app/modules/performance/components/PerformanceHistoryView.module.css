@@ -1,0 +1,225 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.header h2 {
+  margin: 0 0 0.5rem 0;
+  color: #333;
+}
+
+.header p {
+  margin: 0;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.loading,
+.errorMessage {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+}
+
+.errorMessage {
+  color: #d32f2f;
+  background-color: #fee;
+  border: 1px solid #fcc;
+  border-radius: 4px;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+}
+
+.note {
+  font-size: 0.9rem;
+  color: #999;
+  margin-top: 0.5rem;
+}
+
+.trendCard {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.trendTitle {
+  margin: 0 0 1rem 0;
+  color: white;
+  font-size: 1.2rem;
+}
+
+.trendGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.trendItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.trendLabel {
+  font-size: 0.85rem;
+  opacity: 0.9;
+}
+
+.trendValue {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.trendBadge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  display: inline-block;
+  width: fit-content;
+}
+
+.trendImproving {
+  color: #4caf50;
+  background-color: rgba(76, 175, 80, 0.2);
+}
+
+.trendDeclining {
+  color: #f44336;
+  background-color: rgba(244, 67, 54, 0.2);
+}
+
+.trendStable {
+  color: #ff9800;
+  background-color: rgba(255, 152, 0, 0.2);
+}
+
+.historyList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.historyCard {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.cardHeader h3 {
+  margin: 0;
+  color: #333;
+  font-size: 1.1rem;
+}
+
+.cardSubtitle {
+  margin: 0.25rem 0 0 0;
+  color: #666;
+  font-size: 0.85rem;
+}
+
+.statusBadge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.statusPublished {
+  background-color: #e8f5e9;
+  color: #388e3c;
+}
+
+.statusSubmitted {
+  background-color: #fff3e0;
+  color: #f57c00;
+}
+
+.statusDraft {
+  background-color: #f5f5f5;
+  color: #666;
+}
+
+.statusArchived {
+  background-color: #e0e0e0;
+  color: #424242;
+}
+
+.statusDefault {
+  background-color: #f5f5f5;
+  color: #666;
+}
+
+.cardBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.infoGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+}
+
+.infoItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.infoLabel {
+  font-size: 0.85rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.infoValue {
+  font-size: 0.95rem;
+  color: #333;
+}
+
+.cardActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e0e0e0;
+}
+
+@media (max-width: 768px) {
+  .trendGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .infoGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .cardHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+

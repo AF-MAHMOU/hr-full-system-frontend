@@ -35,7 +35,7 @@ export default function HolidayList() {
   if (!holidays.length) return <p>No holidays found</p>;
 
   return (
-    <div className={s.holidayContainer}>
+    <div className={s.cardcontainer}>
       {holidays.map((holiday) => (
         <div key={holiday.id} className={s.Card}>
           <h4 className={s.header}>{holiday.name}</h4>

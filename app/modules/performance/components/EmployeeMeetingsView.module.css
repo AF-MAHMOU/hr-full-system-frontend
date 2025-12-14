@@ -1,0 +1,125 @@
+.container {
+  width: 100%;
+}
+
+.header {
+  margin-bottom: 2rem;
+}
+
+.header h2 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.header p {
+  margin: 0;
+  color: #666;
+}
+
+.loading {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 3rem 2rem;
+}
+
+.emptyState p {
+  margin: 0.5rem 0;
+  color: #666;
+}
+
+.emptyState .note {
+  font-size: 0.9rem;
+  color: #888;
+  margin-top: 1rem;
+}
+
+.meetingsList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.meetingCard {
+  width: 100%;
+}
+
+.meetingHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.meetingHeader h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.date {
+  margin: 0;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.meetingActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.status {
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.25rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.statusScheduled {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.statusCompleted {
+  background-color: #e8f5e9;
+  color: #388e3c;
+}
+
+.statusCancelled {
+  background-color: #ffebee;
+  color: #d32f2f;
+}
+
+.statusRescheduled {
+  background-color: #fff3e0;
+  color: #f57c00;
+}
+
+.agenda,
+.notes {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e0e0e0;
+}
+
+.agenda strong,
+.notes strong {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.agenda p,
+.notes p {
+  margin: 0;
+  color: #666;
+  white-space: pre-wrap;
+}
+

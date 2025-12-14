@@ -1,0 +1,245 @@
+.container {
+  padding: 0;
+}
+
+.loading {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+}
+
+.errorMessage {
+  background-color: #fee;
+  border: 1px solid #fcc;
+  color: #c33;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.overallRatingCard {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  margin-bottom: 1.5rem;
+}
+
+.overallRatingHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.overallRatingHeader h2 {
+  margin: 0;
+  color: white;
+  font-size: 1.5rem;
+}
+
+.overallScore {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-weight: bold;
+}
+
+.scoreValue {
+  font-size: 3rem;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.ratingLabel {
+  font-size: 1.2rem;
+  margin-top: 0.5rem;
+  opacity: 0.9;
+}
+
+.metaInfo {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.metaItem {
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+.metaItem strong {
+  margin-right: 0.5rem;
+}
+
+.ratingsCard,
+.summaryCard,
+.strengthsCard,
+.improvementCard,
+.acknowledgmentCard {
+  margin-bottom: 1.5rem;
+}
+
+.ratingsCard h3,
+.summaryCard h3,
+.strengthsCard h3,
+.improvementCard h3,
+.acknowledgmentCard h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #333;
+  font-size: 1.3rem;
+  border-bottom: 2px solid #e0e0e0;
+  padding-bottom: 0.5rem;
+}
+
+.ratingsList {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.ratingItem {
+  padding: 1rem;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  border-left: 4px solid #667eea;
+}
+
+.ratingHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.ratingHeader h4 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #333;
+  flex: 1;
+}
+
+.ratingValue {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.ratingValue .value {
+  font-size: 1.5rem;
+}
+
+.ratingValue .max {
+  font-size: 1rem;
+  color: #666;
+}
+
+.ratingValue .label {
+  font-size: 0.9rem;
+  color: #666;
+  font-weight: normal;
+}
+
+.weightInfo {
+  font-size: 0.85rem;
+  color: #666;
+  margin-bottom: 0.5rem;
+}
+
+.weightedScore {
+  color: #667eea;
+  font-weight: 500;
+}
+
+.ratingComments {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e0e0e0;
+}
+
+.ratingComments strong {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #333;
+  font-size: 0.9rem;
+}
+
+.ratingComments p {
+  margin: 0;
+  color: #555;
+  line-height: 1.6;
+  font-style: italic;
+}
+
+.criterionDetails {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: #777;
+  font-style: italic;
+}
+
+.summaryContent,
+.strengthsContent,
+.improvementContent,
+.acknowledgmentContent {
+  color: #555;
+  line-height: 1.8;
+}
+
+.summaryContent p,
+.strengthsContent p,
+.improvementContent p,
+.acknowledgmentContent p {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.strengthsCard {
+  border-left: 4px solid #28a745;
+}
+
+.improvementCard {
+  border-left: 4px solid #ffc107;
+}
+
+.acknowledgmentCard {
+  border-left: 4px solid #17a2b8;
+  background-color: #f0f9ff;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 2px solid #e0e0e0;
+}
+
+@media (max-width: 768px) {
+  .overallRatingHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .overallScore {
+    align-items: flex-start;
+  }
+
+  .ratingHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .metaInfo {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+

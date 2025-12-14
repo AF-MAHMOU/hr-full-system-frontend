@@ -1,0 +1,113 @@
+.exportButtonContainer {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+}
+
+.exportButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdownToggle {
+  background: none;
+  border: 1px solid #ddd;
+  border-left: none;
+  border-radius: 0 4px 4px 0;
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: #666;
+  transition: all 0.2s ease;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.dropdownToggle:hover:not(:disabled) {
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+.dropdownToggle:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.dropdownMenu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0.25rem;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  min-width: 150px;
+  z-index: 1000;
+  display: none;
+}
+
+.dropdown:hover .dropdownMenu {
+  display: block;
+}
+
+.dropdownItem {
+  display: block;
+  width: 100%;
+  padding: 0.5rem 1rem;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: #333;
+  transition: background-color 0.2s ease;
+}
+
+.dropdownItem:hover:not(:disabled) {
+  background-color: #f5f5f5;
+}
+
+.dropdownItem:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.dropdownItem:first-child {
+  border-radius: 4px 4px 0 0;
+}
+
+.dropdownItem:last-child {
+  border-radius: 0 0 4px 4px;
+}
+
+@media (max-width: 768px) {
+  .exportButtonContainer {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .exportButton {
+    width: 100%;
+  }
+
+  .dropdown {
+    width: 100%;
+  }
+
+  .dropdownToggle {
+    width: 100%;
+    border-left: 1px solid #ddd;
+    border-radius: 4px;
+    margin-top: 0.5rem;
+  }
+}
+

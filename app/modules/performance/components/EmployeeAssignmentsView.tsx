@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, Button } from '@/shared/components';
 import { performanceApi } from '../api/performanceApi';
 import type { AppraisalAssignment, AppraisalCycle } from '../types';
@@ -13,7 +13,10 @@ import { AppraisalAssignmentStatus } from '../types';
 import SelfAssessmentForm from './SelfAssessmentForm';
 import CreateDisputeModal from './CreateDisputeModal';
 import AcknowledgmentModal from './AcknowledgmentModal';
+import FinalRatingView from './FinalRatingView';
+import PIPViewModal from './PIPViewModal';
 import { useNotification } from '@/shared/hooks';
+import type { PerformanceImprovementPlan } from '../types';
 import styles from './EmployeeAssignmentsView.module.css';
 
 interface EmployeeAssignmentsViewProps {
@@ -32,27 +35,38 @@ export default function EmployeeAssignmentsView({ employeeId }: EmployeeAssignme
   const [disputeEvaluationId, setDisputeEvaluationId] = useState<string | undefined>(undefined);
   const [isAcknowledgmentModalOpen, setIsAcknowledgmentModalOpen] = useState(false);
   const [acknowledgmentEvaluationId, setAcknowledgmentEvaluationId] = useState<string | undefined>(undefined);
+  const [isFinalRatingViewOpen, setIsFinalRatingViewOpen] = useState(false);
+  const [finalRatingEvaluationId, setFinalRatingEvaluationId] = useState<string | undefined>(undefined);
+  const [pips, setPips] = useState<PerformanceImprovementPlan[]>([]);
+  const [selectedPIP, setSelectedPIP] = useState<PerformanceImprovementPlan | null>(null);
+  const [isPIPViewOpen, setIsPIPViewOpen] = useState(false);
   const { showInfo } = useNotification('performance');
+  const hasShownNotificationRef = useRef(false); // Track if we've already shown the notification
 
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       console.log('Fetching assignments for employeeId:', employeeId);
-      const [assignmentsData, cyclesData] = await Promise.all([
+      const [assignmentsData, cyclesData, pipsData] = await Promise.all([
         performanceApi.getEmployeeAssignments(employeeId),
         performanceApi.getCycles(),
+        performanceApi.getPIPsByEmployee(employeeId).catch(() => []), // Fetch PIPs, but don't fail if endpoint doesn't work
       ]);
       console.log('Fetched assignments:', assignmentsData);
       console.log('Fetched cycles:', cyclesData);
+      console.log('Fetched PIPs:', pipsData);
       setAssignments(assignmentsData);
       setCycles(cyclesData);
+      setPips(pipsData || []);
       
       // Show notification for published appraisals that need acknowledgment
+      // Only show once per component mount, not on every fetch
       const publishedAssignments = assignmentsData.filter(
         (a: AppraisalAssignment) => a.status === AppraisalAssignmentStatus.PUBLISHED
       );
-      if (publishedAssignments.length > 0) {
+      if (publishedAssignments.length > 0 && !hasShownNotificationRef.current) {
+        hasShownNotificationRef.current = true; // Mark as shown
         showInfo(
           `You have ${publishedAssignments.length} published appraisal${publishedAssignments.length > 1 ? 's' : ''} ready for acknowledgment`,
           {
@@ -67,7 +81,7 @@ export default function EmployeeAssignmentsView({ employeeId }: EmployeeAssignme
     } finally {
       setLoading(false);
     }
-  }, [employeeId, showInfo]);
+  }, [employeeId]); // Removed showInfo from dependencies to prevent unnecessary re-renders
 
   const fetchAssignments = useCallback(async (cycleId?: string) => {
     try {
@@ -85,6 +99,8 @@ export default function EmployeeAssignmentsView({ employeeId }: EmployeeAssignme
   }, [employeeId]);
 
   useEffect(() => {
+    // Reset notification flag when component mounts or employeeId changes
+    hasShownNotificationRef.current = false;
     fetchData();
   }, [fetchData]);
 
@@ -241,6 +257,20 @@ export default function EmployeeAssignmentsView({ employeeId }: EmployeeAssignme
                       ? 'Start Assessment'
                       : 'View/Edit Assessment'}
                   </Button>
+                  {(assignment.status === AppraisalAssignmentStatus.PUBLISHED ||
+                    assignment.status === AppraisalAssignmentStatus.ACKNOWLEDGED) && (
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedAssignment(assignment);
+                        setFinalRatingEvaluationId((assignment as any).latestAppraisalId);
+                        setIsFinalRatingViewOpen(true);
+                      }}
+                    >
+                      View Final Rating
+                    </Button>
+                  )}
                   {assignment.status === AppraisalAssignmentStatus.PUBLISHED && (
                     <Button
                       variant="success"
@@ -309,6 +339,7 @@ export default function EmployeeAssignmentsView({ employeeId }: EmployeeAssignme
           <CreateDisputeModal
             assignment={selectedAssignment}
             evaluationId={disputeEvaluationId}
+            employeeId={employeeId}
             isOpen={isDisputeModalOpen}
             onClose={() => {
               setIsDisputeModalOpen(false);
@@ -322,7 +353,101 @@ export default function EmployeeAssignmentsView({ employeeId }: EmployeeAssignme
               fetchAssignments(selectedCycleId || undefined);
             }}
           />
+          <FinalRatingView
+            assignment={selectedAssignment}
+            evaluationId={finalRatingEvaluationId}
+            isOpen={isFinalRatingViewOpen}
+            onClose={() => {
+              setIsFinalRatingViewOpen(false);
+              setSelectedAssignment(null);
+              setFinalRatingEvaluationId(undefined);
+            }}
+          />
         </>
+      )}
+
+      {/* Performance Improvement Plans Section */}
+      {pips.length > 0 && (
+        <div className={styles.pipsSection}>
+          <div className={styles.sectionHeader}>
+            <h3>Performance Improvement Plans</h3>
+            <p>View your active and completed performance improvement plans</p>
+          </div>
+          <div className={styles.pipsGrid}>
+            {pips.map((pip) => {
+              const getStatusBadgeClass = (status: string) => {
+                switch (status) {
+                  case 'DRAFT':
+                    return styles.pipStatusDraft;
+                  case 'ACTIVE':
+                    return styles.pipStatusActive;
+                  case 'COMPLETED':
+                    return styles.pipStatusCompleted;
+                  case 'CANCELLED':
+                    return styles.pipStatusCancelled;
+                  default:
+                    return styles.pipStatusDefault;
+                }
+              };
+
+              return (
+                <Card key={pip.appraisalRecordId} padding="md" shadow="warm" className={styles.pipCard}>
+                  <div className={styles.cardHeader}>
+                    <h4>{pip.title}</h4>
+                    <span className={`${styles.statusBadge} ${getStatusBadgeClass(pip.status)}`}>
+                      {pip.status}
+                    </span>
+                  </div>
+                  <div className={styles.cardBody}>
+                    {pip.description && (
+                      <div className={styles.infoRow}>
+                        <span className={styles.label}>Description:</span>
+                        <span className={styles.value}>{pip.description}</span>
+                      </div>
+                    )}
+                    <div className={styles.infoRow}>
+                      <span className={styles.label}>Start Date:</span>
+                      <span className={styles.value}>{formatDate(pip.startDate)}</span>
+                    </div>
+                    <div className={styles.infoRow}>
+                      <span className={styles.label}>Target Completion:</span>
+                      <span className={styles.value}>{formatDate(pip.targetCompletionDate)}</span>
+                    </div>
+                    {pip.actualCompletionDate && (
+                      <div className={styles.infoRow}>
+                        <span className={styles.label}>Completed:</span>
+                        <span className={styles.value}>{formatDate(pip.actualCompletionDate)}</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className={styles.cardActions}>
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedPIP(pip);
+                        setIsPIPViewOpen(true);
+                      }}
+                    >
+                      View Details
+                    </Button>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {isPIPViewOpen && selectedPIP && (
+        <PIPViewModal
+          pip={selectedPIP}
+          isOpen={isPIPViewOpen}
+          onClose={() => {
+            setIsPIPViewOpen(false);
+            setSelectedPIP(null);
+          }}
+        />
       )}
     </div>
   );

@@ -61,14 +61,23 @@ export function Navbar() {
       items.push({ label: 'My Profile', route: ROUTES.EMPLOYEE_PROFILE, userTypes: ['candidate'] });
     }
 
-    // HR Dashboard
+    // HR Dashboard - only show for actual HR roles (not just employees with DEPARTMENT_EMPLOYEE role)
     const isHrUser =
       userRoles.includes(SystemRole.HR_MANAGER) ||
       userRoles.includes(SystemRole.HR_EMPLOYEE) ||
       userRoles.includes(SystemRole.HR_ADMIN) ||
       userRoles.includes(SystemRole.SYSTEM_ADMIN);
 
-    if (isHrUser) {
+    // Only show HR Dashboard if user has an HR role AND is not just a regular employee
+    // Check if user has ONLY DEPARTMENT_EMPLOYEE role (without any HR role)
+    const isOnlyEmployee = 
+      userRoles.includes(SystemRole.DEPARTMENT_EMPLOYEE) && 
+      !userRoles.includes(SystemRole.HR_MANAGER) &&
+      !userRoles.includes(SystemRole.HR_EMPLOYEE) &&
+      !userRoles.includes(SystemRole.HR_ADMIN) &&
+      !userRoles.includes(SystemRole.SYSTEM_ADMIN);
+
+    if (isHrUser && !isOnlyEmployee) {
       items.push({
         label: 'HR Dashboard',
         route: ROUTES.HR_DASHBOARD,

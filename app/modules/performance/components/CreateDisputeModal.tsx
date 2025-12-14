@@ -13,8 +13,10 @@ import type { AppraisalAssignment, CreateAppraisalDisputeDto } from '../types';
 import styles from './CreateDisputeModal.module.css';
 
 interface CreateDisputeModalProps {
-  assignment: AppraisalAssignment;
+  assignment?: AppraisalAssignment;
   evaluationId?: string;
+  employeeId?: string; // For HR employees creating disputes on behalf of employees
+  employeeName?: string; // Display name for HR context
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
@@ -23,6 +25,8 @@ interface CreateDisputeModalProps {
 export default function CreateDisputeModal({
   assignment,
   evaluationId,
+  employeeId,
+  employeeName,
   isOpen,
   onClose,
   onSuccess,
@@ -52,14 +56,19 @@ export default function CreateDisputeModal({
       return;
     }
 
-    if (!user?.userid) {
-      setError('User ID not found. Please refresh and try again.');
+    // Determine which employee ID to use
+    // If employeeId is provided (HR creating on behalf), use it
+    // Otherwise, use the logged-in user's ID (employee creating for themselves)
+    const targetEmployeeId = employeeId || user?.userid;
+    
+    if (!targetEmployeeId) {
+      setError('Employee ID not found. Please refresh and try again.');
       return;
     }
 
     // Get evaluation ID from assignment or prop
     let evalId = evaluationId;
-    if (!evalId && (assignment as any).latestAppraisalId) {
+    if (!evalId && assignment && (assignment as any).latestAppraisalId) {
       evalId = (assignment as any).latestAppraisalId;
     }
 
@@ -79,13 +88,27 @@ export default function CreateDisputeModal({
         proposedRating: proposedRating ? Number(proposedRating) : undefined,
       };
 
-      await performanceApi.createDispute(user.userid, disputeData);
+      await performanceApi.createDispute(targetEmployeeId, disputeData);
       
       onSuccess();
       onClose();
     } catch (err: any) {
-      setError(err.response?.data?.message || err.message || 'Failed to create dispute');
+      // Extract detailed error message
+      let errorMessage = 'Failed to create dispute';
+      if (err.response?.data) {
+        if (Array.isArray(err.response.data.message)) {
+          errorMessage = err.response.data.message.join(', ');
+        } else if (typeof err.response.data.message === 'string') {
+          errorMessage = err.response.data.message;
+        } else if (err.response.data.error) {
+          errorMessage = err.response.data.error;
+        }
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      setError(errorMessage);
       console.error('Error creating dispute:', err);
+      console.error('Error response data:', err.response?.data);
     } finally {
       setLoading(false);
     }
@@ -101,8 +124,11 @@ export default function CreateDisputeModal({
       <form onSubmit={handleSubmit} className={styles.form}>
         <div className={styles.infoBox}>
           <p>
-            <strong>Note:</strong> You can flag concerns about your appraisal rating. 
-            HR will review your dispute and respond accordingly.
+            <strong>Note:</strong> {employeeName 
+              ? `You are flagging a concern about ${employeeName}'s appraisal rating.`
+              : 'You can flag concerns about your appraisal rating.'
+            } 
+            HR will review the dispute and respond accordingly.
           </p>
         </div>
 

@@ -13,6 +13,7 @@ import { apiClient } from '@/shared/utils/api';
 import { API_ENDPOINTS } from '@/shared/constants';
 import type { AppraisalCycle, CycleProgress, AppraisalAssignment } from '../types';
 import { AppraisalAssignmentStatus } from '../types';
+import OutcomeReportGenerator from './OutcomeReportGenerator';
 import styles from './HRManagerDashboard.module.css';
 
 interface Department {
@@ -42,6 +43,7 @@ export default function HRManagerDashboard() {
   const [departmentProgress, setDepartmentProgress] = useState<DepartmentProgress[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isOutcomeReportOpen, setIsOutcomeReportOpen] = useState(false);
 
   // Fetch departments
   const fetchDepartments = useCallback(async () => {
@@ -217,6 +219,13 @@ export default function HRManagerDashboard() {
           <p>Track appraisal completion across departments and cycles</p>
         </div>
         <div className={styles.controls}>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => setIsOutcomeReportOpen(true)}
+          >
+            📊 Generate Outcome Report
+          </Button>
           {cycles.length > 0 && (
             <select
               value={selectedCycleId}
@@ -453,6 +462,11 @@ export default function HRManagerDashboard() {
           </Card>
         </>
       )}
+
+      <OutcomeReportGenerator
+        isOpen={isOutcomeReportOpen}
+        onClose={() => setIsOutcomeReportOpen(false)}
+      />
     </div>
   );
 }

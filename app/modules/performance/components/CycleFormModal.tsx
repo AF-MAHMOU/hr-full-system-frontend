@@ -60,19 +60,34 @@ export default function CycleFormModal({
     if (isOpen) {
       fetchOptions();
       if (isEdit && cycle) {
+        // Extract templateId from templateAssignments
+        const templateId = cycle.templateAssignments && cycle.templateAssignments.length > 0
+          ? (cycle.templateAssignments[0].templateId as any)?._id || 
+            (typeof cycle.templateAssignments[0].templateId === 'string' 
+              ? cycle.templateAssignments[0].templateId 
+              : cycle.templateAssignments[0].templateId?.toString())
+          : '';
+
+        // Extract departmentIds from templateAssignments
+        const targetDepartmentIds = cycle.templateAssignments && cycle.templateAssignments.length > 0
+          ? (cycle.templateAssignments[0].departmentIds || []).map((dept: any) => 
+              (dept._id || dept).toString()
+            )
+          : [];
+
         // Populate edit form
         setFormData({
           cycleName: cycle.name || '',
           description: cycle.description || '',
           appraisalType: cycle.cycleType || AppraisalTemplateType.ANNUAL,
-          templateId: '', // Would need to get from templateAssignments
+          templateId: templateId || '',
           startDate: cycle.startDate ? new Date(cycle.startDate).toISOString().split('T')[0] : '',
           endDate: cycle.endDate ? new Date(cycle.endDate).toISOString().split('T')[0] : '',
           managerReviewDeadline: cycle.managerDueDate ? new Date(cycle.managerDueDate).toISOString().split('T')[0] : '',
           selfAssessmentDeadline: '',
           hrReviewDeadline: '',
           disputeDeadline: '',
-          targetDepartmentIds: [],
+          targetDepartmentIds: targetDepartmentIds,
           targetPositionIds: [],
           targetEmployeeIds: [],
           excludeEmployeeIds: [],
@@ -167,7 +182,12 @@ export default function CycleFormModal({
         excludeEmployeeIds: formData.excludeEmployeeIds && formData.excludeEmployeeIds.length > 0 ? formData.excludeEmployeeIds : undefined,
       };
 
-      await performanceApi.createCycle(cleanedData);
+      // Use updateCycle if editing, createCycle if creating
+      if (isEdit && cycle?._id) {
+        await performanceApi.updateCycle(cycle._id, cleanedData);
+      } else {
+        await performanceApi.createCycle(cleanedData);
+      }
       onSuccess();
       onClose();
     } catch (err: any) {

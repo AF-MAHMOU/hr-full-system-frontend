@@ -11,23 +11,47 @@ import { performanceApi } from '../api/performanceApi';
 import type { AppraisalDispute } from '../types';
 import { AppraisalDisputeStatus } from '../types';
 import ResolveDisputeModal from './ResolveDisputeModal';
+import CreateDisputeModal from './CreateDisputeModal';
+import CreateDisputeForEmployeeModal from './CreateDisputeForEmployeeModal';
+import ExportButton from './ExportButton';
+import { useAuth } from '@/shared/hooks/useAuth';
+import { SystemRole } from '@/shared/types/auth';
 import styles from './DisputeList.module.css';
 
 export default function DisputeList() {
+  const { user } = useAuth();
+  const isHrEmployee = user?.roles?.includes(SystemRole.HR_EMPLOYEE);
+  const isHrManager = user?.roles?.includes(SystemRole.HR_MANAGER);
+  const isHrAdmin = user?.roles?.includes(SystemRole.HR_ADMIN);
+  const isSystemAdmin = user?.roles?.includes(SystemRole.SYSTEM_ADMIN);
+  // Only HR Manager, HR Admin, and System Admin can resolve disputes
+  const canResolveDisputes = isHrManager || isHrAdmin || isSystemAdmin;
+  
   const [disputes, setDisputes] = useState<AppraisalDispute[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<AppraisalDisputeStatus | ''>('');
   const [selectedDispute, setSelectedDispute] = useState<AppraisalDispute | null>(null);
   const [isResolveModalOpen, setIsResolveModalOpen] = useState(false);
+  const [isCreateDisputeModalOpen, setIsCreateDisputeModalOpen] = useState(false);
 
   const fetchDisputes = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await performanceApi.getDisputes(
-        statusFilter || undefined
-      );
+      
+      // HR Employees see only their own disputes, HR Managers/Admins see all disputes
+      let data: AppraisalDispute[];
+      if (isHrEmployee && user?.userid) {
+        data = await performanceApi.getEmployeeDisputes(user.userid);
+        // Apply status filter client-side for HR Employees
+        if (statusFilter) {
+          data = data.filter(d => d.status === statusFilter);
+        }
+      } else {
+        data = await performanceApi.getDisputes(statusFilter || undefined);
+      }
+      
       setDisputes(data);
     } catch (err: any) {
       setError(err.message || 'Failed to load disputes');
@@ -35,7 +59,7 @@ export default function DisputeList() {
     } finally {
       setLoading(false);
     }
-  }, [statusFilter]);
+  }, [statusFilter, isHrEmployee, user?.userid]);
 
   useEffect(() => {
     fetchDisputes();
@@ -72,6 +96,9 @@ export default function DisputeList() {
   };
 
   const handleResolveClick = (dispute: AppraisalDispute) => {
+    console.log('Resolve clicked for dispute:', dispute);
+    console.log('Dispute _id:', dispute._id, 'Type:', typeof dispute._id);
+    console.log('Dispute object keys:', Object.keys(dispute));
     setSelectedDispute(dispute);
     setIsResolveModalOpen(true);
   };
@@ -105,9 +132,27 @@ export default function DisputeList() {
       <div className={styles.header}>
         <div>
           <h2>Appraisal Disputes</h2>
-          <p>Review and resolve employee concerns about appraisal ratings</p>
+          <p>
+            {isHrEmployee 
+              ? 'View disputes you have raised about appraisal ratings'
+              : 'Review and resolve employee concerns about appraisal ratings'}
+          </p>
         </div>
         <div className={styles.controls}>
+          {isHrEmployee && (
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => setIsCreateDisputeModalOpen(true)}
+            >
+              + Create Dispute
+            </Button>
+          )}
+          <ExportButton
+            status={statusFilter || undefined}
+            variant="outline"
+            size="sm"
+          />
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as AppraisalDisputeStatus | '')}
@@ -201,7 +246,8 @@ export default function DisputeList() {
                 </div>
 
                 <div className={styles.cardActions}>
-                  {(dispute.status === AppraisalDisputeStatus.OPEN ||
+                  {/* Only HR Manager/Admin can resolve disputes */}
+                  {canResolveDisputes && (dispute.status === AppraisalDisputeStatus.OPEN ||
                     dispute.status === AppraisalDisputeStatus.UNDER_REVIEW) && (
                     <Button
                       variant="primary"
@@ -237,6 +283,17 @@ export default function DisputeList() {
             setSelectedDispute(null);
           }}
           onSuccess={handleResolveSuccess}
+        />
+      )}
+      
+      {isHrEmployee && (
+        <CreateDisputeForEmployeeModal
+          isOpen={isCreateDisputeModalOpen}
+          onClose={() => setIsCreateDisputeModalOpen(false)}
+          onSuccess={() => {
+            fetchDisputes();
+            setIsCreateDisputeModalOpen(false);
+          }}
         />
       )}
     </div>

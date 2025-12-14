@@ -215,6 +215,18 @@ export async function assignDepartmentHead(
 /**
  * Assign reporting position
  */
+/**
+ * Check if an employee is a department head based on their position
+ */
+export async function checkIsDepartmentHead(
+  employeeId: string
+): Promise<{ success: boolean; isDepartmentHead: boolean }> {
+  const response = await apiClient.get<{ success: boolean; isDepartmentHead: boolean }>(
+    `${API_ENDPOINTS.ORGANIZATION_STRUCTURE}/employees/${employeeId}/is-department-head`
+  );
+  return response.data;
+}
+
 export async function assignReportingPosition(
   positionId: string,
   reportsToPositionId: string | null

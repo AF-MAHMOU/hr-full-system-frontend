@@ -29,7 +29,7 @@ export default function ResolveDisputeModal({
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [resolutionStatus, setResolutionStatus] = useState<'ADJUSTED' | 'REJECTED'>('ADJUSTED');
+  const [resolutionStatus, setResolutionStatus] = useState<'RESOLVED' | 'REJECTED'>('RESOLVED');
   const [resolutionNotes, setResolutionNotes] = useState('');
   const [reviewComments, setReviewComments] = useState('');
   const [adjustedRating, setAdjustedRating] = useState<number | ''>('');
@@ -37,7 +37,7 @@ export default function ResolveDisputeModal({
   useEffect(() => {
     if (isOpen) {
       // Reset form when modal opens
-      setResolutionStatus('ADJUSTED');
+      setResolutionStatus('RESOLVED');
       setResolutionNotes('');
       setReviewComments('');
       setAdjustedRating('');
@@ -62,6 +62,14 @@ export default function ResolveDisputeModal({
       setLoading(true);
       setError(null);
 
+      // Ensure we have a valid dispute ID
+      const disputeId = dispute._id || (dispute as any).id;
+      if (!disputeId) {
+        setError('Dispute ID is missing. Please refresh and try again.');
+        setLoading(false);
+        return;
+      }
+
       const resolveData: ResolveAppraisalDisputeDto = {
         status: resolutionStatus,
         resolutionNotes: resolutionNotes.trim(),
@@ -69,7 +77,8 @@ export default function ResolveDisputeModal({
         adjustedRating: adjustedRating ? Number(adjustedRating) : undefined,
       };
 
-      await performanceApi.resolveDispute(dispute._id!, user.userid, resolveData);
+      console.log('Resolving dispute with ID:', disputeId, 'Type:', typeof disputeId);
+      await performanceApi.resolveDispute(String(disputeId), user.userid, resolveData);
 
       onSuccess();
       onClose();
@@ -137,11 +146,11 @@ export default function ResolveDisputeModal({
           <select
             id="resolutionStatus"
             value={resolutionStatus}
-            onChange={(e) => setResolutionStatus(e.target.value as 'ADJUSTED' | 'REJECTED')}
+            onChange={(e) => setResolutionStatus(e.target.value as 'RESOLVED' | 'REJECTED')}
             className={styles.select}
             required
           >
-            <option value="ADJUSTED">Adjusted (Rating Changed)</option>
+            <option value="RESOLVED">Resolved (Rating Changed)</option>
             <option value="REJECTED">Rejected (Rating Unchanged)</option>
           </select>
           <div className={styles.helpText}>
@@ -149,7 +158,7 @@ export default function ResolveDisputeModal({
           </div>
         </div>
 
-        {resolutionStatus === 'ADJUSTED' && (
+        {resolutionStatus === 'RESOLVED' && (
           <div className={styles.formGroup}>
             <label htmlFor="adjustedRating" className={styles.label}>
               Adjusted Rating (Optional)

@@ -10,6 +10,9 @@ import { Card, Button } from '@/shared/components';
 import { performanceApi } from '../api/performanceApi';
 import type { AppraisalCycle } from '../types';
 import CycleFormModal from './CycleFormModal';
+import { useAuth } from '@/shared/hooks/useAuth';
+import { SystemRole } from '@/shared/types/auth';
+import { useNotification } from '@/shared/hooks';
 import styles from './CycleList.module.css';
 
 interface CycleListProps {
@@ -18,8 +21,21 @@ interface CycleListProps {
 }
 
 export default function CycleList({ cycles, onRefresh }: CycleListProps) {
+  const { user } = useAuth();
+  const { showSuccess, showError } = useNotification('performance');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCycle, setSelectedCycle] = useState<AppraisalCycle | undefined>();
+  const [activatingCycleId, setActivatingCycleId] = useState<string | null>(null);
+  const [publishingCycleId, setPublishingCycleId] = useState<string | null>(null);
+
+  // Check if user can activate cycles (HR_ADMIN or SYSTEM_ADMIN)
+  const canActivateCycle = user?.roles?.includes(SystemRole.HR_ADMIN) || 
+                          user?.roles?.includes(SystemRole.SYSTEM_ADMIN);
+  
+  // Check if user can publish cycles (HR_MANAGER, HR_ADMIN, or SYSTEM_ADMIN)
+  const canPublishCycle = user?.roles?.includes(SystemRole.HR_MANAGER) ||
+                          user?.roles?.includes(SystemRole.HR_ADMIN) ||
+                          user?.roles?.includes(SystemRole.SYSTEM_ADMIN);
 
   const handleCreateNew = () => {
     setSelectedCycle(undefined);
@@ -39,6 +55,64 @@ export default function CycleList({ cycles, onRefresh }: CycleListProps) {
   const handleSuccess = () => {
     onRefresh();
     handleModalClose();
+  };
+
+  const handleActivate = async (cycle: AppraisalCycle) => {
+    if (!cycle._id) {
+      showError('Cycle ID is missing');
+      return;
+    }
+
+    if (cycle.status !== 'PLANNED') {
+      showError(`Cannot activate cycle. Current status: ${cycle.status}. Only PLANNED cycles can be activated.`);
+      return;
+    }
+
+    try {
+      setActivatingCycleId(cycle._id);
+      await performanceApi.activateCycle(cycle._id);
+      showSuccess(`Cycle "${cycle.name}" has been activated successfully. Appraisals have been auto-assigned to eligible employees.`);
+      onRefresh();
+    } catch (error: any) {
+      showError(error.response?.data?.message || error.message || 'Failed to activate cycle');
+    } finally {
+      setActivatingCycleId(null);
+    }
+  };
+
+  const handlePublish = async (cycle: AppraisalCycle) => {
+    if (!cycle._id) {
+      showError('Cycle ID is missing');
+      return;
+    }
+
+    if (cycle.status !== 'ACTIVE') {
+      showError(`Cannot publish cycle. Current status: ${cycle.status}. Only ACTIVE cycles can be published.`);
+      return;
+    }
+
+    // Confirm before publishing
+    const confirmed = window.confirm(
+      `Are you sure you want to publish "${cycle.name}"?\n\n` +
+      `This will publish all evaluations and assignments in this cycle to employees. ` +
+      `Employees will be able to view and acknowledge their appraisal results.\n\n` +
+      `This action cannot be undone.`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setPublishingCycleId(cycle._id);
+      await performanceApi.publishCycle(cycle._id);
+      showSuccess(`Cycle "${cycle.name}" has been published successfully. All evaluations and assignments are now visible to employees.`);
+      onRefresh();
+    } catch (error: any) {
+      showError(error.response?.data?.message || error.message || 'Failed to publish cycle');
+    } finally {
+      setPublishingCycleId(null);
+    }
   };
 
   const formatDate = (dateString?: string) => {
@@ -122,6 +196,26 @@ export default function CycleList({ cycles, onRefresh }: CycleListProps) {
                   >
                     Edit
                   </Button>
+                  {canActivateCycle && cycle.status === 'PLANNED' && (
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={() => handleActivate(cycle)}
+                      disabled={activatingCycleId === cycle._id}
+                    >
+                      {activatingCycleId === cycle._id ? 'Activating...' : 'Activate'}
+                    </Button>
+                  )}
+                  {canPublishCycle && cycle.status === 'ACTIVE' && (
+                    <Button
+                      variant="success"
+                      size="sm"
+                      onClick={() => handlePublish(cycle)}
+                      disabled={publishingCycleId === cycle._id}
+                    >
+                      {publishingCycleId === cycle._id ? 'Publishing...' : 'Publish'}
+                    </Button>
+                  )}
                 </div>
               </div>
             ))}

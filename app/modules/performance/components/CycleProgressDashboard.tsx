@@ -9,6 +9,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { Card, Button } from '@/shared/components';
 import { performanceApi } from '../api/performanceApi';
 import type { AppraisalCycle, CycleProgress } from '../types';
+import ExportButton from './ExportButton';
+import OutcomeReportGenerator from './OutcomeReportGenerator';
 import styles from './CycleProgressDashboard.module.css';
 
 interface CycleProgressDashboardProps {
@@ -22,6 +24,7 @@ export default function CycleProgressDashboard({ cycles, onRefresh }: CycleProgr
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cyclesList, setCyclesList] = useState<AppraisalCycle[]>([]);
+  const [isOutcomeReportOpen, setIsOutcomeReportOpen] = useState(false);
 
   // Fetch cycles if not provided
   const fetchCycles = useCallback(async () => {
@@ -146,6 +149,20 @@ export default function CycleProgressDashboard({ cycles, onRefresh }: CycleProgr
           <p>Monitor appraisal completion status across cycles</p>
         </div>
         <div className={styles.controls}>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => setIsOutcomeReportOpen(true)}
+          >
+            📊 Generate Outcome Report
+          </Button>
+          {selectedCycleId && (
+            <ExportButton
+              cycleId={selectedCycleId}
+              variant="outline"
+              size="sm"
+            />
+          )}
           {cyclesList.length > 0 && (
             <select
               value={selectedCycleId}
@@ -321,6 +338,11 @@ export default function CycleProgressDashboard({ cycles, onRefresh }: CycleProgr
           </Card>
         </>
       )}
+
+      <OutcomeReportGenerator
+        isOpen={isOutcomeReportOpen}
+        onClose={() => setIsOutcomeReportOpen(false)}
+      />
     </div>
   );
 }

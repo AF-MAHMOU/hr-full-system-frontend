@@ -20,6 +20,14 @@ import type {
   CreateAppraisalDisputeDto,
   ResolveAppraisalDisputeDto,
   AppraisalDisputeStatus,
+  HighPerformerFlag,
+  FlagHighPerformerDto,
+  VisibilityRule,
+  CreateVisibilityRuleDto,
+  UpdateVisibilityRuleDto,
+  OneOnOneMeeting,
+  CreateOneOnOneMeetingDto,
+  UpdateOneOnOneMeetingDto,
 } from '../types';
 
 /**
@@ -118,6 +126,52 @@ export const createCycle = async (data: CreateAppraisalCycleDto): Promise<Apprai
   const response = await apiClient.post<AppraisalCycle | { success: boolean; message: string; data: AppraisalCycle }>(
     `${API_ENDPOINTS.PERFORMANCE}/cycles`,
     data
+  );
+  if (response.data && '_id' in response.data) {
+    return response.data as AppraisalCycle;
+  }
+  return (response.data as any).data;
+};
+
+/**
+ * Update an existing appraisal cycle
+ */
+export const updateCycle = async (
+  cycleId: string,
+  data: CreateAppraisalCycleDto
+): Promise<AppraisalCycle> => {
+  const response = await apiClient.put<AppraisalCycle | { success: boolean; message: string; data: AppraisalCycle }>(
+    `${API_ENDPOINTS.PERFORMANCE}/cycles/${cycleId}`,
+    data
+  );
+  if (response.data && '_id' in response.data) {
+    return response.data as AppraisalCycle;
+  }
+  return (response.data as any).data;
+};
+
+/**
+ * Activate an appraisal cycle
+ * Changes status from PLANNED to ACTIVE and auto-assigns appraisals
+ */
+export const activateCycle = async (cycleId: string): Promise<AppraisalCycle> => {
+  const response = await apiClient.post<AppraisalCycle | { success: boolean; message: string; data: AppraisalCycle }>(
+    `${API_ENDPOINTS.PERFORMANCE}/cycles/${cycleId}/activate`
+  );
+  if (response.data && '_id' in response.data) {
+    return response.data as AppraisalCycle;
+  }
+  return (response.data as any).data;
+};
+
+/**
+ * Publish an appraisal cycle
+ * Publishes all evaluations and assignments in the cycle to employees
+ * Roles: HR_MANAGER, HR_ADMIN, SYSTEM_ADMIN
+ */
+export const publishCycle = async (cycleId: string): Promise<AppraisalCycle> => {
+  const response = await apiClient.post<AppraisalCycle | { success: boolean; message: string; data: AppraisalCycle }>(
+    `${API_ENDPOINTS.PERFORMANCE}/cycles/${cycleId}/publish`
   );
   if (response.data && '_id' in response.data) {
     return response.data as AppraisalCycle;
@@ -264,6 +318,20 @@ export const getManagerAssignments = async (managerId: string, cycleId?: string)
 };
 
 /**
+ * Get assignments for a cycle
+ */
+export const getCycleAssignments = async (cycleId: string): Promise<AppraisalAssignment[]> => {
+  const response = await apiClient.get<AppraisalAssignment[] | { success: boolean; message: string; data: AppraisalAssignment[] }>(
+    `${API_ENDPOINTS.PERFORMANCE}/cycles/${cycleId}/assignments`
+  );
+  
+  if (Array.isArray(response.data)) {
+    return response.data;
+  }
+  return (response.data as any).data || [];
+};
+
+/**
  * Get assignment by employee and cycle
  */
 export const getEmployeeAssignmentByCycle = async (cycleId: string, employeeId: string): Promise<AppraisalAssignment> => {
@@ -298,6 +366,16 @@ export const submitSelfAssessment = async (
   const response = await apiClient.post(
     `${API_ENDPOINTS.PERFORMANCE}/cycles/${cycleId}/employees/${employeeId}/self-assessment`,
     data
+  );
+  return response.data;
+};
+
+/**
+ * Get evaluation by ID
+ */
+export const getEvaluationById = async (evaluationId: string): Promise<any> => {
+  const response = await apiClient.get(
+    `${API_ENDPOINTS.PERFORMANCE}/evaluations/${evaluationId}`
   );
   return response.data;
 };
@@ -462,6 +540,317 @@ export const acknowledgeEvaluation = async (
   return response.data;
 };
 
+/**
+ * Export appraisal summaries (HR Employee action)
+ * REQ-AE-11: HR Employee exports ad-hoc appraisal summaries
+ */
+export interface ExportAppraisalSummaryParams {
+  cycleId?: string;
+  departmentId?: string;
+  employeeId?: string;
+  format?: 'csv' | 'pdf';
+  status?: string;
+}
+
+export const exportAppraisalSummaries = async (
+  params: ExportAppraisalSummaryParams
+): Promise<Blob> => {
+  const queryParams = new URLSearchParams();
+  if (params.cycleId) queryParams.append('cycleId', params.cycleId);
+  if (params.departmentId) queryParams.append('departmentId', params.departmentId);
+  if (params.employeeId) queryParams.append('employeeId', params.employeeId);
+  if (params.format) queryParams.append('format', params.format);
+  if (params.status) queryParams.append('status', params.status);
+
+  const response = await apiClient.get(
+    `${API_ENDPOINTS.PERFORMANCE}/export/summaries?${queryParams.toString()}`,
+    {
+      responseType: 'blob', // Important for file downloads
+    }
+  );
+
+  return response.data;
+};
+
+/**
+ * Generate outcome report (HR Employee action)
+ * REQ-OD-06: HR Employee generates outcome reports
+ */
+export interface ExportOutcomeReportParams {
+  cycleId?: string;
+  departmentId?: string;
+  format?: 'csv' | 'pdf' | 'json';
+  includeHighPerformers?: boolean;
+  includePIPs?: boolean;
+  includeDisputes?: boolean;
+}
+
+export const generateOutcomeReport = async (
+  params: ExportOutcomeReportParams
+): Promise<Blob> => {
+  const queryParams = new URLSearchParams();
+  if (params.cycleId) queryParams.append('cycleId', params.cycleId);
+  if (params.departmentId) queryParams.append('departmentId', params.departmentId);
+  if (params.format) queryParams.append('format', params.format);
+  if (params.includeHighPerformers !== undefined) {
+    queryParams.append('includeHighPerformers', params.includeHighPerformers ? 'true' : 'false');
+  }
+  if (params.includePIPs !== undefined) {
+    queryParams.append('includePIPs', params.includePIPs ? 'true' : 'false');
+  }
+  if (params.includeDisputes !== undefined) {
+    queryParams.append('includeDisputes', params.includeDisputes ? 'true' : 'false');
+  }
+
+  const response = await apiClient.get(
+    `${API_ENDPOINTS.PERFORMANCE}/export/outcome-report?${queryParams.toString()}`,
+    {
+      responseType: 'blob', // Important for file downloads
+    }
+  );
+
+  return response.data;
+};
+
+/**
+ * Flag an employee as a high-performer
+ * POST /performance/high-performers/flag
+ */
+export const flagHighPerformer = async (
+  flagDto: FlagHighPerformerDto
+): Promise<any> => {
+  const response = await apiClient.post<any>(
+    `${API_ENDPOINTS.PERFORMANCE}/high-performers/flag`,
+    flagDto
+  );
+  return response.data;
+};
+
+/**
+ * Unflag a high-performer
+ * POST /performance/high-performers/unflag/:appraisalRecordId
+ */
+export const unflagHighPerformer = async (
+  appraisalRecordId: string
+): Promise<{ message: string }> => {
+  const response = await apiClient.post<{ message: string }>(
+    `${API_ENDPOINTS.PERFORMANCE}/high-performers/unflag/${appraisalRecordId}`
+  );
+  return response.data;
+};
+
+/**
+ * Get high-performer flag for an appraisal
+ * GET /performance/high-performers/flag/:appraisalRecordId
+ */
+export const getHighPerformerFlag = async (
+  appraisalRecordId: string
+): Promise<HighPerformerFlag | null> => {
+  const response = await apiClient.get<HighPerformerFlag | null>(
+    `${API_ENDPOINTS.PERFORMANCE}/high-performers/flag/${appraisalRecordId}`
+  );
+  return response.data;
+};
+
+/**
+ * Get all high-performers flagged by a manager
+ * GET /performance/high-performers/manager/:managerId
+ */
+export const getHighPerformersByManager = async (
+  managerId: string
+): Promise<any[]> => {
+  const response = await apiClient.get<any[]>(
+    `${API_ENDPOINTS.PERFORMANCE}/high-performers/manager/${managerId}`
+  );
+  return response.data;
+};
+
+/**
+ * Get all high-performers (HR/Admin view)
+ * GET /performance/high-performers
+ */
+export const getAllHighPerformers = async (): Promise<any[]> => {
+  const response = await apiClient.get<any[]>(
+    `${API_ENDPOINTS.PERFORMANCE}/high-performers`
+  );
+  return response.data;
+};
+
+// ==================== PERFORMANCE IMPROVEMENT PLAN (PIP) API ====================
+// REQ-OD-05: Line Manager initiates Performance Improvement Plans
+
+export const createPerformanceImprovementPlan = async (
+  createDto: import('../types').CreatePerformanceImprovementPlanDto
+): Promise<any> => {
+  const response = await apiClient.post(
+    `${API_ENDPOINTS.PERFORMANCE}/improvement-plans`,
+    createDto
+  );
+  return response.data;
+};
+
+export const getPIPsByEmployee = async (employeeId: string): Promise<any[]> => {
+  const response = await apiClient.get<any[]>(
+    `${API_ENDPOINTS.PERFORMANCE}/employees/${employeeId}/improvement-plans`
+  );
+  return response.data;
+};
+
+export const getPIPsByManager = async (managerId: string): Promise<any[]> => {
+  const response = await apiClient.get<any[]>(
+    `${API_ENDPOINTS.PERFORMANCE}/managers/${managerId}/improvement-plans`
+  );
+  return response.data;
+};
+
+export const getAllPIPs = async (status?: string): Promise<any[]> => {
+  const url = status
+    ? `${API_ENDPOINTS.PERFORMANCE}/improvement-plans?status=${status}`
+    : `${API_ENDPOINTS.PERFORMANCE}/improvement-plans`;
+  const response = await apiClient.get<any[]>(url);
+  return response.data;
+};
+
+export const getPIPByAppraisalId = async (appraisalRecordId: string): Promise<any> => {
+  const response = await apiClient.get(
+    `${API_ENDPOINTS.PERFORMANCE}/improvement-plans/appraisal/${appraisalRecordId}`
+  );
+  return response.data;
+};
+
+export const updatePIP = async (
+  appraisalRecordId: string,
+  updateDto: import('../types').UpdatePerformanceImprovementPlanDto
+): Promise<any> => {
+  const response = await apiClient.put(
+    `${API_ENDPOINTS.PERFORMANCE}/improvement-plans/appraisal/${appraisalRecordId}`,
+    updateDto
+  );
+  return response.data;
+};
+
+export const deletePIP = async (appraisalRecordId: string): Promise<void> => {
+  await apiClient.delete(
+    `${API_ENDPOINTS.PERFORMANCE}/improvement-plans/appraisal/${appraisalRecordId}`
+  );
+};
+
+/**
+ * Get employee performance history
+ * REQ-OD-08: Employee / Line Manager access past appraisal history
+ * GET /performance/employees/:employeeId/history
+ */
+export const getEmployeePerformanceHistory = async (
+  employeeId: string
+): Promise<any[]> => {
+  const response = await apiClient.get(
+    `${API_ENDPOINTS.PERFORMANCE}/employees/${employeeId}/history`
+  );
+  return response.data;
+};
+
+/**
+ * Visibility Rules API - REQ-OD-16: System Admin configures visibility rules
+ */
+export const getAllVisibilityRules = async (): Promise<VisibilityRule[]> => {
+  const response = await apiClient.get<VisibilityRule[]>(
+    `${API_ENDPOINTS.PERFORMANCE}/visibility-rules`
+  );
+  return response.data;
+};
+
+export const getActiveVisibilityRules = async (): Promise<VisibilityRule[]> => {
+  const response = await apiClient.get<VisibilityRule[]>(
+    `${API_ENDPOINTS.PERFORMANCE}/visibility-rules/active`
+  );
+  return response.data;
+};
+
+export const getVisibilityRuleById = async (id: string): Promise<VisibilityRule> => {
+  const response = await apiClient.get<VisibilityRule>(
+    `${API_ENDPOINTS.PERFORMANCE}/visibility-rules/${id}`
+  );
+  return response.data;
+};
+
+export const createVisibilityRule = async (
+  data: CreateVisibilityRuleDto
+): Promise<VisibilityRule> => {
+  const response = await apiClient.post<VisibilityRule>(
+    `${API_ENDPOINTS.PERFORMANCE}/visibility-rules`,
+    data
+  );
+  return response.data;
+};
+
+export const updateVisibilityRule = async (
+  id: string,
+  data: UpdateVisibilityRuleDto
+): Promise<VisibilityRule> => {
+  const response = await apiClient.put<VisibilityRule>(
+    `${API_ENDPOINTS.PERFORMANCE}/visibility-rules/${id}`,
+    data
+  );
+  return response.data;
+};
+
+export const deleteVisibilityRule = async (id: string): Promise<void> => {
+  await apiClient.delete(`${API_ENDPOINTS.PERFORMANCE}/visibility-rules/${id}`);
+};
+
+/**
+ * 1-on-1 Meetings API - REQ-OD-14: Line Manager schedules 1-on-1 meetings
+ */
+export const createOneOnOneMeeting = async (
+  data: CreateOneOnOneMeetingDto
+): Promise<OneOnOneMeeting> => {
+  const response = await apiClient.post<OneOnOneMeeting>(
+    `${API_ENDPOINTS.PERFORMANCE}/meetings`,
+    data
+  );
+  return response.data;
+};
+
+export const getMeetingsByManager = async (
+  managerId: string
+): Promise<OneOnOneMeeting[]> => {
+  const response = await apiClient.get<OneOnOneMeeting[]>(
+    `${API_ENDPOINTS.PERFORMANCE}/managers/${managerId}/meetings`
+  );
+  return response.data;
+};
+
+export const getMeetingsByEmployee = async (
+  employeeId: string
+): Promise<OneOnOneMeeting[]> => {
+  const response = await apiClient.get<OneOnOneMeeting[]>(
+    `${API_ENDPOINTS.PERFORMANCE}/employees/${employeeId}/meetings`
+  );
+  return response.data;
+};
+
+export const getMeetingById = async (id: string): Promise<OneOnOneMeeting> => {
+  const response = await apiClient.get<OneOnOneMeeting>(
+    `${API_ENDPOINTS.PERFORMANCE}/meetings/${id}`
+  );
+  return response.data;
+};
+
+export const updateOneOnOneMeeting = async (
+  id: string,
+  data: UpdateOneOnOneMeetingDto
+): Promise<OneOnOneMeeting> => {
+  const response = await apiClient.put<OneOnOneMeeting>(
+    `${API_ENDPOINTS.PERFORMANCE}/meetings/${id}`,
+    data
+  );
+  return response.data;
+};
+
+export const deleteOneOnOneMeeting = async (id: string): Promise<void> => {
+  await apiClient.delete(`${API_ENDPOINTS.PERFORMANCE}/meetings/${id}`);
+};
+
 export const performanceApi = {
   getTemplates,
   getTemplateById,
@@ -470,6 +859,9 @@ export const performanceApi = {
   deleteTemplate,
   getCycles,
   createCycle,
+  updateCycle,
+  activateCycle,
+  publishCycle,
   getAssignments,
   getAssignmentById,
   assignTemplateToEmployees,
@@ -478,8 +870,10 @@ export const performanceApi = {
   removeAssignment,
   getEmployeeAssignments,
   getEmployeeAssignmentByCycle,
+  getCycleAssignments,
   getManagerAssignments,
   submitSelfAssessment,
+  getEvaluationById,
   getEvaluationByCycleAndEmployee,
   submitManagerEvaluation,
   getCycleProgress,
@@ -489,5 +883,34 @@ export const performanceApi = {
   getDisputeById,
   resolveDispute,
   acknowledgeEvaluation,
+  exportAppraisalSummaries,
+  generateOutcomeReport,
+  flagHighPerformer,
+  unflagHighPerformer,
+  getHighPerformerFlag,
+  getHighPerformersByManager,
+  getAllHighPerformers,
+  createPerformanceImprovementPlan,
+  getPIPsByEmployee,
+  getPIPsByManager,
+  getAllPIPs,
+  getPIPByAppraisalId,
+  updatePIP,
+  deletePIP,
+  getEmployeePerformanceHistory,
+  // Visibility Rules - REQ-OD-16
+  getAllVisibilityRules,
+  getActiveVisibilityRules,
+  getVisibilityRuleById,
+  createVisibilityRule,
+  updateVisibilityRule,
+  deleteVisibilityRule,
+  // 1-on-1 Meetings - REQ-OD-14
+  createOneOnOneMeeting,
+  getMeetingsByManager,
+  getMeetingsByEmployee,
+  getMeetingById,
+  updateOneOnOneMeeting,
+  deleteOneOnOneMeeting,
 };
 

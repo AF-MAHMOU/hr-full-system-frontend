@@ -9,6 +9,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Modal, Button, Input } from '@/shared/components';
 import { performanceApi } from '../api/performanceApi';
 import { useAuth } from '@/shared/hooks/useAuth';
+import { useNotification } from '@/shared/hooks/useNotification';
 import type { AppraisalAssignment, AppraisalTemplate } from '../types';
 import styles from './ManagerReviewForm.module.css';
 
@@ -38,6 +39,14 @@ export default function ManagerReviewForm({
   const [areasForImprovement, setAreasForImprovement] = useState('');
   const [developmentRecommendations, setDevelopmentRecommendations] = useState('');
   const [overallRating, setOverallRating] = useState<number>(0);
+  
+  // High-performer flagging state
+  const [isHighPerformer, setIsHighPerformer] = useState(false);
+  const [highPerformerNotes, setHighPerformerNotes] = useState('');
+  const [promotionRecommendation, setPromotionRecommendation] = useState('');
+  const [existingFlag, setExistingFlag] = useState<any>(null);
+  
+  const { showSuccess, showError } = useNotification();
   
   // Calculate overall rating function
   const calculateOverallRating = useCallback((): number => {
@@ -118,6 +127,21 @@ export default function ManagerReviewForm({
           setOverallRating(evaluationData.totalScore || 0);
           setStrengths(evaluationData.strengths || '');
           setAreasForImprovement(evaluationData.improvementAreas || '');
+          
+          // Load existing high-performer flag if evaluation exists
+          if (evaluationData._id) {
+            try {
+              const flag = await performanceApi.getHighPerformerFlag(evaluationData._id);
+              if (flag) {
+                setExistingFlag(flag);
+                setIsHighPerformer(flag.isHighPerformer);
+                setHighPerformerNotes(flag.notes || '');
+                setPromotionRecommendation(flag.promotionRecommendation || '');
+              }
+            } catch (err) {
+              // Flag doesn't exist, that's okay
+            }
+          }
         }
         } else if (templateData) {
         // Initialize empty ratings
@@ -244,7 +268,36 @@ export default function ManagerReviewForm({
         overallRating,
       });
 
-      await performanceApi.submitManagerEvaluation(cycleId, employeeId, payload);
+      const evaluationResult = await performanceApi.submitManagerEvaluation(cycleId, employeeId, payload);
+      
+      // Flag/unflag high-performer if needed
+      const appraisalRecordId = evaluationResult?._id || employeeEvaluation?._id;
+      if (appraisalRecordId) {
+        
+        if (isHighPerformer) {
+          try {
+            await performanceApi.flagHighPerformer({
+              appraisalRecordId,
+              isHighPerformer: true,
+              notes: highPerformerNotes,
+              promotionRecommendation: promotionRecommendation,
+            });
+            showSuccess('Employee flagged as high-performer');
+          } catch (err: any) {
+            console.error('Error flagging high-performer:', err);
+            showError('Review submitted, but failed to flag high-performer: ' + (err.response?.data?.message || err.message));
+          }
+        } else if (existingFlag?.isHighPerformer) {
+          // Unflag if previously flagged but now unchecked
+          try {
+            await performanceApi.unflagHighPerformer(appraisalRecordId);
+            showSuccess('High-performer flag removed');
+          } catch (err: any) {
+            console.error('Error unflagging high-performer:', err);
+            // Don't show error, just log it
+          }
+        }
+      }
       
       onSuccess();
     } catch (err: any) {
@@ -409,6 +462,78 @@ export default function ManagerReviewForm({
                 className={styles.textarea}
               />
             </div>
+            
+            {/* High-Performer Flagging Section */}
+            <div className={styles.field} style={{ 
+              borderTop: '2px solid #e0e0e0', 
+              paddingTop: '1.5rem', 
+              marginTop: '1.5rem' 
+            }}>
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '0.5rem',
+                marginBottom: '1rem' 
+              }}>
+                <input
+                  type="checkbox"
+                  id="isHighPerformer"
+                  checked={isHighPerformer}
+                  onChange={(e) => setIsHighPerformer(e.target.checked)}
+                  style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                />
+                <label htmlFor="isHighPerformer" style={{ 
+                  fontSize: '1.1rem', 
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  color: '#007bff'
+                }}>
+                  Flag as High Performer ⭐
+                </label>
+              </div>
+              
+              {isHighPerformer && (
+                <div style={{ marginLeft: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <div>
+                    <label htmlFor="highPerformerNotes" style={{ 
+                      display: 'block', 
+                      marginBottom: '0.5rem',
+                      fontSize: '0.9rem',
+                      fontWeight: '500'
+                    }}>
+                      Notes (optional)
+                    </label>
+                    <textarea
+                      id="highPerformerNotes"
+                      value={highPerformerNotes}
+                      onChange={(e) => setHighPerformerNotes(e.target.value)}
+                      placeholder="Add notes about why this employee is a high-performer..."
+                      rows={3}
+                      className={styles.textarea}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="promotionRecommendation" style={{ 
+                      display: 'block', 
+                      marginBottom: '0.5rem',
+                      fontSize: '0.9rem',
+                      fontWeight: '500'
+                    }}>
+                      Promotion Recommendation (optional)
+                    </label>
+                    <textarea
+                      id="promotionRecommendation"
+                      value={promotionRecommendation}
+                      onChange={(e) => setPromotionRecommendation(e.target.value)}
+                      placeholder="Recommend this employee for promotion or advancement..."
+                      rows={2}
+                      className={styles.textarea}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+            
             <div className={styles.field}>
               <label htmlFor="overallRating">
                 Overall Rating: {overallRating.toFixed(1)}%

@@ -33,6 +33,8 @@ export interface EmployeeProfile {
   department?: string;
   position?: string;
   payGrade?: string;
+  primaryDepartmentId?: string;
+  primaryPositionId?: string;
 }
 
 export interface ChangeRequest {

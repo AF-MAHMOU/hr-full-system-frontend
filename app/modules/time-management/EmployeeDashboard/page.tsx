@@ -9,11 +9,15 @@
   import { Shift, ShiftType } from "../types";
   import { usePathname, useRouter } from "next/navigation";
 import EmployeeClock from "../EmployeeClock/page";
+import { SystemRole } from "@/shared/types";
+import { useAuth } from "@/shared/hooks"; 
 
   export default function ShiftPage() {
     const [shifts, setShifts] = useState<Shift[]>([]);
     const [shiftTypes, setShiftTypes] = useState<ShiftType[]>([]);
     const [loading, setLoading] = useState(true);
+
+    const  { user } = useAuth();
 
     const load = async () => {
       setLoading(true);
@@ -48,6 +52,11 @@ import EmployeeClock from "../EmployeeClock/page";
       parts[parts.length - 1] = "shift-assignment";
       router.push("/" + parts.join("/"));
     };
+
+    if (!user?.roles.includes(SystemRole.DEPARTMENT_EMPLOYEE || SystemRole.HR_EMPLOYEE)) {
+      console.log("hi")
+      router.push("/");
+    }
 
     return (
         <div className={s.container}>

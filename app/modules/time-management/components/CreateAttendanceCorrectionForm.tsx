@@ -62,8 +62,6 @@ export default function CreateAttendanceCorrectionForm({
           <Selections
                       employeeId={employeeId}
                       setEmployeeId={setEmployeeId}
-                      employees={employees}
-                      setEmployees={setEmployees}
                     />
 
           <label className={s.description}>Attendance Record</label>

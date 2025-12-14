@@ -8,6 +8,7 @@ import s from "../page.module.css";
 import { PunchType } from "../types";  
 import { EmployeeProfile } from "../../hr/api/hrApi";  
 import * as XLSX from "xlsx";  
+import { SystemRole } from "@/shared/types";
 
 export default function EmployeeClock() {  
   const { user } = useAuth(); 
@@ -27,10 +28,13 @@ export default function EmployeeClock() {
   setLoading(true);
   setMessage("");
 
+  
+  const router = useRouter();
+
   try {
+    // make sure that employee has a shift to begin with
     const punches = [{ type: punchType, timestamp: new Date().toISOString() }];
     if (!user?.userid) {
-      const router = useRouter();
       router.push("/login");
       throw new Error("User ID not found");
     }
@@ -69,16 +73,13 @@ export default function EmployeeClock() {
     const savedAttendance = JSON.parse(localStorage.getItem("offlineAttendance") || "[]");
     if (savedAttendance.length > 0) {
       try {
-        // Retry sending all the saved attendance data one by one
         for (let i = 0; i < savedAttendance.length; i++) {
           try {
             await createAttendanceRecord(savedAttendance[i]);
-            // Remove the successfully uploaded record
             savedAttendance.splice(i, 1); 
             i--; // Adjust the index after removal to avoid skipping the next item
             localStorage.setItem("offlineAttendance", JSON.stringify(savedAttendance));
           } catch (error) {
-            // Log any individual record that failed to upload
             console.error(`Failed to sync record at index ${i}:`, error);
           }
         }

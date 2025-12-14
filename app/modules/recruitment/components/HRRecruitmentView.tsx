@@ -7,10 +7,13 @@
 
 import { useState } from 'react';
 import { Card, Button } from '@/shared/components';
+import RecruitmentPostings from './RecruitmentPostings';
+import RecruitmentTemplates from './RecruitmentTemplates';
+import HRApplicationList from './HRApplicationList';
 import styles from './HRRecruitmentView.module.css';
 
 export default function HRRecruitmentView() {
-  const [activeTab, setActiveTab] = useState<'postings' | 'applications' | 'candidates'>('postings');
+  const [activeTab, setActiveTab] = useState<'postings' | 'templates' | 'applications' | 'candidates'>('postings');
 
   return (
     <div className={styles.container}>
@@ -28,6 +31,12 @@ export default function HRRecruitmentView() {
             Job Postings
           </button>
           <button
+            className={`${styles.tab} ${activeTab === 'templates' ? styles.active : ''}`}
+            onClick={() => setActiveTab('templates')}
+          >
+            Job Templates
+          </button>
+          <button
             className={`${styles.tab} ${activeTab === 'applications' ? styles.active : ''}`}
             onClick={() => setActiveTab('applications')}
           >
@@ -43,24 +52,15 @@ export default function HRRecruitmentView() {
 
         <div className={styles.content}>
           {activeTab === 'postings' && (
-            <div className={styles.tabContent}>
-              <div className={styles.actions}>
-                <Button variant="primary" onClick={() => {}}>
-                  Create Job Posting
-                </Button>
-              </div>
-              <p className={styles.placeholder}>
-                Job postings will appear here. This feature is under development.
-              </p>
-            </div>
+            <RecruitmentPostings />
+          )}
+
+          {activeTab === 'templates' && (
+            <RecruitmentTemplates />
           )}
 
           {activeTab === 'applications' && (
-            <div className={styles.tabContent}>
-              <p className={styles.placeholder}>
-                Applications will appear here. This feature is under development.
-              </p>
-            </div>
+            <HRApplicationList />
           )}
 
           {activeTab === 'candidates' && (

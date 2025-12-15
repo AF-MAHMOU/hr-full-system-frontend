@@ -7,11 +7,21 @@ import CreateHolidayForm from "../components/CreateHolidayForm";
 import HolidayList from "../components/HolidayList";
 import Calendar from "../components/Calendar";
 import { Holiday } from "../types";
+import { SystemRole } from "@/shared/types";
+import { useAuth } from "@/shared/hooks";
+import AttendanceCorrectionRequestList from "../components/AttendanceCorrectionList";
+import AskForCorrection from "../components/AskForCorrection";
+import EmployeeViewHoliday from "../components/EmployeeViewCalendar";
 
 export default function HolidayPage() {
   const [holidays, setHolidays] = useState<Holiday[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const { user } = useAuth();  
+  const roles = user?.roles;
+  const isAuthorized = roles?.includes(SystemRole.SYSTEM_ADMIN) || roles?.includes(SystemRole.HR_ADMIN);
+  
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -64,20 +74,16 @@ export default function HolidayPage() {
       <p className={s.description2}>
         Manage company holidays by adding, viewing, and deleting holiday entries.
       </p>
-
-      {error && <p style={{ color: "red" }}>{error}</p>}
-
-      {loading ? (
-        <p>Loading...</p>
-      ) : (
-        <HolidayList />
+      {isAuthorized ? ( 
+        <>
+          <CreateHolidayForm onCreated={load} />  
+          <HolidayList />
+        </>
+        ) : ( 
+        <>
+          <EmployeeViewHoliday/> 
+        </>
       )}
-
-      <CreateHolidayForm onCreated={load} />
-
-      <div style={{ marginTop: "3rem" }}>
-        <Calendar holidays={holidays} />
-      </div>
     </div>
   );
 }

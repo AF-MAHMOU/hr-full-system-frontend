@@ -55,8 +55,6 @@ export default function CreateNotificationLogForm({ onCreated }: CreateNotificat
           <Selections
                       employeeId={employeeId}
                       setEmployeeId={setEmployeeId}
-                      employees={employees}
-                      setEmployees={setEmployees}
                     />
           
           <label className={s.description}>Notification Type</label>

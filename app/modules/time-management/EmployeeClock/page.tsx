@@ -6,9 +6,7 @@ import { useRouter } from "next/navigation";
 import { createAttendanceRecord } from "../api";  
 import s from "../page.module.css";  
 import { PunchType } from "../types";  
-import { EmployeeProfile } from "../../hr/api/hrApi";  
 import * as XLSX from "xlsx";  
-import { SystemRole } from "@/shared/types";
 
 export default function EmployeeClock() {  
   const { user } = useAuth(); 
@@ -27,9 +25,6 @@ export default function EmployeeClock() {
   const handlePunch = async () => {
   setLoading(true);
   setMessage("");
-
-  
-  const router = useRouter();
 
   try {
     // make sure that employee has a shift to begin with
@@ -223,7 +218,7 @@ export default function EmployeeClock() {
   }; 
 
   return ( 
-    <div className={s.container}> 
+    <> 
       <h1 className={s.header}>Employee Clock In/Out</h1> 
 
       <div style={{ marginBottom: '2rem' }}> 
@@ -309,6 +304,6 @@ export default function EmployeeClock() {
       </div> 
 
       {message && <p className={s.message}>{message}</p>} 
-    </div> 
+    </> 
   ); 
 }

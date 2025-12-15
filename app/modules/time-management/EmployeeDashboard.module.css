@@ -1,0 +1,21 @@
+.employeePage {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0f0e1a 0%, #1a1825 25%, #2f2c3c 50%, #25242d 75%, #181623 100%);
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.section {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}

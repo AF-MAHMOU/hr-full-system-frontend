@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createAttendanceRecord, getAllTimeExceptions } from '../api/index';
-import s from "../page.module.css";
+import s from "../../../page.module.css";
 import { Punch, PunchType, TimeException } from "../types";
 import Selections from "./Selections";
 import { EmployeeProfile } from "../../hr/api/hrApi";
@@ -14,7 +14,6 @@ interface CreateAttendanceRecordFormProps {
 export default function CreateAttendanceRecordForm({ onCreated }: CreateAttendanceRecordFormProps) {
   const [timeExceptions, setTimeExceptions] = useState<TimeException[]>([]);
   const [exceptionIds, setExceptionIds] = useState("");
-  const [employees, setEmployees] = useState<EmployeeProfile[]>([]);
   const [employeeId, setEmployeeId] = useState("");
   const [punches, setPunches] = useState<Punch[]>([]);
   const [finalisedForPayroll, setFinalisedForPayroll] = useState<boolean>(false);
@@ -64,8 +63,6 @@ export default function CreateAttendanceRecordForm({ onCreated }: CreateAttendan
           <Selections
                       employeeId={employeeId}
                       setEmployeeId={setEmployeeId}
-                      employees={employees}
-                      setEmployees={setEmployees}
                     />
 
           <label className={s.description}>Punches</label>

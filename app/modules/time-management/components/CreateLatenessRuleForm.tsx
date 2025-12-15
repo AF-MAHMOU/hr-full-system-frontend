@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { createLatenessRule } from '../api/index';
-import s from "../page.module.css";
+import s from "../../../page.module.css";
 
 interface CreateLatenessRuleFormProps { onCreated: () => void; }
 
@@ -41,7 +41,7 @@ export default function CreateLatenessRuleForm({ onCreated }: CreateLatenessRule
           <label className={s.description}>
             <input type="checkbox" checked={active} onChange={e => setActive(e.target.checked)} />Active
           </label>
-          <button className={s.button} disabled={loading}>{loading ? "Adding..." : "Add"}</button>
+          <button className={s.buttonDark} disabled={loading}>{loading ? "Adding..." : "Add"}</button>
         </div>
       </div>
     </form>

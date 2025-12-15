@@ -113,14 +113,6 @@ const allAssignments: ShiftAssignmentWithType[] = [
           <button className={s.button}   onClick={() => goToDepartmentPage()}>Assign by Department</button>
           <button className={s.button}   onClick={() => goToEmployeePage()}>Assign by Employee</button>
           <button className={s.button}   onClick={() => gotoPositionPage()}>Assign by Position</button>
-
-          {/*<CreateShiftAssignmentDepartmentForm onCreated={load} />
-          <CreateShiftAssignmentEmployeeForm onCreated={load} />
-          <CreateShiftAssignmentPositionForm onCreated={load} />*/}
-
-          <div style={{ marginTop: "3rem" }}>
-            <Calendar shiftassignments={shiftassignments} />
-          </div>
         </>
       )}
     </div>

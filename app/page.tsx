@@ -302,7 +302,7 @@ export default function Home() {
       actions.push({
         label: 'Time Management',
         route: ROUTES.TIME_MANAGEMENT,
-        icon: '📈',
+        icon: '🕐',
         userTypes: ['employee'],
       });
     }

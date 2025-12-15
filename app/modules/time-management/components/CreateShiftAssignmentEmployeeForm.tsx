@@ -9,7 +9,6 @@ import {
 import s from "../page.module.css";
 import { ScheduleRule, Shift, ShiftAssignmentStatus } from "../types";
 import { useSearchParams } from "next/navigation";
-import { EmployeeProfile } from "../../hr/api/hrApi";
 import Selections from "./Selections";
 
 interface CreateShiftAssignmentEmployeeFormProps {
@@ -20,21 +19,19 @@ function dateOnlyToIso(dateOnly: string): string {
   return new Date(`${dateOnly}T00:00:00`).toISOString();
 }
 
-const toId = (x: any) => String(x?.id ?? x?._id ?? "");
-
 export default function CreateShiftAssignmentEmployeeForm({
   onCreated,
 }: CreateShiftAssignmentEmployeeFormProps) {
   const [shifts, setShifts] = useState<Shift[]>([]);
-  const [employeeId, setEmployeeId] = useState("");
   const [scheduleRules, setScheduleRules] = useState<ScheduleRule[]>([]);
 
-  const [selectedShiftId, setSelectedShiftId] = useState("");
+  // ✅ Use only ONE state for employeeId
   const [selectedEmployeeId, setSelectedEmployeeId] = useState("");
+  const [selectedShiftId, setSelectedShiftId] = useState("");
   const [selectedScheduleRuleId, setSelectedScheduleRuleId] = useState("");
 
-  const [startDate, setStartDate] = useState(""); // "YYYY-MM-DD"
-  const [endDate, setEndDate] = useState(""); // "YYYY-MM-DD"
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   const [status, setStatus] = useState<ShiftAssignmentStatus>(
     ShiftAssignmentStatus.APPROVED
@@ -47,7 +44,6 @@ export default function CreateShiftAssignmentEmployeeForm({
   const shiftId = params.get("shiftId");
 
   useEffect(() => {
-    
     if (shiftId) {
       setSelectedShiftId(shiftId);
       console.log("URL shiftId =", shiftId);
@@ -75,16 +71,16 @@ export default function CreateShiftAssignmentEmployeeForm({
     })();
   }, []);
 
-
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
+    console.log("Selected Employee ID:", selectedEmployeeId); // Add this log
+    console.log("Selected Shift ID:", selectedShiftId);
+    console.log("Start Date:", startDate);
+
     if (!selectedEmployeeId || !selectedShiftId || !startDate) {
-      console.log("selectedEmployeeId", selectedEmployeeId);
-      console.log("selectedShiftId", selectedShiftId);
-      console.log(startDate);
       setError("Employee, Shift, and Start Date are required");
       setLoading(false);
       return;
@@ -100,16 +96,23 @@ export default function CreateShiftAssignmentEmployeeForm({
         status,
       };
 
-      await createShiftAssignmentByEmployee(shiftAssignmentData);
+      console.log("Submitting data:", shiftAssignmentData); // Log the payload
 
-      setSelectedEmployeeId("");
-      setSelectedShiftId("");
-      setSelectedScheduleRuleId("");
-      setStartDate("");
-      setEndDate("");
-      setStatus(ShiftAssignmentStatus.APPROVED);
-
-      onCreated();
+      const result = await createShiftAssignmentByEmployee(shiftAssignmentData);
+      
+      if (result.success) {
+        // Reset form
+        setSelectedEmployeeId("");
+        setSelectedShiftId("");
+        setSelectedScheduleRuleId("");
+        setStartDate("");
+        setEndDate("");
+        setStatus(ShiftAssignmentStatus.APPROVED);
+        
+        onCreated();
+      } else {
+        setError(result.error?.message || "Failed to create shift assignment");
+      }
     } catch (err) {
       console.error("Error creating shift assignment:", err);
       setError("Failed to create shift assignment. Please try again.");
@@ -118,29 +121,18 @@ export default function CreateShiftAssignmentEmployeeForm({
     }
   };
 
-  useEffect(() => {
-    const badShifts = shifts.filter(s => !(s as any).id && !(s as any)._id);
-    const badRules = scheduleRules.filter(r => !(r as any).id && !(r as any)._id);
-    
-    if (badShifts.length || badRules.length) {
-      console.error("❌ BAD SHIFTS:", badShifts);
-      console.error("❌ BAD RULES:", badRules);
-    }
-  }, [shifts, scheduleRules]);
-
-
   return (
-    
     <form onSubmit={submit} className={s.formContainer}>
       {error && <div style={{ color: "red", marginBottom: "10px" }}>{error}</div>}
 
       <div className={s.grid}>
         <div className={s.field}>
           <label className={s.description}>Employee</label>
+          {/* ✅ Pass the same state variable and setter */}
           <Selections
-                                employeeId={selectedEmployeeId}
-                                setEmployeeId={setSelectedEmployeeId}
-                              />
+            employeeId={selectedEmployeeId}
+            setEmployeeId={setSelectedEmployeeId}
+          />
 
           <label className={s.description}>Shift</label>
           <select
@@ -174,10 +166,21 @@ export default function CreateShiftAssignmentEmployeeForm({
           </select>
 
           <label className={s.description}>Start Date</label>
-          <input className={s.select}type="date" value={startDate} onChange={e => setStartDate(e.target.value)} required />
+          <input 
+            className={s.select}
+            type="date" 
+            value={startDate} 
+            onChange={e => setStartDate(e.target.value)} 
+            required 
+          />
 
           <label className={s.description}>End Date</label>
-          <input className={s.select}type="date" value={endDate} onChange={e => setEndDate(e.target.value)} />
+          <input 
+            className={s.select}
+            type="date" 
+            value={endDate} 
+            onChange={e => setEndDate(e.target.value)} 
+          />
 
           <label className={s.description}>Status</label>
           <select

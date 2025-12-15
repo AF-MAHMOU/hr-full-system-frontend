@@ -17,6 +17,7 @@ export default function AttendanceCorrectionRequestPage() {
 
   const { user } = useAuth();  
   const roles = user?.roles;
+  const isAuthorized = roles?.includes(SystemRole.SYSTEM_ADMIN) || roles?.includes(SystemRole.HR_ADMIN);
 
   const load = async () => {
   setLoading(true);
@@ -46,7 +47,7 @@ export default function AttendanceCorrectionRequestPage() {
       <h1 className={s.header}>Attendance Correction Requests</h1>  
       <p className={s.description}>Had something that caused you to be late/absent? No worries</p>  
       <p className={s.description}>(Ngl I would worry since the code was not written by professionals but yk)</p>  
-        {roles?.includes(SystemRole.SYSTEM_ADMIN) || roles?.includes(SystemRole.HR_ADMIN) ? ( 
+        {isAuthorized ? ( 
           <>
             <AttendanceCorrectionRequestList attendancecorrectionrequests={attendancecorrectionrequests} onDelete={handleDelete} />  
             <CreateAttendanceCorrectionForm onCreated={load} />  

@@ -12,5 +12,37 @@ html, body {
   margin: 0;
   padding: 0;
   background: #181623;              /* solid fallback color */
-  overflow: hidden;                 /* disables all body scrolling */
+}
+
+.fc .fc-daygrid-day-number {
+  color: #e5e7eb !important; /* light gray / white */
+}
+
+.fc .fc-toolbar-title {
+  color: #f8fafc !important; /* almost white */
+}
+
+.fc .fc-col-header-cell-cushion {
+  color: #e5e7eb !important;
+}
+
+.fc .fc-day-today .fc-daygrid-day-number {
+  color: #60a5fa !important; /* blue */
+  font-weight: bold;
+}
+
+.fc .fc-day-other .fc-daygrid-day-number {
+  color: #6b7280 !important; /* muted gray */
+}
+
+/* Add to page.module.css */
+:global(.fc) {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+:global(.fc-view-harness) {
+  min-height: 500px !important;
+  max-height: 70vh !important;
+  overflow-y: auto !important;
 }

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { createOvertime } from "../api";
 import { CreateOvertimeRuleDto } from "../types";
-import s from "../page.module.css";
+import s from "../../../page.module.css";
 
 interface CreateOvertimeRuleFormProps {
   onCreated: () => void;
@@ -84,7 +84,7 @@ export default function CreateOvertimeRuleForm({
 
           {error && <p className={s.errorText}>{error}</p>}
 
-          <button className={s.button} disabled={loading}>
+          <button className={s.buttonDark} disabled={loading}>
             {loading ? "Adding..." : "Add"}
           </button>
         </div>

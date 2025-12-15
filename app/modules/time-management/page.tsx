@@ -1,13 +1,12 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Card } from '@/shared/components';
-import s from './page.module.css';
+import s from '../../page.module.css';
 import { getAllLatenessRule, getAllSchedule, getAllShifts, getAllShiftsType } from './api/index';
 import { LatenessRule, ScheduleRule, Shift, ShiftType } from './types';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { set } from 'zod';
+import { Button, Card } from '@/shared/components';
 import { useAuth } from '@/shared/hooks';
 import { SystemRole } from '@/shared/types';
 
@@ -16,45 +15,40 @@ export default function TimeManagementPage() {
     const [shifts, setShifts] = useState<Shift[]>([]);
     const [latenessRules, setLatenessRules] = useState<LatenessRule[]>([]);
     const [scheduleRules, setScheduleRules] = useState<ScheduleRule[]>([]);
-
     const [loading, setLoading] = useState(true);
 
     const pathname = usePathname();
+    const router = useRouter();
+    const { user } = useAuth();
+    const roles = user?.roles;
 
     const shiftTypeHref = `${pathname}/shift-type`;
     const shiftsHref = `${pathname}/shifts`;
     const latenessHref = `${pathname}/lateness`;
     const scheduleHref = `${pathname}/schedule`;
 
-    const router = useRouter();
-    const { user } = useAuth();
-
-    const roles = user?.roles;
-
     useEffect(() => {
-    console.log("hello");
-    console.log(user?.roles);
+        async function fetchThem() {
+            try {
+                const st = await getAllShiftsType();
+                const s = await getAllShifts();
+                const l = await getAllLatenessRule();
+                const sr = await getAllSchedule();
 
-    async function fetchThem() {
-        try {
-            const st = await getAllShiftsType();
-            const s = await getAllShifts();
-            const l = await getAllLatenessRule();
-            const sr = await getAllSchedule();
-
-            setShiftTypes(st);
-            setShifts(s);
-            setLatenessRules(l);
-            setScheduleRules(sr);
-        } catch (err) {
-            console.error('Failed to fetch', err);
-        } finally {
-            setLoading(false);
+                setShiftTypes(st);
+                setShifts(s);
+                setLatenessRules(l);
+                setScheduleRules(sr);
+            } catch (err) {
+                console.error('Failed to fetch', err);
+            } finally {
+                setLoading(false);
+            }
         }
-    }
-    fetchThem();
-}, [user, router]); // Include `user` in dependencies to re-run if it changes
-
+        if (user) {
+            fetchThem();
+        }
+    }, [user]);
 
     const nextStep = (() => {
         const label = 'Get started';
@@ -89,53 +83,105 @@ export default function TimeManagementPage() {
         return null;
     })();
 
-return (
-    <div className={s.wrapper}>
+    return (
         <div className={s.container}>
-            <p>hi</p> {/*THis navbar really needs to be studied */}
-            
-            <header className={s.header}>Welcome to Time Management!</header>
+        <section className={s.welcomeSection}>
+          <div className={s.welcomeContent}>
+            <h1 className={s.welcomeTitle}>Time Management</h1>
+            <p className={s.welcomeSubtitle}>
+              Manage attendance, shifts, and policies in one place.
+            </p>
+          </div>
+        </section>
 
-            {loading && roles?.includes(SystemRole.SYSTEM_ADMIN) || roles?.includes(SystemRole.HR_ADMIN) ? (
-                <p>Loading...</p>
-            ) : nextStep ? (
-                <>
-                    <header className={s.header}>
-                        <h2 className={s.header2}>Get Started with Time Management</h2>
-                    </header>
+            {!roles?.includes(SystemRole.SYSTEM_ADMIN) && !roles?.includes(SystemRole.HR_ADMIN) ? (
+              /* NON ADMIN VIEW*/
+              <section className={s.quickActionsSection}>
+                <h2 className={s.sectionTitle}>Quick actions</h2>
 
-                    <p className={s.description}>
-                        Complete the required setup steps to start using attendance and payroll features.
-                    </p>
+                <div className={s.actionsGrid}>
+                  <div
+                    className={s.actionCard}
+                    onClick={() => router.push('/modules/time-management/attendance-record')}
+                  >
+                    <span className={s.actionIcon}>📅</span>
+                    <span className={s.actionLabel}>Attendance</span>
+                  </div>
 
-                    <div className={s.actions}>
-                        <Link href={nextStep.href} className={s.button}>
-                            {nextStep.label}
-                        </Link>
+                  <div
+                    className={s.actionCard}
+                    onClick={() => router.push('/modules/time-management/shifts')}
+                  >
+                    <span className={s.actionIcon}>⏱</span>
+                    <span className={s.actionLabel}>My shifts</span>
+                  </div>
+
+                  <div
+                    className={s.actionCard}
+                    onClick={() => router.push('/modules/time-management/holiday')}
+                  >
+                    <span className={s.actionIcon}>🏖</span>
+                    <span className={s.actionLabel}>Holidays</span>
+                  </div>
+                </div>
+              </section>
+                ) : (
+                    /* ADMIN VIEW */
+                  <section className={s.quickActionsSection}>
+                    <h2 className={s.sectionTitle}>Admin actions</h2>
+                
+                    <div className={s.actionsGrid}>
+                      <div
+                        className={s.actionCard}
+                        onClick={() => router.push('/modules/time-management/shift-type')}
+                      >
+                        <span className={s.actionIcon}>🧩</span>
+                        <span className={s.actionLabel}>Shift types</span>
+                      </div>
+
+                      <div
+                        className={s.actionCard}
+                        onClick={() => router.push('/modules/time-management/overtime')}
+                      >
+                        <span className={s.actionIcon}> ⏱ </span>
+                        <span className={s.actionLabel}>Overtime Rules</span>
+                      </div>
+                
+                      <div
+                        className={s.actionCard}
+                        onClick={() => router.push('/modules/time-management/shifts')}
+                      >
+                        <span className={s.actionIcon}>⏱</span>
+                        <span className={s.actionLabel}>Shifts</span>
+                      </div>
+                
+                      <div
+                        className={s.actionCard}
+                        onClick={() => router.push('/modules/time-management/shift-assignment')}
+                      >
+                        <span className={s.actionIcon}>👥</span>
+                        <span className={s.actionLabel}>Assign shifts</span>
+                      </div>
+                
+                      <div
+                        className={s.actionCard}
+                        onClick={() => router.push('/modules/time-management/lateness')}
+                      >
+                        <span className={s.actionIcon}>⚠️</span>
+                        <span className={s.actionLabel}>Lateness rules</span>
+                      </div>
+                
+                      <div
+                        className={s.actionCard}
+                        onClick={() => router.push('/modules/time-management/overtime')}
+                      >
+                        <span className={s.actionIcon}>💰</span>
+                        <span className={s.actionLabel}>Overtime</span>
+                      </div>
                     </div>
-                </>
-            ) : (
-                <></>
-            )}
-            <>
-            {roles?.includes(SystemRole.SYSTEM_ADMIN) || roles?.includes(SystemRole.HR_ADMIN) ? ( 
-                <>
-                <p className={s.header2}>Time Management is fully set up!</p>
-                <Link href="/modules/time-management/attendance-record" className={s.button}>Attendance Record</Link>
-                <Link href="/modules/time-management/holiday" className={s.button}>Holiday Setup</Link>
-                <Link href="/modules/time-management/lateness" className={s.button}>Define Lateness Rules</Link>
-                <Link href="/modules/time-management/notification" className={s.button}>Notification Log</Link>
-                <Link href="/modules/time-management/overtime" className={s.button}>Overtime Rule</Link>
-                <Link href="/modules/time-management/shift-assignment" className={s.button}>Assign Shifts</Link>
-                <Link href="/modules/time-management/shift-type" className={s.button}>Define Shift Types</Link>
-                <Link href="/modules/time-management/shifts" className={s.button}>Define Shifts</Link>
-                <Link href="/modules/time-management/attendance-correction" className={s.button}>Attendance Correction</Link>
-                <Link href="/modules/time-management/time-exception" className={s.button}>Time Exceptions</Link>
-                </>
-            ) : ( 
-                <h2 className={s.header}>Who gave you Authority to come over here? :)</h2> 
-            )}
-            </>
+                  </section>
+                )}
+
         </div>
-    </div>
-);}
+    );
+}

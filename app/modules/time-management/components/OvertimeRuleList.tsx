@@ -7,7 +7,7 @@ import { updateOvertime } from "../api";
 interface OvertimeRuleListProps {
   overtimerules: OvertimeRule[];
   onDelete: (id: string) => void;
-  onToggleStatus: (id: string) => void; // To handle status change
+  onToggleStatus?: (id: string) => void; // To handle status change
 }
 
 const getOvertimeRuleId = (r: any) =>
@@ -24,7 +24,7 @@ export default function OvertimeRuleList({
   const handleToggleClick = async (id: string, currentActive: boolean) => {
     try {
       await updateOvertime(id, { active: !currentActive }); // Update API to change active status
-      onToggleStatus(id); // Let parent update state after toggling
+      if(onToggleStatus)onToggleStatus(id); // Let parent update state after toggling
     } catch (err) {
       console.error("Failed to toggle status:", err);
     }

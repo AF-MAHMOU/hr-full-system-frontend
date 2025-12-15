@@ -28,7 +28,6 @@ export default function CreateShiftAssignmentEmployeeForm({
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [employeeId, setEmployeeId] = useState("");
   const [scheduleRules, setScheduleRules] = useState<ScheduleRule[]>([]);
-  const [employees, setEmployees] = useState<EmployeeProfile[]>([]);
 
   const [selectedShiftId, setSelectedShiftId] = useState("");
   const [selectedEmployeeId, setSelectedEmployeeId] = useState("");
@@ -83,6 +82,9 @@ export default function CreateShiftAssignmentEmployeeForm({
     setError("");
 
     if (!selectedEmployeeId || !selectedShiftId || !startDate) {
+      console.log("selectedEmployeeId", selectedEmployeeId);
+      console.log("selectedShiftId", selectedShiftId);
+      console.log(startDate);
       setError("Employee, Shift, and Start Date are required");
       setLoading(false);
       return;
@@ -136,10 +138,8 @@ export default function CreateShiftAssignmentEmployeeForm({
         <div className={s.field}>
           <label className={s.description}>Employee</label>
           <Selections
-                                employeeId={employeeId}
-                                setEmployeeId={setEmployeeId}
-                                employees={employees}
-                                setEmployees={setEmployees}
+                                employeeId={selectedEmployeeId}
+                                setEmployeeId={setSelectedEmployeeId}
                               />
 
           <label className={s.description}>Shift</label>

@@ -11,20 +11,18 @@ export const metadata: Metadata = {
   description: 'Unified HR platform for managing employee lifecycle',
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="en">
-      <body>
-        <NotificationProvider defaultDuration={5000} maxNotifications={5}>
-          <Navbar />
-<main className={s.appContent}>
-  {children}
-</main>
-
-          {children}
-          <NotificationContainer position={NotificationPosition.TOP_RIGHT} maxNotifications={5} />
-        </NotificationProvider>
-      </body>
-    </html>
-  );
+export default function RootLayout({ children }: { children: React.ReactNode }) { 
+  return ( 
+    <html lang="en"> 
+      <body> 
+        <NotificationProvider defaultDuration={5000} maxNotifications={5}> 
+          <Navbar /> 
+          <main className={s.appContent}> 
+            {children} 
+          </main> 
+          <NotificationContainer position={NotificationPosition.TOP_RIGHT} maxNotifications={5} /> 
+        </NotificationProvider> 
+      </body> 
+    </html> 
+  ); 
 }

@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import CreateShiftTypeForm from "../components/CreateShiftTypeForm";
 import ShiftTypeList from "../components/ShiftTypeList";
-import Calendar from "../components/Calendar";
 import s from "../page.module.css";
 import { ShiftType } from "../types";
 import { deleteShiftType, getAllShiftsType } from '../api/index';

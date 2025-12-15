@@ -29,20 +29,11 @@ export default function TimeManagementPage() {
     const router = useRouter();
     const { user } = useAuth();
 
+    const roles = user?.roles;
+
     useEffect(() => {
     console.log("hello");
     console.log(user?.roles);
-
-    // Check if user exists and has roles before proceeding
-    if (user && user.roles) {
-        if (user.roles.includes(SystemRole.DEPARTMENT_EMPLOYEE)) {
-            setTimeout(() => {
-                router.push('/');
-            }, 1);
-        }
-    } else {
-        console.log('User is not fully loaded or no roles available.');
-    }
 
     async function fetchThem() {
         try {
@@ -101,9 +92,11 @@ export default function TimeManagementPage() {
 return (
     <div className={s.wrapper}>
         <div className={s.container}>
+            <p>hi</p> {/*THis navbar really needs to be studied */}
+            
             <header className={s.header}>Welcome to Time Management!</header>
 
-            {loading ? (
+            {loading && roles?.includes(SystemRole.SYSTEM_ADMIN) || roles?.includes(SystemRole.HR_ADMIN) ? (
                 <p>Loading...</p>
             ) : nextStep ? (
                 <>
@@ -122,21 +115,27 @@ return (
                     </div>
                 </>
             ) : (
-                <p className={s.header2}>
-                    Time Management is fully set up.
-                </p>
+                <></>
             )}
-
-            <Link href="/modules/time-management/attendance-correction" className={s.button}>Attendance Correction</Link>
-            <Link href="/modules/time-management/attendance-record" className={s.button}>Attendance Record</Link>
-            <Link href="/modules/time-management/holiday" className={s.button}>Holiday Setup</Link>
-            <Link href="/modules/time-management/lateness" className={s.button}>Define Lateness Rules</Link>
-            <Link href="/modules/time-management/notification" className={s.button}>Notification Log</Link>
-            <Link href="/modules/time-management/overtime" className={s.button}>Overtime Rule</Link>
-            <Link href="/modules/time-management/shift-assignment" className={s.button}>Assign Shifts</Link>
-            <Link href="/modules/time-management/shift-type" className={s.button}>Define Shift Types</Link>
-            <Link href="/modules/time-management/shifts" className={s.button}>Define Shifts</Link>
-            <Link href="/modules/time-management/time-exception" className={s.button}>Time Exceptions</Link>
+            <>
+            {roles?.includes(SystemRole.SYSTEM_ADMIN) || roles?.includes(SystemRole.HR_ADMIN) ? ( 
+                <>
+                <p className={s.header2}>Time Management is fully set up!</p>
+                <Link href="/modules/time-management/attendance-record" className={s.button}>Attendance Record</Link>
+                <Link href="/modules/time-management/holiday" className={s.button}>Holiday Setup</Link>
+                <Link href="/modules/time-management/lateness" className={s.button}>Define Lateness Rules</Link>
+                <Link href="/modules/time-management/notification" className={s.button}>Notification Log</Link>
+                <Link href="/modules/time-management/overtime" className={s.button}>Overtime Rule</Link>
+                <Link href="/modules/time-management/shift-assignment" className={s.button}>Assign Shifts</Link>
+                <Link href="/modules/time-management/shift-type" className={s.button}>Define Shift Types</Link>
+                <Link href="/modules/time-management/shifts" className={s.button}>Define Shifts</Link>
+                <Link href="/modules/time-management/attendance-correction" className={s.button}>Attendance Correction</Link>
+                <Link href="/modules/time-management/time-exception" className={s.button}>Time Exceptions</Link>
+                </>
+            ) : ( 
+                <h2 className={s.header}>Who gave you Authority to come over here? :)</h2> 
+            )}
+            </>
         </div>
     </div>
 );}

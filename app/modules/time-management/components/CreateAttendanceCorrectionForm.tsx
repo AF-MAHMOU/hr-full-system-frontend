@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { createAttendanceCorrection, getAllAttendanceRecord } from "../api/index";
 import s from "../page.module.css";
 import { AttendanceRecord, CorrectionRequestStatus } from "../types";
-import { EmployeeProfile } from "../../hr/api/hrApi";
+import { EmployeeProfile, getAllEmployees } from "../../hr/api/hrApi";
 import Selections from "./Selections";
 
 interface CreateAttendanceCorrectionFormProps {
@@ -26,14 +26,23 @@ export default function CreateAttendanceCorrectionForm({
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const token = typeof window !== "undefined"
-    ? localStorage.getItem("token")
-    : null;
+    useEffect(() => {
+  getAllEmployees()
+    .then((data) => {
+      setEmployees(data);
+      setLoading(false);
 
-    if (!token) {
-      console.error("No token found. Please log in.");
-      return;
-    }
+      // Set employeeId to the first employee if available 
+      if (data.length > 0 && !employeeId) {
+        setEmployeeId(data[0]._id);
+      }
+    })
+    .catch((err) => {
+      console.error("Error fetching employees:", err);
+      setLoading(false);
+    });
+}, [setEmployeeId, employeeId]); // Dependency array includes employeeId to ensure it doesn't overwrite after being set
+
     
     setLoading(true);
     try {

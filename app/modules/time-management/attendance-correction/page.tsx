@@ -16,18 +16,21 @@ export default function AttendanceCorrectionRequestPage() {
   const [loading, setLoading] = useState(true);
 
   const { user } = useAuth();  
+  const roles = user?.roles;
 
-  const load = async () => {  
-    setLoading(true);  
-    try {  
-      const data = await getAllAttendanceCorrections();  
-      setAttendanceCorrectionRequests(data);  
-    } catch (err) {  
-      console.error("Error fetching attendancecorrectionrequests:", err);  
-    } finally {  
-      setLoading(false);  
-    }  
-  };  
+  const load = async () => {
+  setLoading(true);
+  try {
+    const data = await getAllAttendanceCorrections();
+    console.log("Fetched data:", data); // Check for duplicates here
+    setAttendanceCorrectionRequests(data);
+  } catch (err) {
+    console.error("Error fetching attendancecorrectionrequests:", err);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   useEffect(() => {  
     load();
@@ -43,19 +46,17 @@ export default function AttendanceCorrectionRequestPage() {
       <h1 className={s.header}>Attendance Correction Requests</h1>  
       <p className={s.description}>Had something that caused you to be late/absent? No worries</p>  
       <p className={s.description}>(Ngl I would worry since the code was not written by professionals but yk)</p>  
-
-      {!user?.roles.includes(SystemRole.DEPARTMENT_EMPLOYEE) || !user?.roles.includes(SystemRole.HR_EMPLOYEE) ? (  
-        <>  
-        <AskForCorrection onCreated={load} /> 
-        <p> hello </p>           
-        </>  
-      ) : ( 
-        <> 
-        <AttendanceCorrectionRequestList attendancecorrectionrequests={attendancecorrectionrequests} onDelete={handleDelete} />  
-        <CreateAttendanceCorrectionForm onCreated={load} />  
-        <AttendanceCorrectionManagementForHRManager />   
-        </> 
-      )}  
+        {roles?.includes(SystemRole.SYSTEM_ADMIN) || roles?.includes(SystemRole.HR_ADMIN) ? ( 
+          <>
+            <AttendanceCorrectionRequestList attendancecorrectionrequests={attendancecorrectionrequests} onDelete={handleDelete} />  
+            <CreateAttendanceCorrectionForm onCreated={load} />  
+            <AttendanceCorrectionManagementForHRManager />
+          </>
+          ) : ( 
+            <>
+                <AskForCorrection onCreated={load} /> 
+            </>
+            )}
     </div>  
   );  
 }

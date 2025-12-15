@@ -64,8 +64,8 @@ function OrganizationStructureContent() {
   // Only SYSTEM_ADMIN can create/edit/delete departments and positions
   const isSystemAdmin = userRoles.includes(SystemRole.SYSTEM_ADMIN);
   
-  // Employees and Managers have read-only access
-  const isReadOnly = !isSystemAdmin && !userRoles.includes(SystemRole.HR_ADMIN) && !userRoles.includes(SystemRole.HR_MANAGER);
+  // Everyone except SYSTEM_ADMIN is read-only (HR Admin/Manager included)
+  const isReadOnly = !isSystemAdmin;
   
   // Users who can access change requests (HR roles, System Admin, and Department Heads)
   const canAccessChangeRequests = 

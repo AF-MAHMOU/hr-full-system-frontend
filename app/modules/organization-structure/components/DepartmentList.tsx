@@ -385,14 +385,16 @@ export function DepartmentList({ departments, onRefresh, isReadOnly = false }: D
                     >
                       Edit
                     </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setDepartmentToDelete(department)}
-                      className={styles.deleteButton}
-                    >
-                      Delete
-                    </Button>
+                    {department.code !== 'HR' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setDepartmentToDelete(department)}
+                        className={styles.deleteButton}
+                      >
+                        Delete
+                      </Button>
+                    )}
                   </>
                 )}
                 <Button

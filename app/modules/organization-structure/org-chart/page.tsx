@@ -51,9 +51,16 @@ function OrgChartContent() {
     const fetchDepartments = async () => {
       try {
         const response = await getDepartments({ limit: 100, isActive: true });
-        setDepartments(response.data);
-        if (response.data.length > 0 && !selectedDepartmentId) {
-          setSelectedDepartmentId(response.data[0]._id);
+        const sorted = [...(response.data || [])].sort((a, b) => {
+          const aIsHr = a.code?.toUpperCase() === 'HR';
+          const bIsHr = b.code?.toUpperCase() === 'HR';
+          if (aIsHr && !bIsHr) return -1;
+          if (!aIsHr && bIsHr) return 1;
+          return a.name.localeCompare(b.name);
+        });
+        setDepartments(sorted);
+        if (sorted.length > 0 && !selectedDepartmentId) {
+          setSelectedDepartmentId(sorted[0]._id);
         }
       } catch (err) {
         console.error('Error fetching departments:', err);
@@ -220,10 +227,20 @@ function OrgChartContent() {
           <div className={styles.error}>{error}</div>
         </Card>
       ) : viewType === 'simplified' && simplifiedData ? (
-        <SimplifiedOrgChartView departments={simplifiedData.data.departments || []} />
+        <SimplifiedOrgChartView 
+          departments={(simplifiedData.data.departments || []).sort((a, b) => {
+            if (a.department?.code === 'HR') return -1;
+            if (b.department?.code === 'HR') return 1;
+            return (a.department?.name || '').localeCompare(b.department?.name || '');
+          })} 
+        />
       ) : orgChartData ? (
         <OrgChartVisualization 
-          departments={orgChartData.data.departments} 
+          departments={(orgChartData.data.departments || []).sort((a, b) => {
+            if (a.department?.code === 'HR') return -1;
+            if (b.department?.code === 'HR') return 1;
+            return (a.department?.name || '').localeCompare(b.department?.name || '');
+          })} 
           allPositions={allPositions}
         />
       ) : (

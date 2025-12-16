@@ -12,6 +12,9 @@ import {
   deleteShiftAssignmentByDepartment,
   deleteShiftAssignmentByEmployee,
   deleteShiftAssignmentByPosition,
+  updateShiftAssignmentByPosition,
+  updateShiftAssignmentByEmployee,
+  updateShiftAssignmentByDepartment,
 } from "../api";
 
 import {
@@ -39,14 +42,6 @@ export default function ShiftAssignmentPage() {
         getAllShiftAssignmentsByEmployee(),
         getAllShiftAssignmentsByPosition(),
       ]);
-const allAssignments: ShiftAssignmentWithType[] = [
-  ...byDept.map((a: ShiftAssignment) => ({ ...a, type: 1 })),
-  ...byEmp.map((a: ShiftAssignment) => ({ ...a, type: 2 })),
-  ...byPos.map((a: ShiftAssignment) => ({ ...a, type: 3 })),
-];
-
-
-      setShiftAssignments(allAssignments);
     } catch (err) {
       console.error("Error fetching data:", err);
     } finally {
@@ -77,7 +72,7 @@ const allAssignments: ShiftAssignmentWithType[] = [
     const newPath = pathname.endsWith("/")
       ? pathname + "department"
       : pathname + "/department";
-      
+
     router.push(newPath);
   };
 
@@ -85,7 +80,7 @@ const allAssignments: ShiftAssignmentWithType[] = [
     const newPath = pathname.endsWith("/")
       ? pathname + "position"
       : pathname + "/position";
-      
+
     router.push(newPath);
   };
 
@@ -93,10 +88,58 @@ const allAssignments: ShiftAssignmentWithType[] = [
     const newPath = pathname.endsWith("/")
       ? pathname + "employee"
       : pathname + "/employee";
-      
+
     router.push(newPath);
   };
 
+
+  const handleRenewAssignment = async (id: string, type: AssignmentType, newEndDate: Date) => {
+    try {
+      // Format the date for the API
+      const formattedDate = newEndDate.toISOString().split('T')[0]; // YYYY-MM-DD
+
+      // Prepare payload - adjust based on what your backend expects
+      const payload = {
+        endDate: formattedDate,
+        // Add other fields if needed
+      };
+
+      let result;
+
+      // Call the appropriate update function based on type
+      if (type === 1) {
+        result = await updateShiftAssignmentByDepartment(id, payload);
+      } else if (type === 2) {
+        result = await updateShiftAssignmentByEmployee(id, payload);
+      } else if (type === 3) {
+        result = await updateShiftAssignmentByPosition(id, payload);
+      } else {
+        throw new Error(`Unknown assignment type: ${type}`);
+      }
+
+      if (result) {
+        // Update local state
+        setShiftAssignments(prev =>
+          prev.map(sa =>
+            sa.id === id
+              ? {
+                ...sa,
+                endDate: result.endDate || formattedDate, // Use result from API
+                status: result.status || sa.status // Update status if needed
+              }
+              : sa
+          )
+        );
+        alert('Assignment renewed successfully!');
+      } else {
+        throw new Error('Update returned null');
+      }
+
+    } catch (error) {
+      console.error('Renew failed:', error);
+      alert('Failed to renew assignment. Please try again.');
+    }
+  };
 
   return (
     <div className={s.container}>
@@ -110,9 +153,9 @@ const allAssignments: ShiftAssignmentWithType[] = [
             shiftassignments={shiftassignments}
             onDelete={handleDelete}
           />
-          <button className={s.button}   onClick={() => goToDepartmentPage()}>Assign by Department</button>
-          <button className={s.button}   onClick={() => goToEmployeePage()}>Assign by Employee</button>
-          <button className={s.button}   onClick={() => gotoPositionPage()}>Assign by Position</button>
+          <button className={s.button} onClick={() => goToDepartmentPage()}>Assign by Department</button>
+          <button className={s.button} onClick={() => goToEmployeePage()}>Assign by Employee</button>
+          <button className={s.button} onClick={() => gotoPositionPage()}>Assign by Position</button>
         </>
       )}
     </div>

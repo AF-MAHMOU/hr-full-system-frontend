@@ -99,8 +99,8 @@ export default function CreateShiftAssignmentEmployeeForm({
       console.log("Submitting data:", shiftAssignmentData); // Log the payload
 
       const result = await createShiftAssignmentByEmployee(shiftAssignmentData);
-      
-      if (result.success) {
+
+      if (result && result.success) {
         // Reset form
         setSelectedEmployeeId("");
         setSelectedShiftId("");
@@ -108,7 +108,7 @@ export default function CreateShiftAssignmentEmployeeForm({
         setStartDate("");
         setEndDate("");
         setStatus(ShiftAssignmentStatus.APPROVED);
-        
+
         onCreated();
       } else {
         setError(result.error?.message || "Failed to create shift assignment");
@@ -166,20 +166,20 @@ export default function CreateShiftAssignmentEmployeeForm({
           </select>
 
           <label className={s.description}>Start Date</label>
-          <input 
+          <input
             className={s.select}
-            type="date" 
-            value={startDate} 
-            onChange={e => setStartDate(e.target.value)} 
-            required 
+            type="date"
+            value={startDate}
+            onChange={e => setStartDate(e.target.value)}
+            required
           />
 
           <label className={s.description}>End Date</label>
-          <input 
+          <input
             className={s.select}
-            type="date" 
-            value={endDate} 
-            onChange={e => setEndDate(e.target.value)} 
+            type="date"
+            value={endDate}
+            onChange={e => setEndDate(e.target.value)}
           />
 
           <label className={s.description}>Status</label>

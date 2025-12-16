@@ -57,7 +57,7 @@ export default function AttendanceRecordPage() {
       )}
       <CreateAttendanceRecordForm onCreated={load} />
 
-      <button type="button"className={s.button}onClick={gotoReportsPage}>
+      <button type="button" className={s.button} onClick={gotoReportsPage}>
         Go to Reports Page
       </button>
     </div>

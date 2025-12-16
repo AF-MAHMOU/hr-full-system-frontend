@@ -617,6 +617,25 @@ export const getAllShifts = async (): Promise<Shift[]> => {
   }
 };
 
+export const getAlmostExpiredShifts = async (): Promise<any> => {
+  try {
+    const response = await axiosInstance.get("/shifts/expiring/list");
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching almost expired shifts:", error);
+    return [];
+  }
+};
+
+export const getExpiredShifts = async (): Promise<any> => {
+  try {
+    const response = await axiosInstance.get("/shifts/expired/list");
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching expired shifts:", error);
+    return [];
+  }
+};
 
 
 export const getAllShiftsType = async (): Promise<ShiftType[]> => {

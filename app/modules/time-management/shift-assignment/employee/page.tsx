@@ -12,6 +12,10 @@ import {
   deleteShiftAssignmentByDepartment,
   deleteShiftAssignmentByEmployee,
   deleteShiftAssignmentByPosition,
+  getAlmostExpiredShifts,
+  updateShiftAssignmentByDepartment,
+  updateShiftAssignmentByEmployee,
+  updateShiftAssignmentByPosition,
 } from "../../api";
 
 import {
@@ -35,14 +39,11 @@ export default function ShiftAssignmentPage() {
         getAllShiftAssignmentsByEmployee(),
         getAllShiftAssignmentsByPosition(),
       ]);
-const allAssignments: ShiftAssignmentWithType[] = [
-  ...byDept.map((a: ShiftAssignment) => ({ ...a, type: 1 })),
-  ...byEmp.map((a: ShiftAssignment) => ({ ...a, type: 2 })),
-  ...byPos.map((a: ShiftAssignment) => ({ ...a, type: 3 })),
-];
 
+      // Trigger notification check (fire and forget / or await if needed)
+      // We don't necessarily need to show the result, but calling it triggers the email/notifications
+      getAlmostExpiredShifts().catch(err => console.error("Expiry check failed", err));
 
-      setShiftAssignments(allAssignments);
     } catch (err) {
       console.error("Error fetching data:", err);
     } finally {
@@ -53,6 +54,19 @@ const allAssignments: ShiftAssignmentWithType[] = [
   useEffect(() => {
     load();
   }, []);
+
+  const handleRenew = async (id: string, type: AssignmentType, newEndDate: string) => {
+    try {
+      const payload = { endDate: newEndDate };
+      if (type === 1) await updateShiftAssignmentByDepartment(id, payload);
+      if (type === 2) await updateShiftAssignmentByEmployee(id, payload);
+      if (type === 3) await updateShiftAssignmentByPosition(id, payload);
+
+      await load();
+    } catch (err) {
+      console.error("Error renewing shift assignment:", err);
+    }
+  };
 
   const handleDelete = async (id: string, type: AssignmentType) => {
     try {
@@ -77,6 +91,7 @@ const allAssignments: ShiftAssignmentWithType[] = [
           <ShiftAssignmentList
             shiftassignments={shiftassignments}
             onDelete={handleDelete}
+            onRenew={handleRenew}
           />
           <CreateShiftAssignmentEmployeeForm onCreated={load} />
 

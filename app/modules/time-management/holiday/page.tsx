@@ -9,8 +9,6 @@ import Calendar from "../components/Calendar";
 import { Holiday } from "../types";
 import { SystemRole } from "@/shared/types";
 import { useAuth } from "@/shared/hooks";
-import AttendanceCorrectionRequestList from "../components/AttendanceCorrectionList";
-import AskForCorrection from "../components/AskForCorrection";
 import EmployeeViewHoliday from "../components/EmployeeViewCalendar";
 
 export default function HolidayPage() {
@@ -18,10 +16,10 @@ export default function HolidayPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { user } = useAuth();  
+  const { user } = useAuth();
   const roles = user?.roles;
   const isAuthorized = roles?.includes(SystemRole.SYSTEM_ADMIN) || roles?.includes(SystemRole.HR_ADMIN);
-  
+
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -74,14 +72,14 @@ export default function HolidayPage() {
       <p className={s.description2}>
         Manage company holidays by adding, viewing, and deleting holiday entries.
       </p>
-      {isAuthorized ? ( 
+      {isAuthorized ? (
         <>
-          <CreateHolidayForm onCreated={load} />  
+          <CreateHolidayForm onCreated={load} />
           <HolidayList />
         </>
-        ) : ( 
+      ) : (
         <>
-          <EmployeeViewHoliday/> 
+          <EmployeeViewHoliday />
         </>
       )}
     </div>

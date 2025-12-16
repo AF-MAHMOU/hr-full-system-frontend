@@ -11,12 +11,17 @@ import { useAuth } from '@/shared/hooks/useAuth';
 import { Card, Button, Input, ProtectedRoute } from '@/shared/components';
 import { SystemRole } from '@/shared/types/auth';
 import { hrApi, type EmployeeProfile } from '../api/hrApi';
+import { getDepartments, getPositions } from '@/app/modules/organization-structure/api/orgStructureApi';
+import type { Department, Position } from '@/app/modules/organization-structure/types';
 import styles from './page.module.css';
 
 function EmployeesListContent() {
   const { user } = useAuth();
   const router = useRouter();
   const [employees, setEmployees] = useState<EmployeeProfile[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [positions, setPositions] = useState<Position[]>([]);
+  const [employeeRoles, setEmployeeRoles] = useState<Record<string, string[]>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -24,7 +29,16 @@ function EmployeesListContent() {
 
   useEffect(() => {
     fetchEmployees();
+    fetchDepartments();
+    fetchPositions();
   }, []);
+
+  useEffect(() => {
+    // Fetch roles for all employees
+    if (employees.length > 0) {
+      fetchEmployeeRoles();
+    }
+  }, [employees]);
 
   // Check if user has HR role
   const userRoles = user?.roles || [];
@@ -44,6 +58,43 @@ function EmployeesListContent() {
       setError(err.message || 'Failed to load employees');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchDepartments = async () => {
+    try {
+      const response = await getDepartments({ limit: 1000, isActive: true });
+      setDepartments(response.data || []);
+    } catch (err) {
+      console.error('Error fetching departments:', err);
+      // Don't set error state - this is a fallback, not critical
+    }
+  };
+
+  const fetchPositions = async () => {
+    try {
+      const response = await getPositions({ limit: 1000, isActive: true });
+      setPositions(response.data || []);
+    } catch (err) {
+      console.error('Error fetching positions:', err);
+      // Don't set error state - this is a fallback, not critical
+    }
+  };
+
+  const fetchEmployeeRoles = async () => {
+    try {
+      const rolesMap: Record<string, string[]> = {};
+      // Roles should now be included in the employee data from backend
+      employees.forEach((employee: any) => {
+        if (employee.roles && Array.isArray(employee.roles)) {
+          rolesMap[employee._id] = employee.roles;
+        } else {
+          rolesMap[employee._id] = [];
+        }
+      });
+      setEmployeeRoles(rolesMap);
+    } catch (err) {
+      console.error('Error processing employee roles:', err);
     }
   };
 
@@ -82,6 +133,38 @@ function EmployeesListContent() {
       default:
         return '#95a5a6';
     }
+  };
+
+  const getDepartmentName = (departmentId?: string | { _id: string; name: string; code: string }) => {
+    if (!departmentId) return 'N/A';
+    // If it's already populated (object), use it directly
+    if (typeof departmentId === 'object' && departmentId.name) {
+      return departmentId.name;
+    }
+    // Otherwise, look it up from the departments array (fallback)
+    if (typeof departmentId === 'string') {
+      const department = departments.find(d => d._id === departmentId);
+      return department?.name || 'N/A';
+    }
+    return 'N/A';
+  };
+
+  const getPositionName = (positionId?: string | { _id: string; title: string; code: string }) => {
+    if (!positionId) return 'N/A';
+    // If it's already populated (object), use it directly
+    if (typeof positionId === 'object' && positionId.title) {
+      return positionId.title;
+    }
+    // Otherwise, look it up from the positions array (fallback)
+    if (typeof positionId === 'string') {
+      const position = positions.find(p => p._id === positionId);
+      return position?.title || 'N/A';
+    }
+    return 'N/A';
+  };
+
+  const getEmployeeRoles = (employeeId: string) => {
+    return employeeRoles[employeeId] || [];
   };
 
   const isAdmin = 
@@ -167,6 +250,9 @@ function EmployeesListContent() {
                 <th>Name</th>
                 <th>Employee #</th>
                 <th>Email</th>
+                <th>Department</th>
+                <th>Position</th>
+                <th>Roles</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
@@ -174,53 +260,64 @@ function EmployeesListContent() {
             <tbody>
               {employees.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className={styles.noData}>
+                  <td colSpan={8} className={styles.noData}>
                     No employees found
                   </td>
                 </tr>
               ) : (
-                employees.map((employee) => (
-                  <tr key={employee._id}>
-                    <td>{employee.fullName}</td>
-                    <td>{employee.employeeNumber || 'N/A'}</td>
-                    <td>{employee.workEmail || employee.personalEmail || 'N/A'}</td>
-                    <td>
-                      <span
-                        className={styles.statusBadge}
-                        style={{ backgroundColor: getStatusColor(employee.status) }}
-                      >
-                        {employee.status || 'N/A'}
-                      </span>
-                    </td>
-                    <td>
-                      <div className={styles.actions}>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => router.push(`/modules/hr/employees/${employee._id}`)}
-                        >
-                          View
-                        </Button>
-                        <Button
-                          variant="primary"
-                          size="sm"
-                          onClick={() => router.push(`/modules/hr/employees/${employee._id}/edit`)}
-                        >
-                          Edit
-                        </Button>
-                        {isAdmin && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => router.push(`/modules/hr/employees/${employee._id}/roles`)}
-                          >
-                            Roles
-                          </Button>
+                employees.map((employee) => {
+                  const roles = getEmployeeRoles(employee._id);
+                  return (
+                    <tr key={employee._id}>
+                      <td>{employee.fullName}</td>
+                      <td>{employee.employeeNumber || 'N/A'}</td>
+                      <td>{employee.workEmail || employee.personalEmail || 'N/A'}</td>
+                      <td>{getDepartmentName(employee.primaryDepartmentId)}</td>
+                      <td>{getPositionName(employee.primaryPositionId)}</td>
+                      <td>
+                        {roles.length > 0 ? (
+                          <div className={styles.rolesContainer}>
+                            {roles.map((role, idx) => (
+                              <span key={idx} className={styles.roleBadge}>
+                                {role}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          'N/A'
                         )}
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                      </td>
+                      <td>
+                        <span
+                          className={styles.statusBadge}
+                          style={{ backgroundColor: getStatusColor(employee.status) }}
+                        >
+                          {employee.status || 'N/A'}
+                        </span>
+                      </td>
+                      <td>
+                        <div className={styles.actions}>
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            onClick={() => router.push(`/modules/hr/employees/${employee._id}/edit`)}
+                          >
+                            View/Edit
+                          </Button>
+                          {isAdmin && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => router.push(`/modules/hr/employees/${employee._id}/roles`)}
+                            >
+                              Roles
+                            </Button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>

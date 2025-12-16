@@ -114,6 +114,9 @@ export default function AssignmentModal({
   const fetchOptions = async () => {
     try {
       setLoadingOptions(true);
+      setError(null);
+      console.log('[AssignmentModal] Fetching options...');
+      
       const [templatesData, cyclesData, employeesData, departmentsData, positionsData] = await Promise.all([
         performanceApi.getTemplates(true), // Only active templates
         performanceApi.getCycles(), // Get all cycles
@@ -121,13 +124,53 @@ export default function AssignmentModal({
         getDepartments({ limit: 100, isActive: true }),
         getPositions({ limit: 100, isActive: true }),
       ]);
+      
+      console.log('[AssignmentModal] Options fetched:', {
+        templates: templatesData.length,
+        cycles: cyclesData.length,
+        employees: employeesData.length,
+        departments: departmentsData.data?.length || 0,
+        positions: positionsData.data?.length || 0,
+      });
+      
+      // Log sample employee to check data structure
+      if (employeesData.length > 0) {
+        const sample = employeesData[0];
+        console.log('[AssignmentModal] Sample employee data:', {
+          fullName: `${sample.firstName} ${sample.lastName}`,
+          employeeNumber: sample.employeeNumber,
+          primaryDepartmentId: sample.primaryDepartmentId,
+          primaryPositionId: sample.primaryPositionId,
+          department: sample.department,
+          position: sample.position,
+          hasPrimaryDepartmentId: !!sample.primaryDepartmentId,
+          hasPrimaryPositionId: !!sample.primaryPositionId,
+          departmentType: typeof sample.primaryDepartmentId,
+          positionType: typeof sample.primaryPositionId,
+          fullEmployee: sample,
+        });
+        
+        // Log all employees to see which ones have department/position
+        console.log('[AssignmentModal] All employees department/position status:', 
+          employeesData.map(emp => ({
+            name: `${emp.firstName} ${emp.lastName}`,
+            hasDept: !!emp.primaryDepartmentId,
+            hasPos: !!emp.primaryPositionId,
+            dept: emp.primaryDepartmentId,
+            pos: emp.primaryPositionId,
+          }))
+        );
+      }
+      
       setTemplates(templatesData);
       setCycles(cyclesData);
       setEmployees(employeesData);
       setDepartments(departmentsData.data || []);
       setPositions(positionsData.data || []);
     } catch (err: any) {
-      console.error('Error fetching options:', err);
+      console.error('[AssignmentModal] Error fetching options:', err);
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to load options. Please refresh and try again.';
+      setError(`Error loading form options: ${errorMessage}`);
     } finally {
       setLoadingOptions(false);
     }
@@ -236,12 +279,12 @@ export default function AssignmentModal({
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={isEdit ? 'Edit Assignment' : 'Assign Appraisal Template'}
-      size="xl"
-    >
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        title={isEdit ? 'Edit Assignment' : 'Assign Template'}
+        size="xl"
+      >
       <form onSubmit={handleSubmit} className={styles.form}>
         {error && (
           <div className={styles.errorMessage} role="alert">
@@ -361,19 +404,58 @@ export default function AssignmentModal({
                   <div className={styles.employeeList}>
                     {employees
                       .filter((emp) => emp.status === 'ACTIVE' || emp.status === 'PROBATION')
-                      .map((employee) => (
-                        <label key={employee._id} className={styles.checkboxLabel}>
-                          <input
-                            type="checkbox"
-                            checked={individualForm.employeeProfileIds.includes(employee._id || '')}
-                            onChange={() => toggleEmployeeSelection(employee._id || '')}
-                            disabled={isLoading}
-                          />
-                          <span>
-                            {employee.firstName} {employee.lastName} ({employee.employeeNumber})
-                          </span>
-                        </label>
-                      ))}
+                      .map((employee) => {
+                        // Get department name - check multiple possible formats
+                        let departmentName = 'N/A';
+                        if (employee.primaryDepartmentId) {
+                          if (typeof employee.primaryDepartmentId === 'object' && employee.primaryDepartmentId.name) {
+                            departmentName = employee.primaryDepartmentId.name;
+                          } else if (typeof employee.primaryDepartmentId === 'string') {
+                            // If it's a string ID, we can't resolve it here, show N/A
+                            departmentName = 'N/A';
+                          }
+                        } else if (employee.department) {
+                          departmentName = employee.department;
+                        }
+                        
+                        // Get position title - check multiple possible formats
+                        let positionTitle = 'N/A';
+                        if (employee.primaryPositionId) {
+                          if (typeof employee.primaryPositionId === 'object' && employee.primaryPositionId.title) {
+                            positionTitle = employee.primaryPositionId.title;
+                          } else if (typeof employee.primaryPositionId === 'string') {
+                            // If it's a string ID, we can't resolve it here, show N/A
+                            positionTitle = 'N/A';
+                          }
+                        } else if (employee.position) {
+                          positionTitle = employee.position;
+                        }
+                        
+                        // Only show department/position if at least one is available
+                        const showMeta = departmentName !== 'N/A' || positionTitle !== 'N/A';
+                        
+                        return (
+                          <label key={employee._id} className={styles.checkboxLabel}>
+                            <input
+                              type="checkbox"
+                              checked={individualForm.employeeProfileIds.includes(employee._id || '')}
+                              onChange={() => toggleEmployeeSelection(employee._id || '')}
+                              disabled={isLoading}
+                            />
+                            <span className={styles.employeeInfo}>
+                              <span className={styles.employeeName}>
+                                {employee.firstName} {employee.lastName}
+                                {employee.employeeNumber && ` (${employee.employeeNumber})`}
+                              </span>
+                              {showMeta && (
+                                <span className={styles.employeeMeta}>
+                                  {departmentName} • {positionTitle}
+                                </span>
+                              )}
+                            </span>
+                          </label>
+                        );
+                      })}
                   </div>
                 </div>
 
@@ -394,11 +476,25 @@ export default function AssignmentModal({
                     <option value="">Auto-detect from org structure</option>
                     {employees
                       .filter((emp) => emp.status === 'ACTIVE')
-                      .map((employee) => (
-                        <option key={employee._id} value={employee._id}>
-                          {employee.firstName} {employee.lastName}
-                        </option>
-                      ))}
+                      .map((employee) => {
+                        const departmentName = employee.primaryDepartmentId 
+                          ? typeof employee.primaryDepartmentId === 'object'
+                            ? employee.primaryDepartmentId.name
+                            : 'N/A'
+                          : employee.department || 'N/A';
+                        
+                        const positionTitle = employee.primaryPositionId
+                          ? typeof employee.primaryPositionId === 'object'
+                            ? employee.primaryPositionId.title
+                            : 'N/A'
+                          : employee.position || 'N/A';
+                        
+                        return (
+                          <option key={employee._id} value={employee._id}>
+                            {employee.firstName} {employee.lastName} - {departmentName} • {positionTitle}
+                          </option>
+                        );
+                      })}
                   </select>
                 </div>
               </>
@@ -460,19 +556,57 @@ export default function AssignmentModal({
                     {employees
                       .filter((emp) => emp.status === 'ACTIVE' || emp.status === 'PROBATION')
                       .slice(0, 50)
-                      .map((employee) => (
-                        <label key={employee._id} className={styles.checkboxLabel}>
-                          <input
-                            type="checkbox"
-                            checked={(bulkForm.employeeProfileIds || []).includes(employee._id || '')}
-                            onChange={() => toggleEmployeeSelection(employee._id || '')}
-                            disabled={isLoading}
-                          />
-                          <span>
-                            {employee.firstName} {employee.lastName} ({employee.employeeNumber})
-                          </span>
-                        </label>
-                      ))}
+                      .map((employee) => {
+                        // Get department name - check multiple possible formats
+                        let departmentName = 'N/A';
+                        if (employee.primaryDepartmentId) {
+                          if (typeof employee.primaryDepartmentId === 'object') {
+                            if (employee.primaryDepartmentId.name) {
+                              departmentName = employee.primaryDepartmentId.name;
+                            }
+                          }
+                        }
+                        // Fallback to employee.department if available
+                        if (departmentName === 'N/A' && employee.department) {
+                          departmentName = employee.department;
+                        }
+                        
+                        // Get position title - check multiple possible formats
+                        let positionTitle = 'N/A';
+                        if (employee.primaryPositionId) {
+                          if (typeof employee.primaryPositionId === 'object') {
+                            if (employee.primaryPositionId.title) {
+                              positionTitle = employee.primaryPositionId.title;
+                            }
+                          }
+                        }
+                        // Fallback to employee.position if available
+                        if (positionTitle === 'N/A' && employee.position) {
+                          positionTitle = employee.position;
+                        }
+                        
+                        return (
+                          <label key={employee._id} className={styles.checkboxLabel}>
+                            <input
+                              type="checkbox"
+                              checked={(bulkForm.employeeProfileIds || []).includes(employee._id || '')}
+                              onChange={() => toggleEmployeeSelection(employee._id || '')}
+                              disabled={isLoading}
+                            />
+                            <span className={styles.employeeInfo}>
+                              <span className={styles.employeeName}>
+                                {employee.firstName} {employee.lastName}
+                                {employee.employeeNumber && ` (${employee.employeeNumber})`}
+                              </span>
+                              {(departmentName !== 'N/A' || positionTitle !== 'N/A') && (
+                                <span className={styles.employeeMeta}>
+                                  {departmentName} • {positionTitle}
+                                </span>
+                              )}
+                            </span>
+                          </label>
+                        );
+                      })}
                   </div>
                 </div>
               </>

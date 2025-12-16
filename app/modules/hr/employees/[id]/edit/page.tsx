@@ -24,6 +24,7 @@ function EditEmployeeContent() {
   const [employee, setEmployee] = useState<EmployeeProfile | null>(null);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [positions, setPositions] = useState<Position[]>([]);
+  const [allDepartments, setAllDepartments] = useState<Department[]>([]); // Store all departments to check head positions
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -87,9 +88,24 @@ function EditEmployeeContent() {
     try {
       const response = await getDepartments({ limit: 100, isActive: true });
       setDepartments(response.data);
+      setAllDepartments(response.data); // Store all departments for head position checking
     } catch (err) {
       console.error('Error fetching departments:', err);
     }
+  };
+
+  // Helper function to check if a position is a head position
+  const isHeadPosition = (positionId: string): boolean => {
+    return allDepartments.some(dept => {
+      const headId = typeof dept.headPositionId === 'string' 
+        ? dept.headPositionId 
+        : (dept.headPositionId as any)?._id 
+          ? String((dept.headPositionId as any)._id)
+          : dept.headPositionId 
+            ? String(dept.headPositionId)
+            : null;
+      return headId === positionId;
+    });
   };
 
   const fetchPositionsForDepartment = async (departmentId: string) => {
@@ -344,11 +360,14 @@ function EditEmployeeContent() {
                   disabled={!formData.primaryDepartmentId}
                 >
                   <option value="">Select Position</option>
-                  {positions.map((pos) => (
-                    <option key={pos._id} value={pos._id}>
-                      {pos.code} - {pos.title}
-                    </option>
-                  ))}
+                  {positions.map((pos) => {
+                    const isHead = isHeadPosition(pos._id);
+                    return (
+                      <option key={pos._id} value={pos._id}>
+                        {pos.code} - {pos.title}{isHead ? ' (HEAD POSITION)' : ''}
+                      </option>
+                    );
+                  })}
                 </select>
                 {!formData.primaryDepartmentId && (
                   <span className={styles.helperText}>

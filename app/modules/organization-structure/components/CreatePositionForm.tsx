@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Button, Input } from '@/shared/components';
-import { createPosition, getPositions } from '../api/orgStructureApi';
+import { createPosition, getPositions, getDepartments } from '../api/orgStructureApi';
 import type { CreatePositionDto, Position } from '../types';
 import styles from './CreatePositionForm.module.css';
 
@@ -38,6 +38,7 @@ export function CreatePositionForm({
   const [existingPositions, setExistingPositions] = useState<Position[]>([]);
   const [existingCodes, setExistingCodes] = useState<string[]>([]);
   const [availableReportingPositions, setAvailableReportingPositions] = useState<Position[]>([]);
+  const [allDepartments, setAllDepartments] = useState<any[]>([]); // Store departments to check head positions
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [codeError, setCodeError] = useState<string | null>(null);
@@ -46,12 +47,16 @@ export function CreatePositionForm({
   useEffect(() => {
     const fetchPositions = async () => {
       try {
-        const response = await getPositions({ limit: 100, isActive: true });
-        setExistingPositions(response.data);
-        setExistingCodes(response.data.map(pos => pos.code.toUpperCase()));
+        const [positionsResponse, departmentsResponse] = await Promise.all([
+          getPositions({ limit: 100, isActive: true }),
+          getDepartments({ limit: 100, isActive: true })
+        ]);
+        setExistingPositions(positionsResponse.data);
+        setExistingCodes(positionsResponse.data.map(pos => pos.code.toUpperCase()));
+        setAllDepartments(departmentsResponse.data);
         
         // Get positions in the same department for reporting hierarchy
-        const deptPositions = response.data.filter(
+        const deptPositions = positionsResponse.data.filter(
           pos => pos.departmentId === departmentId && pos._id !== formData.reportsToPositionId
         );
         setAvailableReportingPositions(deptPositions);
@@ -291,11 +296,24 @@ export function CreatePositionForm({
           className={styles.select}
         >
           <option value="">No reporting position (Top level)</option>
-          {availableReportingPositions.map((position) => (
-            <option key={position._id} value={position._id}>
-              {position.code} - {position.title}
-            </option>
-          ))}
+          {availableReportingPositions.map((position) => {
+            // Check if this position is a head position in any department
+            const isHead = allDepartments.some(dept => {
+              const headId = typeof dept.headPositionId === 'string' 
+                ? dept.headPositionId 
+                : (dept.headPositionId as any)?._id 
+                  ? String((dept.headPositionId as any)._id)
+                  : dept.headPositionId 
+                    ? String(dept.headPositionId)
+                    : null;
+              return headId === position._id;
+            });
+            return (
+              <option key={position._id} value={position._id}>
+                {position.code} - {position.title}{isHead ? ' (HEAD POSITION)' : ''}
+              </option>
+            );
+          })}
         </select>
         <span className={styles.helperText}>
           Select a position this position reports to (optional)

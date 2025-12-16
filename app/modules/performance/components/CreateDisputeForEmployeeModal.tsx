@@ -8,6 +8,7 @@
 import { useState, useEffect } from 'react';
 import { Modal, Button, Input } from '@/shared/components';
 import { performanceApi } from '../api/performanceApi';
+import { useAuth } from '@/shared/hooks/useAuth';
 import type { CreateAppraisalDisputeDto, AppraisalAssignment } from '../types';
 import styles from './CreateDisputeForEmployeeModal.module.css';
 
@@ -33,6 +34,7 @@ export default function CreateDisputeForEmployeeModal({
   onClose,
   onSuccess,
 }: CreateDisputeForEmployeeModalProps) {
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -123,7 +125,11 @@ export default function CreateDisputeForEmployeeModal({
           }
         }
 
-        const allEmployees = Array.from(employeeMap.values());
+        // Filter out the current user - HR Employees should use "Flag Concern" on their own assignments
+        const currentUserId = user?.userid?.toString();
+        const allEmployees = Array.from(employeeMap.values()).filter(
+          (emp) => emp._id !== currentUserId
+        );
         setAllEmployeesCache(allEmployees);
       } catch (err) {
         console.error('Error fetching employees:', err);
@@ -132,7 +138,7 @@ export default function CreateDisputeForEmployeeModal({
     };
 
     fetchAllEmployees();
-  }, [isOpen]);
+  }, [isOpen, user?.userid]);
 
   // Filter employees based on search query (client-side)
   useEffect(() => {
@@ -243,8 +249,9 @@ export default function CreateDisputeForEmployeeModal({
       <form onSubmit={handleSubmit} className={styles.form}>
         <div className={styles.infoBox}>
           <p>
-            <strong>Note:</strong> As an HR Employee, you can create disputes on behalf of employees 
-            when you identify concerns about their appraisal ratings.
+            <strong>Note:</strong> As an HR Employee, you can create disputes on behalf of other employees 
+            when you identify concerns about their appraisal ratings. To dispute your own appraisal, 
+            please use the &quot;Flag Concern&quot; button on your assignment card.
           </p>
         </div>
 
@@ -274,6 +281,11 @@ export default function CreateDisputeForEmployeeModal({
                   type="button"
                   className={styles.dropdownItem}
                   onClick={() => {
+                    // Prevent selecting yourself
+                    if (emp._id === user?.userid?.toString()) {
+                      setError('You cannot create a dispute for yourself. Please use the "Flag Concern" button on your assignment card.');
+                      return;
+                    }
                     setSelectedEmployee(emp);
                     setSearchQuery(`${emp.firstName} ${emp.lastName}${emp.employeeNumber ? ` (${emp.employeeNumber})` : ''}`);
                     setEmployees([]);

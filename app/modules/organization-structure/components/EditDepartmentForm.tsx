@@ -372,11 +372,24 @@ export function EditDepartmentForm({ department, onSuccess, onCancel }: EditDepa
           className={styles.select}
         >
           <option value="">No head position assigned</option>
-          {departmentPositions.map((position) => (
-            <option key={position._id} value={position._id}>
-              {position.code} - {position.title}
-            </option>
-          ))}
+          {departmentPositions.map((position) => {
+            // Check if this position is currently a head position in any department
+            const isHead = existingDepartments.some(dept => {
+              const headId = typeof dept.headPositionId === 'string' 
+                ? dept.headPositionId 
+                : (dept.headPositionId as any)?._id 
+                  ? String((dept.headPositionId as any)._id)
+                  : dept.headPositionId 
+                    ? String(dept.headPositionId)
+                    : null;
+              return headId === position._id;
+            });
+            return (
+              <option key={position._id} value={position._id}>
+                {position.code} - {position.title}{isHead ? ' (HEAD POSITION)' : ''}
+              </option>
+            );
+          })}
         </select>
         {departmentPositions.length === 0 && (
           <span className={styles.helperText}>

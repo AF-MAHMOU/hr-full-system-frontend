@@ -95,7 +95,7 @@
 
 .checkboxLabel {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.5rem;
   padding: 0.5rem;
   cursor: pointer;
@@ -109,6 +109,26 @@
 
 .checkboxLabel input[type="checkbox"] {
   cursor: pointer;
+  margin-top: 0.25rem;
+  flex-shrink: 0;
+}
+
+.employeeInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.employeeName {
+  font-weight: 500;
+  color: #333;
+  font-size: 0.9rem;
+}
+
+.employeeMeta {
+  font-size: 0.8rem;
+  color: #666;
 }
 
 .actions {

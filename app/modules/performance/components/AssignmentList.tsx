@@ -11,6 +11,7 @@ import { performanceApi } from '../api/performanceApi';
 import type { AppraisalAssignment } from '../types';
 import { AppraisalAssignmentStatus } from '../types';
 import AssignmentModal from './AssignmentModal';
+import ExportButton from './ExportButton';
 import styles from './AssignmentList.module.css';
 
 interface AssignmentListProps {
@@ -30,12 +31,41 @@ export default function AssignmentList({ filters }: AssignmentListProps) {
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedAssignment, setSelectedAssignment] = useState<AppraisalAssignment | null>(null);
+  const [highPerformerAppraisalIds, setHighPerformerAppraisalIds] = useState<Set<string>>(new Set());
+
+  // Fetch all high performers to create a lookup map
+  const fetchHighPerformers = async () => {
+    try {
+      const highPerformers = await performanceApi.getAllHighPerformers();
+      // Create a Set of appraisal record IDs that are high performers
+      const hpIds = new Set<string>();
+      highPerformers.forEach((hp: any) => {
+        if (hp._id) {
+          hpIds.add(hp._id.toString());
+        }
+      });
+      setHighPerformerAppraisalIds(hpIds);
+    } catch (err) {
+      // Silently fail - high performer status is optional
+      console.warn('Could not fetch high performers:', err);
+    }
+  };
 
   const fetchAssignments = async () => {
     try {
       setLoading(true);
       setError(null);
       const data = await performanceApi.getAssignments(filters);
+      console.log('[AssignmentList] Fetched assignments:', data);
+      if (data.length > 0) {
+        console.log('[AssignmentList] Sample assignment structure:', {
+          _id: data[0]._id,
+          employeeProfileId: data[0].employeeProfileId,
+          templateId: data[0].templateId,
+          managerProfileId: data[0].managerProfileId,
+          fullAssignment: data[0]
+        });
+      }
       setAssignments(data);
     } catch (err: any) {
       setError(err.message || 'Failed to load assignments');
@@ -47,6 +77,7 @@ export default function AssignmentList({ filters }: AssignmentListProps) {
 
   useEffect(() => {
     fetchAssignments();
+    fetchHighPerformers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters]);
 
@@ -104,9 +135,24 @@ export default function AssignmentList({ filters }: AssignmentListProps) {
     <>
       <div className={styles.header}>
         <h2>Appraisal Assignments</h2>
-        <Button variant="primary" size="md" onClick={handleCreateNew}>
-          + Assign Template
-        </Button>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          {/* REQ-AE-11: HR Employee exports ad-hoc appraisal summaries */}
+          {/* Export is available in Assignments tab for ad-hoc summaries */}
+          {filters?.cycleId && (
+            <ExportButton
+              cycleId={filters.cycleId}
+              departmentId={filters.departmentId}
+              employeeId={filters.employeeProfileId}
+              status={filters.status}
+              variant="outline"
+              size="sm"
+            />
+          )}
+          {/* Note: Generate Outcome Report is in Cycle Progress dashboard (REQ-OD-06) */}
+          <Button variant="primary" size="md" onClick={handleCreateNew}>
+            + Assign Template
+          </Button>
+        </div>
       </div>
 
       {assignments.length === 0 ? (
@@ -114,7 +160,7 @@ export default function AssignmentList({ filters }: AssignmentListProps) {
           <div className={styles.emptyState}>
             <p>No assignments found.</p>
             <Button variant="outline" size="sm" onClick={handleCreateNew}>
-              Create First Assignment
+              Assign Template
             </Button>
           </div>
         </Card>
@@ -125,9 +171,12 @@ export default function AssignmentList({ filters }: AssignmentListProps) {
               <thead>
                 <tr>
                   <th>Employee</th>
+                  <th>Department</th>
+                  <th>Position</th>
                   <th>Template</th>
                   <th>Manager</th>
                   <th>Status</th>
+                  <th>High Performer</th>
                   <th>Assigned Date</th>
                   <th>Due Date</th>
                   <th>Actions</th>
@@ -135,38 +184,69 @@ export default function AssignmentList({ filters }: AssignmentListProps) {
               </thead>
               <tbody>
                 {assignments.map((assignment) => {
-                  // Handle populated fields - backend returns employeeProfileId, templateId, managerProfileId as populated objects
-                  const employee = (assignment as any).employeeProfileId || assignment.employee;
-                  const template = (assignment as any).templateId || assignment.template;
-                  const manager = (assignment as any).managerProfileId || assignment.manager;
+                  // Handle populated fields - backend returns employeeProfileId, templateId, managerProfileId, departmentId, positionId as populated objects
+                  const employee = (assignment as any).employeeProfileId;
+                  const template = (assignment as any).templateId;
+                  const manager = (assignment as any).managerProfileId;
+                  const department = (assignment as any).departmentId;
+                  const position = (assignment as any).positionId;
+                  
+                  // Get employee name
+                  const employeeName = employee && typeof employee === 'object'
+                    ? `${employee.firstName || ''} ${employee.lastName || ''}`.trim() || employee.fullName || 'N/A'
+                    : 'N/A';
+                  
+                  // Get department name
+                  const departmentName = department && typeof department === 'object'
+                    ? department.name || 'N/A'
+                    : 'N/A';
+                  
+                  // Get position title
+                  const positionTitle = position && typeof position === 'object'
+                    ? position.title || 'N/A'
+                    : 'N/A';
+                  
+                  // Get template name
+                  const templateName = template && typeof template === 'object'
+                    ? template.name || 'N/A'
+                    : 'N/A';
+                  
+                  // Get manager name
+                  const managerName = manager && typeof manager === 'object'
+                    ? `${manager.firstName || ''} ${manager.lastName || ''}`.trim() || manager.fullName || 'N/A'
+                    : 'N/A';
+                  
+                  // Check if this assignment's evaluation is flagged as high performer
+                  const appraisalId = assignment.latestAppraisalId;
+                  let isHighPerformer = false;
+                  if (appraisalId) {
+                    // Handle both object (populated) and string (ID) formats
+                    const appraisalIdStr = typeof appraisalId === 'object' 
+                      ? ((appraisalId as any)._id?.toString() || (appraisalId as any).toString())
+                      : appraisalId.toString();
+                    isHighPerformer = highPerformerAppraisalIds.has(appraisalIdStr);
+                  }
                   
                   return (
                   <tr key={assignment._id}>
-                    <td>
-                      {employee
-                        ? typeof employee === 'object' 
-                          ? `${employee.firstName || ''} ${employee.lastName || ''}`.trim() || employee.fullName || 'N/A'
-                          : 'N/A'
-                        : 'N/A'}
-                    </td>
-                    <td>
-                      {template
-                        ? typeof template === 'object'
-                          ? template.name || 'N/A'
-                          : 'N/A'
-                        : 'N/A'}
-                    </td>
-                    <td>
-                      {manager
-                        ? typeof manager === 'object'
-                          ? `${manager.firstName || ''} ${manager.lastName || ''}`.trim() || manager.fullName || 'N/A'
-                          : 'N/A'
-                        : 'N/A'}
-                    </td>
+                    <td>{employeeName}</td>
+                    <td>{departmentName}</td>
+                    <td>{positionTitle}</td>
+                    <td>{templateName}</td>
+                    <td>{managerName}</td>
                     <td>
                       <span className={`${styles.status} ${styles[assignment.status.toLowerCase()]}`}>
                         {formatStatus(assignment.status)}
                       </span>
+                    </td>
+                    <td>
+                      {isHighPerformer ? (
+                        <span className={styles.highPerformerBadge} title="Flagged as High Performer">
+                          ⭐ High Performer
+                        </span>
+                      ) : (
+                        <span className={styles.notHighPerformer}>-</span>
+                      )}
                     </td>
                     <td>{formatDate(assignment.assignedAt)}</td>
                     <td>{formatDate(assignment.dueDate)}</td>
@@ -215,6 +295,7 @@ export default function AssignmentList({ filters }: AssignmentListProps) {
           fetchAssignments();
         }}
       />
+      
     </>
   );
 }

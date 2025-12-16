@@ -18,7 +18,8 @@
   gap: 0.5rem;
 }
 
-.textareaWrapper {
+.textareaWrapper,
+.selectWrapper[data-full-width="true"] {
   grid-column: 1 / -1;
 }
 
@@ -75,6 +76,17 @@
   text-align: center;
   padding: 2rem;
   color: var(--text-secondary);
+}
+
+.helpText {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-top: 0.25rem;
+}
+
+.select[multiple] {
+  min-height: 120px;
+  padding: 0.5rem;
 }
 
 .actions {

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Button, Input } from '@/shared/components';
-import { updatePosition, getPositions } from '../api/orgStructureApi';
+import { updatePosition, getPositions, getDepartments } from '../api/orgStructureApi';
 import type { UpdatePositionDto, Position } from '../types';
 import styles from './CreatePositionForm.module.css';
 
@@ -29,6 +29,7 @@ export function EditPositionForm({
   const [existingPositions, setExistingPositions] = useState<Position[]>([]);
   const [existingCodes, setExistingCodes] = useState<string[]>([]);
   const [availableReportingPositions, setAvailableReportingPositions] = useState<Position[]>([]);
+  const [allDepartments, setAllDepartments] = useState<any[]>([]); // Store departments to check head positions
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [codeError, setCodeError] = useState<string | null>(null);
@@ -293,11 +294,24 @@ export function EditPositionForm({
           className={styles.select}
         >
           <option value="">No reporting position (Top level)</option>
-          {availableReportingPositions.map((pos) => (
-            <option key={pos._id} value={pos._id}>
-              {pos.code} - {pos.title}
-            </option>
-          ))}
+          {availableReportingPositions.map((pos) => {
+            // Check if this position is a head position in any department
+            const isHead = allDepartments.some(dept => {
+              const headId = typeof dept.headPositionId === 'string' 
+                ? dept.headPositionId 
+                : (dept.headPositionId as any)?._id 
+                  ? String((dept.headPositionId as any)._id)
+                  : dept.headPositionId 
+                    ? String(dept.headPositionId)
+                    : null;
+              return headId === pos._id;
+            });
+            return (
+              <option key={pos._id} value={pos._id}>
+                {pos.code} - {pos.title}{isHead ? ' (HEAD POSITION)' : ''}
+              </option>
+            );
+          })}
         </select>
         <span className={styles.helperText}>
           Select a position this position reports to (optional)

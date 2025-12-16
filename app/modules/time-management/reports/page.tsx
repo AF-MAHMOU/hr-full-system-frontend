@@ -1,5 +1,5 @@
 "use client";
-
+  import * as XLSX from 'xlsx';
 import { useState } from "react";
 import s from "../page.module.css";
 import {
@@ -21,7 +21,9 @@ export default function ReportsPage() {
   const [employees, setEmployees] = useState<EmployeeProfile[]>([]);
   const [employeeId, setEmployeeId] = useState("");
     
-  const exportReport = async () => {
+
+
+const exportReport = async () => {
   try {
     setExporting(true);
 
@@ -46,11 +48,13 @@ export default function ReportsPage() {
             attendanceRecordId: e.attendanceRecordId,
             status: e.status,
             reason: e.reason ?? "",
-            // Serialize punches properly (assuming punches is an array or object)
-            punches: JSON.stringify(record?.punches),  // Serialize the punches to a string
+            punches: JSON.stringify((record?.punches ?? []).map((p: any) => ({ 
+              time: p.time ? new Date(p.time).toISOString() : null, 
+              type: p.type 
+            }))),
             totalWorkMinutes: record?.totalWorkMinutes ?? 0,
             hasMissedPunch: record?.hasMissedPunch ? "true" : "false",
-            exceptionIds: e.exceptionIds ?? "",
+            exceptionIds: record?.exceptionIds ? (Array.isArray(record.exceptionIds) ? record.exceptionIds.join(';') : String(record.exceptionIds)) : "",
             finalisedForPayroll: record?.finalisedForPayroll ? "true" : "false",
           };
         });
@@ -68,28 +72,108 @@ export default function ReportsPage() {
       return;
     }
 
-    // Prepare CSV headers and rows
-    const headers = Object.keys(data[0]);
-    const rows = data.map((row) =>
-      headers.map((h) => `"${row[h] ?? ""}"`).join(",")
-    );
+    // Transform data for better readability
+    let exportData = data;
 
-    // Create CSV content
-    const csv = [headers.join(","), ...rows].join("\n");
-    const blob = new Blob([csv], { type: "text/plain;charset=utf-8;" });
-    const url = window.URL.createObjectURL(blob);
+    if (reportType === 'attendance') {
+      exportData = (data as any[]).map((r: any) => ({
+        id: r.id,
+        employeeId: r.employeeId,
+        punches: JSON.stringify((r.punches ?? []).map((p: any) => ({
+          time: p.time ? new Date(p.time).toISOString() : null,
+          type: p.type,
+        }))),
+        totalWorkMinutes: r.totalWorkMinutes ?? 0,
+        hasMissedPunch: r.hasMissedPunch ? 'true' : 'false',
+        exceptionIds: Array.isArray(r.exceptionIds) ? r.exceptionIds.join(';') : (r.exceptionIds ?? ''),
+        finalisedForPayroll: r.finalisedForPayroll ? 'true' : 'false',
+      }));
+    }
 
-    const a = document.createElement("a");
-    a.href = url;
-    a.download =
-      format === "text"
-        ? `${reportType}-report.txt`
-        : `${reportType}-report.csv`;
+    // Handle different export formats
+    switch (format) {
+      case "excel":
+        // Generate real Excel file (.xlsx)
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.json_to_sheet(exportData);
+        XLSX.utils.book_append_sheet(wb, ws, `${reportType}_report`);
+        XLSX.writeFile(wb, `${reportType}_report.xlsx`);
+        break;
 
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    window.URL.revokeObjectURL(url);
+      case "access":
+        // Generate CSV for Access import
+        const accessHeaders = Object.keys(exportData[0]);
+        const accessRows = (exportData as any[]).map((row) =>
+          accessHeaders.map((h) => {
+            const value = row[h] ?? "";
+            // For Access CSV, ensure proper quoting and escaping
+            if (typeof value === 'string' && (value.includes(',') || value.includes('"') || value.includes('\n'))) {
+              return `"${value.replace(/"/g, '""')}"`;
+            }
+            return `"${value}"`;
+          }).join(",")
+        );
+        
+        const accessCSV = [accessHeaders.join(","), ...accessRows].join("\n");
+        const accessBlob = new Blob([accessCSV], { type: "text/csv;charset=utf-8;" });
+        const accessUrl = window.URL.createObjectURL(accessBlob);
+        
+        const accessLink = document.createElement("a");
+        accessLink.href = accessUrl;
+        accessLink.download = `${reportType}_report_for_access.csv`;
+        document.body.appendChild(accessLink);
+        accessLink.click();
+        accessLink.remove();
+        window.URL.revokeObjectURL(accessUrl);
+        break;
+
+      case "text":
+        // Generate formatted text file (.txt)
+        const textContent = exportData.map((row: any, index: number) => {
+          const entries = Object.entries(row);
+          const recordText = entries.map(([key, value]) => {
+            const formattedKey = key
+              .replace(/([A-Z])/g, ' $1')
+              .replace(/^./, str => str.toUpperCase());
+            return `${formattedKey}: ${value}`;
+          }).join("\n");
+          
+          return `RECORD ${index + 1}\n${recordText}\n${"=".repeat(50)}`;
+        }).join("\n\n");
+        
+        const headerText = `${reportType.toUpperCase()} REPORT\nGenerated: ${new Date().toLocaleString()}\n${"=".repeat(50)}\n\n`;
+        const fullText = headerText + textContent;
+        
+        const textBlob = new Blob([fullText], { type: "text/plain;charset=utf-8;" });
+        const textUrl = window.URL.createObjectURL(textBlob);
+        
+        const textLink = document.createElement("a");
+        textLink.href = textUrl;
+        textLink.download = `${reportType}_report.txt`;
+        document.body.appendChild(textLink);
+        textLink.click();
+        textLink.remove();
+        window.URL.revokeObjectURL(textUrl);
+        break;
+
+      default:
+        // Fallback to CSV
+        const headers = Object.keys(exportData[0]);
+        const rows = (exportData as any[]).map((row) =>
+          headers.map((h) => `"${row[h] ?? ""}"`).join(",")
+        );
+        const csv = [headers.join(","), ...rows].join("\n");
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const url = window.URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${reportType}_report.csv`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+    }
   } finally {
     setExporting(false);
   }
@@ -101,12 +185,7 @@ export default function ReportsPage() {
       <h1 className={s.header}>Generate Reports</h1>
 
       {/* Report type */}
-      <Selections
-                            employeeId={employeeId}
-                            setEmployeeId={setEmployeeId}
-                            employees={employees}
-                            setEmployees={setEmployees}
-                          />
+      <Selections employeeId={employeeId} setEmployeeId={setEmployeeId} />
       <div className={s.buttonCollection}>
         <button className={`${s.segmentButton} ${ reportType === "attendance" ? s.active : "" }`}
           onClick={() => setReportType("attendance")}>

@@ -57,7 +57,7 @@ export enum TimeExceptionStatus {
 // ============================================================
 
 export interface Punch {
-  timestamp: string; // ISO string
+  time: Date; // ISO string
   type: PunchType;
 }
 

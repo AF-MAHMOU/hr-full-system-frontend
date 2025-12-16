@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { AttendanceRecord, AttendanceCorrectionRequest,CreateOvertimeRuleDto, OvertimeRule, PunchPolicy, Shift, ShiftType, Holiday, ShiftAssignment, TimeException, ScheduleRule, NotificationLog, LatenessRule, CreateAttendanceCorrectionRequestDto, Punch, UpdateAttendanceRecordDto, CreateAttendanceRecordDto } from '../types';
+import { AttendanceRecord, AttendanceCorrectionRequest, CreateOvertimeRuleDto, OvertimeRule, PunchPolicy, Shift, ShiftType, Holiday, ShiftAssignment, TimeException, ScheduleRule, NotificationLog, LatenessRule, CreateAttendanceCorrectionRequestDto, Punch, UpdateAttendanceRecordDto, CreateAttendanceRecordDto, PunchType } from '../types';
 import { mapIds } from './utils';
 import HolidayList from '../components/HolidayList';
 import axiosInstance from './axiosinstance';
@@ -106,7 +106,7 @@ export const getAttendanceCorrection = async (id: string) => {
 
 export const createAttendanceCorrection = async (payload: any) => {
   try {
-    const { data } = await axios.post(`${BASE_URL}/attendanceCorrection`, payload, { withCredentials: true });
+    const { data } = await axiosInstance.post(`/attendanceCorrection`, payload);
     return data;
   } catch (error: any) {
     console.error("Error:", error.message);
@@ -442,10 +442,15 @@ export const getAllAttendanceRecord =
   async (): Promise<AttendanceRecord[]> => {
     try {
       const { data } = await axiosInstance.get("/attendance");
+      console.log("RAW API RESPONSE:", JSON.stringify(data, null, 2));
+
       return toArray(data).map((r: any): AttendanceRecord => ({
         id: toId(r),
         employeeId: r.employeeId,
-        punches: r.punches ?? [],
+        punches: (r.punches ?? []).map((p: any) => ({
+          type: p.type,
+          time: parseDate(p.time),
+        })),
         totalWorkMinutes: r.totalWorkMinutes,
         hasMissedPunch: r.hasMissedPunch,
         exceptionIds: r.exceptionIds ?? [],
@@ -455,6 +460,21 @@ export const getAllAttendanceRecord =
       return [];
     }
   };
+
+function parseDate(dateString: any): Date {
+  if (!dateString) return new Date();
+
+  const date = new Date(dateString);
+
+  // Check if the date is valid
+  if (isNaN(date.getTime())) {
+    console.warn(`Invalid date string: ${dateString}, using current date instead`);
+    return new Date();
+  }
+
+  return date;
+}
+
 
 
 export const getAllHolidays = async (): Promise<Holiday[]> => {
@@ -662,7 +682,7 @@ export const createShiftAssignmentByEmployee = async (payload: any): Promise<any
       status: response.status
     };
   } catch (error: any) {
-    giveError(error); 
+    giveError(error);
   }
 };
 
@@ -837,8 +857,8 @@ export async function rejectAttendanceCorrection(id: string) {
 //
 //
 
-export async function correctAttendanceRecord(attendanceRecordId: string,updatedPunches: Punch[]) {
-  const response = await axiosInstance.patch(`/attendance/${attendanceRecordId}/correct`,{punches: updatedPunches,},
+export async function correctAttendanceRecord(attendanceRecordId: string, updatedPunches: Punch[]) {
+  const response = await axiosInstance.patch(`/attendance/${attendanceRecordId}/correct`, { punches: updatedPunches, },
     {
       headers: {
         'Content-Type': 'application/json',
@@ -856,75 +876,89 @@ export async function correctAttendanceRecord(attendanceRecordId: string,updated
 
 async function giveError(error: any) {
   const errorResponse = {
-      success: false,
-      error: {
-        message: 'Unknown error occurred',
-        details: '',
-        code: 'UNKNOWN_ERROR',
-        conflicts: [] as any[],
-        status: error.response?.status || 0
-      }
-    };
-    
-    // Handle different types of errors
-    if (error.response) {
-      // The request was made and the server responded with a status code
-      // that falls out of the range of 2xx
-      errorResponse.error.status = error.response.status;
-      errorResponse.error.message = error.response.data?.message || error.response.statusText || 'Server error';
-      errorResponse.error.details = error.response.data;
-      
-      // Specific handling for overlap errors (400 Bad Request)
-      if (error.response.status === 400) {
-        errorResponse.error.code = 'VALIDATION_ERROR';
-        
-        // Check if it's an overlap error
-        const errorMsg = error.response.data?.message || '';
-        if (errorMsg.toLowerCase().includes('overlap')) {
-          errorResponse.error.code = 'OVERLAP';
-          errorResponse.error.message = 'conflicts with existing item';
-          
-          // Try to extract conflict details if available
-          if (error.response.data) {
-            errorResponse.error.conflicts = [error.response.data];
-          }
+    success: false,
+    error: {
+      message: 'Unknown error occurred',
+      details: '',
+      code: 'UNKNOWN_ERROR',
+      conflicts: [] as any[],
+      status: error.response?.status || 0
+    }
+  };
+
+  // Handle different types of errors
+  if (error.response) {
+    // The request was made and the server responded with a status code
+    // that falls out of the range of 2xx
+    errorResponse.error.status = error.response.status;
+    errorResponse.error.message = error.response.data?.message || error.response.statusText || 'Server error';
+    errorResponse.error.details = error.response.data;
+
+    // Specific handling for overlap errors (400 Bad Request)
+    if (error.response.status === 400) {
+      errorResponse.error.code = 'VALIDATION_ERROR';
+
+      // Check if it's an overlap error
+      const errorMsg = error.response.data?.message || '';
+      if (errorMsg.toLowerCase().includes('overlap')) {
+        errorResponse.error.code = 'OVERLAP';
+        errorResponse.error.message = 'conflicts with existing item';
+
+        // Try to extract conflict details if available
+        if (error.response.data) {
+          errorResponse.error.conflicts = [error.response.data];
         }
       }
-      
-      // Handle other status codes
-      else if (error.response.status === 401) {
-        errorResponse.error.code = 'UNAUTHORIZED';
-        errorResponse.error.message = 'Authentication required';
-      }
-      else if (error.response.status === 403) {
-        errorResponse.error.code = 'FORBIDDEN';
-        errorResponse.error.message = 'You do not have permission to assign shifts';
-      }
-      else if (error.response.status === 404) {
-        errorResponse.error.code = 'NOT_FOUND';
-        errorResponse.error.message = 'Employee or shift not found';
-      }
-      else if (error.response.status === 409) {
-        errorResponse.error.code = 'CONFLICT';
-        errorResponse.error.message = 'Shift assignment conflict';
-      }
-      else if (error.response.status >= 500) {
-        errorResponse.error.code = 'SERVER_ERROR';
-        errorResponse.error.message = 'Internal server error. Please try again later.';
-      }
-      
-    } else if (error.request) {
-      // The request was made but no response was received
-      errorResponse.error.code = 'NETWORK_ERROR';
-      errorResponse.error.message = 'Network error. Please check your connection.';
-      errorResponse.error.details = error.request;
-      
-    } else {
-      // Something happened in setting up the request that triggered an Error
-      errorResponse.error.code = 'REQUEST_ERROR';
-      errorResponse.error.message = error.message || 'Failed to create request';
     }
-    
-    // Throw the structured error so the component can handle it properly
-    throw errorResponse;
+
+    // Handle other status codes
+    else if (error.response.status === 401) {
+      errorResponse.error.code = 'UNAUTHORIZED';
+      errorResponse.error.message = 'Authentication required';
+    }
+    else if (error.response.status === 403) {
+      errorResponse.error.code = 'FORBIDDEN';
+      errorResponse.error.message = 'You do not have permission to assign shifts';
+    }
+    else if (error.response.status === 404) {
+      errorResponse.error.code = 'NOT_FOUND';
+      errorResponse.error.message = 'Employee or shift not found';
+    }
+    else if (error.response.status === 409) {
+      errorResponse.error.code = 'CONFLICT';
+      errorResponse.error.message = 'Shift assignment conflict';
+    }
+    else if (error.response.status >= 500) {
+      errorResponse.error.code = 'SERVER_ERROR';
+      errorResponse.error.message = 'Internal server error. Please try again later.';
+    }
+
+  } else if (error.request) {
+    // The request was made but no response was received
+    errorResponse.error.code = 'NETWORK_ERROR';
+    errorResponse.error.message = 'Network error. Please check your connection.';
+    errorResponse.error.details = error.request;
+
+  } else {
+    // Something happened in setting up the request that triggered an Error
+    errorResponse.error.code = 'REQUEST_ERROR';
+    errorResponse.error.message = error.message || 'Failed to create request';
+  }
+
+  // Throw the structured error so the component can handle it properly
+  throw errorResponse;
 }
+
+//
+//
+//
+
+export const addPunchToAttendance = async (
+  attendanceId: string,
+  punch: { type: PunchType; time: Date }
+) => {
+  return axiosInstance.patch(
+    `/attendance/${attendanceId}/punch`,
+    punch
+  );
+};

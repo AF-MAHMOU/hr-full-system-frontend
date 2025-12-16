@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createAttendanceRecord, getAllTimeExceptions } from '../api/index';
-import s from "../../../page.module.css";
+import s from "../page.module.css";
 import { Punch, PunchType, TimeException } from "../types";
 import Selections from "./Selections";
 import { EmployeeProfile } from "../../hr/api/hrApi";

@@ -21,7 +21,7 @@ export default function AttendanceRecordList({ attendancerecords, onDelete }: At
   if (!attendancerecords.length) return <p>No attendancerecords found</p>;
 
   return (
-    <div className={s.attendancerecordContainer}>
+    <div className={s.cardcontainer}>
       {attendancerecords.map((attendancerecord) => (
         <div key={attendancerecord.id} className={s.Card}>
           {/*Balabizo*/}
@@ -46,7 +46,7 @@ export default function AttendanceRecordList({ attendancerecords, onDelete }: At
             <ul>
               {attendancerecord.punches.map((p, i) => (
                 <li key={i}>
-                  {new Date(p.timestamp).toLocaleString()} - {p.type}
+                  {new Date(p.time).toLocaleString()} - {p.type}
                 </li>
               ))}
             </ul>

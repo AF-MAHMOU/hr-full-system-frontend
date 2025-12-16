@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";  
 import { useAuth } from "@/shared/hooks"; 
 import { useRouter } from "next/navigation"; 
-import { createAttendanceRecord } from "../api";  
+import { addPunchToAttendance, createAttendanceRecord, getAllAttendanceRecord, getAllHolidays, getAllShiftAssignmentsByEmployee } from "../api/index";  
 import s from "../page.module.css";  
 import { PunchType } from "../types";  
 import * as XLSX from "xlsx";  
@@ -23,107 +23,102 @@ export default function EmployeeClock() {
 
   // Handle manual punch for clocking in/out 
   const handlePunch = async () => {
-  setLoading(true);
-  setMessage("");
+    setLoading(true);
+    setMessage("");
 
-  try {
-    // make sure that employee has a shift to begin with
-    const punches = [{ type: punchType, timestamp: new Date().toISOString() }];
-    if (!user?.userid) {
-      router.push("/login");
-      throw new Error("User ID not found");
-    }
-
-    const attendanceData = {
-      employeeId: user?.userid,
-      punches,
-      finalisedForPayroll: true,
-    };
-
-    if (!navigator.onLine) {
-      const savedAttendance = JSON.parse(localStorage.getItem("offlineAttendance") || "[]");
-      savedAttendance.push(attendanceData);
-      localStorage.setItem("offlineAttendance", JSON.stringify(savedAttendance));
-      setMessage("Attendance recorded (offline). It will be synced when you're back online.");
-      return;
-    }
-
-    await createAttendanceRecord(attendanceData);
-    setMessage(`Attendance recorded (${punchType}) successfully`);
-    setPunchType(punchType === PunchType.IN ? PunchType.OUT : PunchType.IN);
-
-    setMessage(`Attendance recorded (${punchType}) successfully`);
-    setPunchType(punchType === PunchType.IN ? PunchType.OUT : PunchType.IN);
-  } catch (error: any) {
-    const errorMsg = error.response?.data?.message || error.message || "Failed to process attendance";
-    console.error("Error:", errorMsg);
-    setMessage(errorMsg);
-  }
- finally {
-    setLoading(false);
-  }
-
-  useEffect(() => {
-  const handleOnline = async () => {
-    const savedAttendance = JSON.parse(localStorage.getItem("offlineAttendance") || "[]");
-    if (savedAttendance.length > 0) {
-      try {
-        for (let i = 0; i < savedAttendance.length; i++) {
-          try {
-            await createAttendanceRecord(savedAttendance[i]);
-            savedAttendance.splice(i, 1); 
-            i--; // Adjust the index after removal to avoid skipping the next item
-            localStorage.setItem("offlineAttendance", JSON.stringify(savedAttendance));
-          } catch (error) {
-            console.error(`Failed to sync record at index ${i}:`, error);
-          }
-        }
-
-        // Once all data is synced, clear the local storage
-        if (savedAttendance.length === 0) {
-          localStorage.removeItem("offlineAttendance");
-          setMessage("All offline attendance data synced successfully!");
-        }
-      } catch (error) {
-        console.error("Failed to sync offline data:", error);
-        setMessage("There was an issue syncing attendance records.");
+    try {
+      if (!user?.userid) {
+        router.push("/login");
+        return;
       }
+
+      const today = new Date();
+
+      // Helper: strip time portion for date-only comparison
+      const toDateOnly = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      const todayOnly = toDateOnly(today).getTime();
+
+      // 1) Check holidays/rest days
+      try {
+        const holidays = await getAllHolidays();
+        const isHoliday = holidays.some((h) => {
+          if (!h || !h.active) return false;
+          const start = new Date(h.startDate);
+          const end = h.endDate ? new Date(h.endDate) : start;
+          const s = toDateOnly(start).getTime();
+          const e = toDateOnly(end).getTime();
+          return todayOnly >= s && todayOnly <= e;
+        });
+
+        if (isHoliday) {
+          setMessage("You cannot punch on a holiday or rest day.");
+          return;
+        }
+      } catch (err) {
+        console.error('Failed to fetch holidays:', err);
+        // Fall through - do not block punches if holiday check fails, but warn
+      }
+
+      // 2) Verify employee has a shift assignment covering today
+      try {
+        const assignments = await getAllShiftAssignmentsByEmployee();
+        const hasAssignmentToday = assignments.some((a) => {
+          if (!a || a.status !== 'APPROVED' && a.status !== 'PENDING') return false;
+          const start = new Date(a.startDate);
+          const end = a.endDate ? new Date(a.endDate) : new Date(8640000000000000);
+          const s = toDateOnly(start).getTime();
+          const e = toDateOnly(end).getTime();
+          return todayOnly >= s && todayOnly <= e;
+        });
+
+        if (!hasAssignmentToday) {
+          setMessage("No shift assignment found for today; contact your manager if this is an error.");
+          return;
+        }
+      } catch (err) {
+        console.error('Failed to fetch shift assignments:', err);
+        // Fall through - allow punching if assignment check fails
+      }
+
+      const all = await getAllAttendanceRecord();
+      const todayStr = today.toDateString();
+
+      const existingRecord = all.find(record =>
+        record.employeeId === user.userid &&
+        record.punches?.some(p =>
+          new Date(p.time).toDateString() === todayStr
+        )
+      );
+
+
+      const punch = {
+        type: punchType,
+        time: new Date(),
+      };
+
+      if (existingRecord) {
+        // PATCH :D
+        await addPunchToAttendance(existingRecord.id, punch);
+        setMessage(`Punch ${punchType} added`);
+      } else {
+        // CREATE new record
+        await createAttendanceRecord({
+          employeeId: user.userid,
+          punches: [punch],
+          finalisedForPayroll: true,
+        });
+        setMessage(`Attendance created (${punchType})`);
+      }
+
+      setPunchType(punchType === PunchType.IN ? PunchType.OUT : PunchType.IN);
+
+    } catch (error: any) {
+      setMessage(error.response?.data?.message || error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Add event listeners for network status changes
-  window.addEventListener("online", handleOnline);
-  window.addEventListener("offline", () => {
-    setMessage("You're offline. Attendance will be recorded when you're back online.");
-  });
-
-  return () => {
-    window.removeEventListener("online", handleOnline);
-    window.removeEventListener("offline", () => {
-      setMessage("You're offline. Attendance will be recorded when you're back online.");
-    });
-  };
-}, []);
-
-
-
-  /*
-  // ====================================================================================================
-  // Credit to Ahmed Fouad
-  // ====================================================================================================
-  useEffect(() => {
-      if (user) {
-        if (user.userType === 'employee') {checkPendingAcknowledgments();}
-        whateverIWillAdd();
-        
-        // Refresh every 30 seconds
-        const interval = setInterval(() => {
-          if (user.userType === 'employee') {checkPendingAcknowledgments();}
-          whateverIWillAdd();
-        }, 30000);
-        return () => clearInterval(interval);
-      } */
-};
 
 
   // Handle file upload for bulk import from Excel 
@@ -152,7 +147,6 @@ export default function EmployeeClock() {
         const rowNum = i + 2; 
         try { 
           const punchTypeStr = row.punchType?.toString().toUpperCase() || row.PunchType?.toString().toUpperCase(); 
-          const timestampStr = row.timestamp || row.Timestamp || row.Time; 
 
           if (!punchTypeStr || (punchTypeStr !== "IN" && punchTypeStr !== "OUT")) { 
             errors.push(`Row ${rowNum}: Invalid punch type (must be IN or OUT)`); 
@@ -160,9 +154,20 @@ export default function EmployeeClock() {
             continue; 
           } 
 
-          // Prepare punch data 
-          const timestamp = timestampStr ? new Date(timestampStr).toISOString() : new Date().toISOString(); 
-          const punches = [{ type: punchTypeStr as PunchType, timestamp }]; 
+          const time =
+            row.timestamp
+              ? new Date(row.timestamp)
+              : row.Time
+              ? new Date(row.Time)
+              : new Date();
+                  
+          const punches = [
+            {
+              type: punchTypeStr as PunchType,
+              time,
+            },
+          ];
+
 
           if (!user?.userid) { 
             router.push("/login");

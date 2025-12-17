@@ -1,5 +1,7 @@
 import { AttendanceCorrectionRequest } from "../types";
 import s from "../page.module.css";
+import { SystemRole } from "@/shared/types";
+import { useAuth } from "@/shared/hooks";
 
 interface AttendanceCorrectionRequestListProps {
   attendancecorrectionrequests: AttendanceCorrectionRequest[];
@@ -10,6 +12,9 @@ export default function AttendanceCorrectionRequestList({
   attendancecorrectionrequests,
   onDelete,
 }: AttendanceCorrectionRequestListProps) {
+  // ✅ Move hook call INSIDE the component function
+  const { user } = useAuth();
+
   if (!attendancecorrectionrequests.length) return <p>No attendance correction requests found</p>;
 
   return (
@@ -28,12 +33,23 @@ export default function AttendanceCorrectionRequestList({
             Status: {request.status}
           </p>
 
-          <button
-            className={s.button}
-            onClick={() => onDelete(request.id)}
-          >
-            Delete
-          </button>
+          {(user?.roles?.includes(SystemRole.SYSTEM_ADMIN) || user?.roles?.includes(SystemRole.HR_ADMIN)) && (
+            <>
+              <button
+                className={s.button}
+                onClick={() => onDelete(request.id)}
+              >
+                Delete
+              </button>
+              <button
+                className={s.button}
+                onClick={() => onDelete(request.id)}
+              >
+                Review
+              </button>
+            </>
+
+          )}
         </div>
       ))}
     </div>

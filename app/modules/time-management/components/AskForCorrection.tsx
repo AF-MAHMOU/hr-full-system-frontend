@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { createAttendanceCorrection, getAllAttendanceRecord } from "../api/index";
 import s from "../page.module.css";
 import { AttendanceRecord, CorrectionRequestStatus } from "../types";
-import Selections from "./Selections";
 import { useAuth } from "@/shared/hooks";
 
 interface CreateAttendanceCorrectionFormProps {

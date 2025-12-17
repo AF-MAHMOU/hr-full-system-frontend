@@ -33,7 +33,7 @@ export default function ShiftList({
             key={shift.id || shift.name || `shift-${index}`}
             className={s.Card}
           >
-            <h4 className={s.header}>{shift.name}</h4>
+            <h4 className={s.ctaTitle}>{shift.name}</h4>
 
             <p className={s.description}>
               Type: {shiftType?.name ?? "Unknown"}

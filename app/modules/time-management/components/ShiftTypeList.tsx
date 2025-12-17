@@ -13,12 +13,12 @@ const toggleShiftTypeStatus = async (id: string) => {
   await updateShiftType(id, { active: !st.active });
 }
 
-export default function ShiftTypeList({ 
-  shifttypes, 
-  onDelete, 
+export default function ShiftTypeList({
+  shifttypes,
+  onDelete,
   onToggleStatus // From parent
 }: ShiftTypeListProps) {
-  
+
   const handleToggleClick = async (id: string) => {
     try {
       // Call your API function
@@ -33,13 +33,13 @@ export default function ShiftTypeList({
   if (!shifttypes.length) return <p>No shift Types found</p>;
 
   return (
-    <div className={s.cardcontainer}>
+    <div className={s.cardContainer}>
       {shifttypes.map((shifttype) => (
         <div key={shifttype.id} className={s.Card}>
           <h4 className={s.header}>{shifttype.name}</h4>
-        
+
           <p className={s.description}>
-            Type: {shifttype.name} 
+            Type: {shifttype.name}
           </p>
 
           <p className={s.description}>
@@ -47,16 +47,16 @@ export default function ShiftTypeList({
               {shifttype.active ? 'Active' : 'Inactive'}
             </span>
           </p>
-          
+
           <div className={s.buttonContainer}>
-            <button 
+            <button
               className={`${s.button} ${s.toggleButton} ${shifttype.active ? s.deactivateBtn : s.activateBtn}`}
               onClick={() => handleToggleClick(shifttype.id)} // Use local handler
             >
               {shifttype.active ? 'Deactivate' : 'Activate'}
             </button>
-            
-            <button 
+
+            <button
               className={`${s.button} ${s.deleteButton}`}
               onClick={() => onDelete(shifttype.id)}
             >

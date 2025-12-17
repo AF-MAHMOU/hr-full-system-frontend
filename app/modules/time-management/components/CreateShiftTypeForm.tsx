@@ -29,13 +29,13 @@ export default function CreateShiftTypeForm({ onCreated }: CreateShiftTypeFormPr
 
       onCreated();
     }
-    catch (err) {console.error("Error creating shifttype:", err);}
-    finally {setLoading(false);}
+    catch (err) { console.error("Error creating shifttype:", err); }
+    finally { setLoading(false); }
   };
 
   const router = useRouter();
   const pathname = usePathname();
-  
+
   const goToShiftPage = () => {
     const parts = pathname.split("/").filter(Boolean);
     parts[parts.length - 1] = "shifts";
@@ -44,15 +44,15 @@ export default function CreateShiftTypeForm({ onCreated }: CreateShiftTypeFormPr
 
   return (
     <form onSubmit={submit} className={s.formContainer}>
-      <div className={s.grid}>
-      <div className={s.field}>
-        
-        <label className={s.description}>ShiftType Name  </label>
-        <input type="text" value={name} onChange={e => setName(e.target.value)} required />
-         <label className={s.description}>
-          <input type="checkbox" checked={active} onChange={e => setActive(e.target.checked)} />Active</label>
-      <button className={s.button} disabled={loading}>{loading ? "Adding..." : "Add"}</button>
-      <button 
+      <div className={s.container}>
+        <div className={s.field}>
+
+          <label className={s.description}>ShiftType Name  </label>
+          <input type="text" value={name} onChange={e => setName(e.target.value)} required />
+          <label className={s.description}>
+            <input type="checkbox" checked={active} onChange={e => setActive(e.target.checked)} />Active</label>
+          <button className={s.button} disabled={loading}>{loading ? "Adding..." : "Add"}</button>
+          <button
             type="button"
             className={s.button}
             onClick={goToShiftPage}
@@ -60,8 +60,8 @@ export default function CreateShiftTypeForm({ onCreated }: CreateShiftTypeFormPr
             Add Shift Type
           </button>
 
+        </div>
       </div>
-    </div>
-  </form>
+    </form>
   );
 }

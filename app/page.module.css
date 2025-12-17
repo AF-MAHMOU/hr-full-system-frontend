@@ -24,7 +24,7 @@
 .buttonDark {
   padding: 12px 22px;
   border-radius: 2rem;
-  border-color:#3b3848;
+  border-color: #3b3848;
   border-width: 0.125rem;
 
   background: linear-gradient(90deg, #121325, #262D3A);
@@ -79,14 +79,14 @@
 /* Activate Button - Green Glow */
 .activateBtn {
   color: #E8FFF8;
-  text-shadow: 
+  text-shadow:
     0 0 10px rgba(72, 255, 194, 0.7),
     0 0 20px rgba(72, 255, 194, 0.5),
     0 0 30px rgba(72, 255, 194, 0.3);
-  
+
   border-color: #48FFC2;
   background: linear-gradient(90deg, #121325, #1A2B2A);
-  
+
   box-shadow:
     0 1rem 2rem rgba(0, 0, 0, 0.25),
     inset 0 1rem 1rem #121325,
@@ -95,30 +95,30 @@
 
 .activateBtn:hover {
   color: #FFFFFF;
-  text-shadow: 
+  text-shadow:
     0 0 15px rgba(72, 255, 194, 0.9),
     0 0 25px rgba(72, 255, 194, 0.6),
     0 0 35px rgba(72, 255, 194, 0.4);
-  
+
   box-shadow:
     0 4px 12px rgba(0, 0, 0, 0.35),
     inset 0 1px 1px rgba(72, 255, 194, 0.3),
     0 0 20px rgba(72, 255, 194, 0.6);
-  
+
   border-color: #6AFFD0;
 }
 
 /* Deactivate Button - Red/Purple Glow */
 .deactivateBtn {
   color: #FFE8F8;
-  text-shadow: 
+  text-shadow:
     0 0 10px rgba(255, 72, 194, 0.7),
     0 0 20px rgba(255, 72, 194, 0.5),
     0 0 30px rgba(255, 72, 194, 0.3);
-  
+
   border-color: #FF48C2;
   background: linear-gradient(90deg, #121325, #2A1A2B);
-  
+
   box-shadow:
     0 1rem 2rem rgba(0, 0, 0, 0.25),
     inset 0 1rem 1rem #121325,
@@ -127,16 +127,16 @@
 
 .deactivateBtn:hover {
   color: #FFFFFF;
-  text-shadow: 
+  text-shadow:
     0 0 15px rgba(255, 72, 194, 0.9),
     0 0 25px rgba(255, 72, 194, 0.6),
     0 0 35px rgba(255, 72, 194, 0.4);
-  
+
   box-shadow:
     0 4px 12px rgba(0, 0, 0, 0.35),
     inset 0 1px 1px rgba(255, 72, 194, 0.3),
     0 0 20px rgba(255, 72, 194, 0.6);
-  
+
   border-color: #FF6AD0;
 }
 
@@ -150,13 +150,16 @@
 }
 
 @keyframes pulseGreen {
-  0%, 100% {
-    text-shadow: 
+
+  0%,
+  100% {
+    text-shadow:
       0 0 10px rgba(72, 255, 194, 0.7),
       0 0 20px rgba(72, 255, 194, 0.5);
   }
+
   50% {
-    text-shadow: 
+    text-shadow:
       0 0 15px rgba(72, 255, 194, 0.9),
       0 0 25px rgba(72, 255, 194, 0.7),
       0 0 35px rgba(72, 255, 194, 0.4);
@@ -164,13 +167,16 @@
 }
 
 @keyframes pulseRed {
-  0%, 100% {
-    text-shadow: 
+
+  0%,
+  100% {
+    text-shadow:
       0 0 10px rgba(255, 72, 194, 0.7),
       0 0 20px rgba(255, 72, 194, 0.5);
   }
+
   50% {
-    text-shadow: 
+    text-shadow:
       0 0 15px rgba(255, 72, 194, 0.9),
       0 0 25px rgba(255, 72, 194, 0.7),
       0 0 35px rgba(255, 72, 194, 0.4);
@@ -202,7 +208,7 @@
 
 .field {
   display: flex;
-  flex-direction: column; 
+  flex-direction: column;
   width: 40rem;
   gap: 0.5rem;
   margin-bottom: 1rem;
@@ -217,7 +223,7 @@
   background:
     linear-gradient(120deg, #1c1a28f2, #201e2ef2) padding-box,
     radial-gradient(120% 120% at 0% 0%, #545170, #1b1b28) border-box;
-  
+
   outline-color: #00000059;
   color: #F9F9F5;
   font-size: 1rem;
@@ -233,7 +239,7 @@
   border-color: #7c3aed;
   box-shadow: 0 0 1rem #7c3aed;
 
-  background: linear-gradient(120deg,#272438f2,#333048f2);
+  background: linear-gradient(120deg, #272438f2, #333048f2);
 }
 
 .button {
@@ -297,12 +303,12 @@
   transform: translateY(-2px);
 }
 
-.statCard > div {
+.statCard>div {
   border-left: 4px solid transparent;
   transition: box-shadow var(--transition-fast, 150ms ease-in-out);
 }
 
-.statCard:hover > div {
+.statCard:hover>div {
   box-shadow: var(--shadow-lg);
 }
 

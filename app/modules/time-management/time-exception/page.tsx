@@ -7,8 +7,10 @@ import { deleteTimeException, getAllTimeExceptions } from '../api/index';
 import CreateTimeExceptionForm from "../components/CreateTimeExceptionForm";
 import TimeExceptionList from "../components/TimeExceptionList";
 
+import { TimeException } from "../types";
+
 export default function timeExceptionPage() {
-  const [timeexceptions, setTimeExceptions] = useState([]);
+  const [timeexceptions, setTimeExceptions] = useState<TimeException[]>([]);
   const [loading, setLoading] = useState(true);
   const pathname = usePathname();
 
@@ -36,7 +38,7 @@ export default function timeExceptionPage() {
 
   return (
     <div className={s.container}>
-      <h1 className={s.header}>Time Exceptions</h1>      
+      <h1 className={s.header}>Time Exceptions</h1>
 
       {loading ? (
         <p>Loading...</p>

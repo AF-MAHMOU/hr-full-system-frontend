@@ -1,21 +1,21 @@
 "use client";
 
-import s from "../page.module.css";  
-import EmployeeClock from "../EmployeeClock/page";
+import s from "../page.module.css";
+import EmployeeClock from "../components/EmployeeClock";
 import EmployeeViewCalendar from "../components/EmployeeViewCalendar";
 
-export default function EmployeeDashboard() {  
-  return ( 
-    <main className={s.container}> 
+export default function EmployeeDashboard() {
+  return (
+    <main className={s.container}>
       <div className={s.dashboardLayout}>
         <section className={s.dashboardSection}>
-          <EmployeeClock/>
+          <EmployeeClock />
         </section>
-        
+
         <section className={s.dashboardSection}>
-          <EmployeeViewCalendar/>
+          <EmployeeViewCalendar />
         </section>
       </div>
-    </main> 
-  ); 
+    </main>
+  );
 }

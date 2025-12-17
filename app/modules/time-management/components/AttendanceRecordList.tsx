@@ -1,8 +1,11 @@
 import { AttendanceRecord } from "../types";
 import s from "../page.module.css";
+import { getEmployeeName } from "./utils";
+import { EmployeeProfile } from "../../hr/api/hrApi";
 
 interface AttendanceRecordListProps {
   attendancerecords: AttendanceRecord[];
+  employees: EmployeeProfile[];
   onDelete: (id: string) => void;
 }
 
@@ -17,14 +20,15 @@ export interface AttendanceRecord {
   finalisedForPayroll: boolean;
 }
 */
-export default function AttendanceRecordList({ attendancerecords, onDelete }: AttendanceRecordListProps) {
+export default function AttendanceRecordList({ attendancerecords, employees, onDelete }: AttendanceRecordListProps) {
   if (!attendancerecords.length) return <p>No attendancerecords found</p>;
 
   return (
-    <div className={s.cardcontainer}>
+    <div className={s.cardContainer}>
       {attendancerecords.map((attendancerecord) => (
         <div key={attendancerecord.id} className={s.Card}>
-          {/*Balabizo*/}
+          <p className={s.description}>Employee: {getEmployeeName(employees, attendancerecord.employeeId)}</p>
+
           <p className={s.description}>
             Employee ID: {attendancerecord.employeeId}
           </p>

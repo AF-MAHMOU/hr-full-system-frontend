@@ -591,6 +591,16 @@ export const getAllShiftAssignmentsByPosition =
     }
   };
 
+export const getAllShiftAssignments =
+  async (): Promise<ShiftAssignment[]> => {
+    try {
+      const { data } = await axiosInstance.get("/shift-assignments");
+      return toArray(data).map(mapShiftAssignment);
+    } catch {
+      return [];
+    }
+  };
+
 export const getAllShifts = async (): Promise<Shift[]> => {
   try {
     const response = await axiosInstance.get("/shifts");
@@ -688,7 +698,7 @@ export const createShiftAssignmentByDepartment = async (payload: any): Promise<a
       status: response.status
     };
   } catch (error: any) {
-    giveError(error);
+    return giveError(error);
   }
 };
 
@@ -701,7 +711,7 @@ export const createShiftAssignmentByEmployee = async (payload: any): Promise<any
       status: response.status
     };
   } catch (error: any) {
-    giveError(error);
+    return giveError(error);
   }
 };
 
@@ -714,7 +724,7 @@ export const createShiftAssignmentByPosition = async (payload: any): Promise<any
       status: response.status
     };
   } catch (error: any) {
-    giveError(error);
+    return giveError(error);
   }
 };
 
@@ -964,8 +974,8 @@ async function giveError(error: any) {
     errorResponse.error.message = error.message || 'Failed to create request';
   }
 
-  // Throw the structured error so the component can handle it properly
-  throw errorResponse;
+  // Return the structured error so the component can handle it properly
+  return errorResponse;
 }
 
 //

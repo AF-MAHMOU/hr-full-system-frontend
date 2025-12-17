@@ -16,6 +16,7 @@ import {
   updateShiftAssignmentByDepartment,
   updateShiftAssignmentByEmployee,
   updateShiftAssignmentByPosition,
+  getAllShifts,
 } from "../../api";
 
 import {
@@ -25,20 +26,37 @@ import {
 } from "../../types";
 
 import CreateShiftAssignmentEmployeeForm from "../../components/CreateShiftAssignmentEmployeeForm";
+import { EmployeeProfile, getAllEmployees } from "../../../hr/api/hrApi";
 
 export default function ShiftAssignmentPage() {
   const [shiftassignments, setShiftAssignments] = useState<ShiftAssignmentWithType[]>([]);
+  const [employees, setEmployees] = useState<EmployeeProfile[]>([]);
+  const [shifts, setShifts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
     setLoading(true);
 
     try {
-      const [byDept, byEmp, byPos] = await Promise.all([
+      const [byDept, byEmp, byPos, employeeData, shiftsData] = await Promise.all([
         getAllShiftAssignmentsByDepartment(),
         getAllShiftAssignmentsByEmployee(),
         getAllShiftAssignmentsByPosition(),
+        getAllEmployees(),
+        getAllShifts(),
       ]);
+
+      setEmployees(employeeData);
+      setShifts(shiftsData);
+
+      // Combine all assignments with their type
+      const combined: ShiftAssignmentWithType[] = [
+        ...byDept.map(sa => ({ ...sa, type: 1 as AssignmentType })), // 1 = DEPARTMENT
+        ...byEmp.map(sa => ({ ...sa, type: 2 as AssignmentType })), // 2 = EMPLOYEE
+        ...byPos.map(sa => ({ ...sa, type: 3 as AssignmentType })), // 3 = POSITION
+      ];
+
+      setShiftAssignments(combined);
 
       // Trigger notification check (fire and forget / or await if needed)
       // We don't necessarily need to show the result, but calling it triggers the email/notifications
@@ -88,11 +106,7 @@ export default function ShiftAssignmentPage() {
         <p>Loading...</p>
       ) : (
         <>
-          <ShiftAssignmentList
-            shiftassignments={shiftassignments}
-            onDelete={handleDelete}
-            onRenew={handleRenew}
-          />
+          <ShiftAssignmentList shiftassignments={shiftassignments} employees={employees} shifts={shifts} onDelete={handleDelete} />
           <CreateShiftAssignmentEmployeeForm onCreated={load} />
 
           <div style={{ marginTop: "3rem" }}>

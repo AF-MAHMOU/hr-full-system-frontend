@@ -9,15 +9,15 @@ interface NotificationLogListProps {
 export default function NotificationLogList({ notifications, onDelete }: NotificationLogListProps) {
   if (!notifications.length) return <p>No notifications found</p>;
 
-/*
-  id: string;
-  to: string;
-  type: string;
-  message?: string;
-*/
+  /*
+    id: string;
+    to: string;
+    type: string;
+    message?: string;
+  */
 
   return (
-    <div className={s.cardcontainer}>
+    <div className={s.cardContainer}>
       {notifications.map((notification) => (
         <div key={notification.id} className={s.Card}>
           <h4 className={s.header}>{notification.to}</h4>

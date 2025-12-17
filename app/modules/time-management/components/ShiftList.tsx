@@ -19,7 +19,7 @@ export default function ShiftList({
   }
 
   return (
-    <div className={s.cardcontainer}>
+    <div className={s.cardContainer}>
       {shifts.map((shift, index) => {
         const shiftType = shiftTypes.find(
           (t) =>

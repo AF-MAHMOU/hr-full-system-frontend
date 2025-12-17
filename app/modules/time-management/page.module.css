@@ -11,13 +11,41 @@
   padding: var(--spacing-lg);
   display: flex;
   flex-direction: column;
-  /* ← THIS IS THE KEY! */
+  background-color: #fef9f3;
   align-items: center;
   justify-content: center;
   gap: var(--spacing-md);
-  /* Optional: adds space between items */
 }
 
+.welcomeContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+
+.actionCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-lg);
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-fast, 150ms ease-in-out);
+  text-align: center;
+}
+
+.actionCard:hover {
+  background: var(--bg-secondary);
+  border-color: var(--primary-main);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
 
 .dashboardLayout {
   display: flex;
@@ -81,26 +109,6 @@
   max-width: 600px;
 }
 
-.button {
-  padding: 12px 22px;
-  border-radius: 2rem;
-  border-color: #3b3848;
-  border-width: 0.125rem;
-
-  background: linear-gradient(90deg, #121325, #262D3A);
-
-  box-shadow:
-    0 1rem 2rem rgba(0, 0, 0, 0.25),
-    inset 0 1rem 1rem #121325;
-
-  color: #B8EDED;
-  font-weight: 1200;
-
-  transition: all 0.2s ease;
-}
-
-
-
 .button:hover {
   background: linear-gradient(90deg, #121325, #262D3A);
   box-shadow:
@@ -111,10 +119,10 @@
 .button {
   padding: 12px 22px;
   border-radius: 2rem;
-  border-color: #3b3848;
+  border-color: #fef9f3;
   border-width: 0.125rem;
 
-  background: linear-gradient(90deg, #121325, #262D3A);
+  background: linear-gradient(120deg, #272727, #271010);
 
   box-shadow:
     0 1rem 2rem rgba(0, 0, 0, 0.25),
@@ -128,14 +136,6 @@
   cursor: pointer;
   position: relative;
   overflow: hidden;
-}
-
-.button:hover {
-  background: linear-gradient(90deg, #121325, #262D3A);
-  box-shadow:
-    0 4px 12px rgba(0, 0, 0, 0.35),
-    inset 0 1px 1px rgba(255, 255, 255, 0.6);
-  transform: translateY(-1px);
 }
 
 /* Activate Button - Green Glow */
@@ -282,9 +282,9 @@
   padding: 0.6rem 0.8rem;
   border-radius: 1.25rem;
   border: 0.01rem solid #555555;
+  background-color: 6d65ff44;
   background:
-    linear-gradient(120deg, #1c1a28f2, #201e2ef2) padding-box,
-    radial-gradient(120% 120% at 0% 0%, #545170, #1b1b28) border-box;
+    radial-gradient(120% 120% at 0% 0%, #3B3B3B, #3b3b3b75) border-box;
 
   outline-color: #00000059;
   color: #F9F9F5;
@@ -422,7 +422,7 @@
 
 /* Individual card styles */
 .Card {
-  background: #a3aabb;
+  background: #fffdf9;
   color: #f9f9f5;
   width: 18rem;
   /* Fixed width for consistent columns */
@@ -569,14 +569,13 @@
   padding: 0.75rem 2.5rem 0.75rem 0.9rem;
   border-radius: 2rem;
   border: 1px solid #3b3848;
-  background:
-    linear-gradient(120deg, #1c1a28f2, #201e2ef2) padding-box,
-    radial-gradient(120% 120% at 0% 0%, #545170, #1b1b28) border-box;
+  background-color: f7efe6;
   color: #F2F4F8;
-
+  outline: none;
   box-shadow:
-    0 1.25rem 4rem #00000059,
-    inset 0 1rem 2rem #ffffff0d;
+    0.1rem 2px 4px rgba(0, 0, 0, 0.12),
+    0.1rem 6px 12px rgba(0, 0, 0, 0.9);
+
 
   background-image:
     url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4.5 6l3.5 4 3.5-4' stroke='%23B8EDED' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");

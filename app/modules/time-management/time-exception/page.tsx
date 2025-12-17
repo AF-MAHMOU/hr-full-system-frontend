@@ -39,13 +39,13 @@ export default function timeExceptionPage() {
   return (
     <div className={s.container}>
       <h1 className={s.header}>Time Exceptions</h1>
+      <CreateTimeExceptionForm onCreated={load} />
 
       {loading ? (
         <p>Loading...</p>
       ) : (
         <TimeExceptionList timeexceptions={timeexceptions} onDelete={handleDelete} />
       )}
-      <CreateTimeExceptionForm onCreated={load} />
     </div>
   );
 }

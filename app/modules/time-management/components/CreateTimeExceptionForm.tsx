@@ -18,7 +18,7 @@ export default function CreateTimeExceptionForm({ onCreated }: CreateTimeExcepti
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
   const [assignedTo, setAssignedTo] = useState(() => {
     if (typeof window !== "undefined") {
-      const currentUser = localStorage.getItem("userId"); 
+      const currentUser = localStorage.getItem("userId");
       return currentUser || "";
     }
     return "";
@@ -28,9 +28,9 @@ export default function CreateTimeExceptionForm({ onCreated }: CreateTimeExcepti
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-  getAllEmployees().then(setEmployees).catch(() => {});
-  getAllAttendanceRecord().then(setAttendanceRecords).catch(() => {});
-}, []);
+    getAllEmployees().then(setEmployees).catch(() => { });
+    getAllAttendanceRecord().then(setAttendanceRecords).catch(() => { });
+  }, []);
 
 
   const submit = async (e: React.FormEvent) => {
@@ -62,18 +62,18 @@ export default function CreateTimeExceptionForm({ onCreated }: CreateTimeExcepti
       setLoading(false);
     }
   };
-  
-    /* export interface TimeException {
-      attendanceRecordId: string;
-      assignedTo: string; // person responsible for handling the exception
-    }*/
+
+  /* export interface TimeException {
+    attendanceRecordId: string;
+    assignedTo: string; // person responsible for handling the exception
+  }*/
 
   return (
     <form onSubmit={submit} className={s.formContainer}>
       <div className={s.grid}>
         <div className={s.field}>
           <label className={s.description}>Employee</label>
-          <select className={s.select}value={employeeId} onChange={(e) => setEmployeeId(e.target.value)}required>
+          <select className={s.select} value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} required>
             <option value="" disabled>Select employee</option>
             {employees.map(emp => (
               <option key={emp._id} value={emp._id}>
@@ -105,7 +105,7 @@ export default function CreateTimeExceptionForm({ onCreated }: CreateTimeExcepti
           </select>
 
           <label className={s.description}>person responsible for handling the exception</label>
-          <select className={s.select}value={assignedTo} onChange={(e) => setAssignedTo(e.target.value)}required>
+          <select className={s.select} value={assignedTo} onChange={(e) => setAssignedTo(e.target.value)} required>
             <option value="" disabled>Select employee</option>
             {employees.map(emp => (
               <option key={emp._id} value={emp._id}>

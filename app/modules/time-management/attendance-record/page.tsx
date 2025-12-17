@@ -8,18 +8,24 @@ import s from "../page.module.css";
 import { deleteAttendanceRecord, getAllAttendanceRecord } from '../api/index';
 import { AttendanceRecord } from "../types";
 import { usePathname, useRouter } from "next/navigation";
+import { EmployeeProfile, getAllEmployees } from "../../hr/api/hrApi";
 
 export default function AttendanceRecordPage() {
   const [attendancerecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
+  const [employees, setEmployees] = useState<EmployeeProfile[]>([]);
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
     setLoading(true);
     try {
-      const data = await getAllAttendanceRecord();
-      setAttendanceRecords(data);
+      const [attendanceData, employeeData] = await Promise.all([
+        getAllAttendanceRecord(),
+        getAllEmployees(),
+      ]);
+      setAttendanceRecords(attendanceData);
+      setEmployees(employeeData);
     } catch (err) {
-      console.error("Error fetching attendancerecords:", err);
+      console.error("Error fetching data:", err);
     } finally {
       setLoading(false);
     }
@@ -52,7 +58,7 @@ export default function AttendanceRecordPage() {
         <p>Loading...</p>
       ) : (
         <>
-          <AttendanceRecordList attendancerecords={attendancerecords} onDelete={handleDelete} />
+          <AttendanceRecordList attendancerecords={attendancerecords} employees={employees} onDelete={handleDelete} />
         </>
       )}
       <CreateAttendanceRecordForm onCreated={load} />

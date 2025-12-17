@@ -128,24 +128,22 @@ export default function NotificationPage() {
     userRoles.includes(SystemRole.HR_MANAGER) ||
     userRoles.includes(SystemRole.HR_ADMIN);
 
-  if (!isAuthenticated || (!isHrUser && !isManager)) {
-    return <Unauthorized />;
-  }
-
-
-
   return (
     <div className={s.container}>
       <h1 className={s.header}>Notifications</h1>
-
+      {isAuthenticated || (!isHrUser && !isManager) ? (
+        <>
+          <CreateNotificationLogForm onCreated={load} />
+        </>
+      ) : <></>}
       {loading ? (
         <p>Loading...</p>
       ) : (
         <>
           <NotificationLogList notifications={notifications} onDelete={handleDelete} />
-          <CreateNotificationLogForm onCreated={load} />
         </>
-      )}
-    </div>
+      )
+      }
+    </div >
   );
 }

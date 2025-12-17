@@ -6,8 +6,9 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { useAuth } from '@/shared/hooks'; // Add this import
-import { getAllHolidays, getShift, getShiftAssignmentsByEmployee } from '../api/index';
+import { getAllHolidays, getShiftAssignmentsByEmployee } from '../api/index';
 import '../../../../app/global.css';
+import { getShiftName } from './utils';
 
 const getHolidayColor = (type: string) => {
   switch (type) {
@@ -47,7 +48,7 @@ export default function EmployeeViewCalendar() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        
+
         if (calendarView === 'holidays') {
           // Fetch holidays
           const holidays = await getAllHolidays();
@@ -67,42 +68,42 @@ export default function EmployeeViewCalendar() {
           // Fetch shift assignments for the current employee
           if (user?.userid) {
             const shiftAssignments = await getShiftAssignmentsByEmployee(user.userid);
-            
+
             // Transform shift assignments into calendar events
             const shiftEvents = await Promise.all(
               shiftAssignments.map(async (assignment: any) => {
                 // Fetch shift details to get name and times
-                const shift = await getShift(assignment.shiftId);
-                
+                const shift = await getShiftAssignmentsByEmployee(assignment.shiftId);
+
                 const startDate = new Date(assignment.startDate);
                 const endDate = assignment.endDate ? new Date(assignment.endDate) : null;
-                
+
                 // Create recurring events for each day in the date range
                 const events = [];
                 const currentDate = new Date(startDate);
-                
+
                 while (!endDate || currentDate <= endDate) {
                   if (shift) {
                     // Create event with shift timing
                     const eventDate = new Date(currentDate);
                     const eventStart = new Date(eventDate);
                     const eventEnd = new Date(eventDate);
-                    
+
                     // Parse shift start/end times
                     if (shift.startTime && shift.endTime) {
                       const [startHour, startMinute] = shift.startTime.split(':').map(Number);
                       const [endHour, endMinute] = shift.endTime.split(':').map(Number);
-                      
+
                       eventStart.setHours(startHour, startMinute, 0);
                       eventEnd.setHours(endHour, endMinute, 0);
                     }
-                    
+
                     events.push({
                       id: `shift-${assignment._id}-${eventDate.toISOString().split('T')[0]}`,
-                      title: `${shift.name} (${assignment.status})`,
+                      title: `${getShiftName(shift, assignment.shiftId)}`,
                       start: eventStart.toISOString(),
                       end: eventEnd.toISOString(),
-                      allDay: false,
+                      allDay: true,
                       color: getShiftAssignmentColor(assignment.status),
                       extendedProps: {
                         type: 'shift',
@@ -114,18 +115,18 @@ export default function EmployeeViewCalendar() {
                       }
                     });
                   }
-                  
+
                   // Move to next day
                   currentDate.setDate(currentDate.getDate() + 1);
-                  
+
                   // If no end date, only show one day
                   if (!endDate) break;
                 }
-                
+
                 return events;
               })
             );
-            
+
             // Flatten the array of arrays
             const flattenedEvents = shiftEvents.flat();
             setEvents(flattenedEvents);
@@ -146,7 +147,7 @@ export default function EmployeeViewCalendar() {
   return (
     <div>
       {/* View Toggle Buttons */}
-      <div style={{ 
+      <div style={{
         marginBottom: '1rem',
         display: 'flex',
         gap: '1rem',
@@ -155,13 +156,15 @@ export default function EmployeeViewCalendar() {
         <button
           onClick={() => setCalendarView('shifts')}
           style={{
-            padding: '0.5rem 1rem',
-            borderRadius: '0.375rem',
+            padding: '0.75rem 1.5rem',
+            borderRadius: '0.5rem',
             border: 'none',
-            backgroundColor: calendarView === 'shifts' ? '#3b82f6' : '#6b7280',
-            color: 'white',
+            backgroundColor: calendarView === 'shifts' ? '#3b82f6' : '#e5e7eb',
+            color: calendarView === 'shifts' ? 'white' : '#4b5563',
             cursor: 'pointer',
-            fontWeight: calendarView === 'shifts' ? 'bold' : 'normal'
+            fontWeight: '600',
+            transition: 'all 0.2s ease',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
           }}
         >
           My Shifts
@@ -183,7 +186,7 @@ export default function EmployeeViewCalendar() {
       </div>
 
       {/* Legend */}
-      <div style={{ 
+      <div style={{
         marginBottom: '1rem',
         display: 'flex',
         flexWrap: 'wrap',
@@ -241,7 +244,7 @@ export default function EmployeeViewCalendar() {
         eventClick={(info) => {
           const event = info.event;
           const extendedProps = event.extendedProps;
-          
+
           if (extendedProps.type === 'shift') {
             alert(
               `Shift: ${extendedProps.shiftName}\n` +
@@ -257,10 +260,10 @@ export default function EmployeeViewCalendar() {
           }
         }}
         eventContent={(eventInfo) => {
-          const timeText = eventInfo.event.allDay 
-            ? '' 
+          const timeText = eventInfo.event.allDay
+            ? ''
             : eventInfo.timeText;
-          
+
           return (
             <div style={{ padding: '2px' }}>
               <div style={{ fontWeight: 'bold', fontSize: '0.85em' }}>

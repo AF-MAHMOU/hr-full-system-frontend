@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import '../shared/styles/globals.css';
 import { Navbar, NotificationContainer } from '@/shared/components';
 import { NotificationProvider } from '@/shared/contexts/NotificationContext';
+import { AuthProvider } from '@/shared/contexts/AuthContext';
 import { NotificationPosition } from '@/shared/types';
 
 export const metadata: Metadata = {
@@ -17,11 +18,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <NotificationProvider defaultDuration={5000} maxNotifications={5}>
-          <Navbar />
-          {children}
-          <NotificationContainer position={NotificationPosition.TOP_RIGHT} maxNotifications={5} />
-        </NotificationProvider>
+        <AuthProvider>
+          <NotificationProvider defaultDuration={5000} maxNotifications={5}>
+            <Navbar />
+            {children}
+            <NotificationContainer position={NotificationPosition.TOP_RIGHT} maxNotifications={5} />
+          </NotificationProvider>
+        </AuthProvider>
       </body>
     </html>
   );

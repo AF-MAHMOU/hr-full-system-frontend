@@ -343,8 +343,12 @@ export default function ManagerReviewsView({ managerId }: ManagerReviewsViewProp
                                 <span>Due: {formatDate(assignment.dueDate)}</span>
                               </div>
                               <div className={styles.assignmentActions}>
-                                {(assignment.status === AppraisalAssignmentStatus.IN_PROGRESS ||
-                                  assignment.status === AppraisalAssignmentStatus.NOT_STARTED) && (
+                                {/* Manager can review when employee has submitted (REQ-AE-03) */}
+                                {/* Show "Review" button for SUBMITTED, IN_PROGRESS, NOT_STARTED, ACKNOWLEDGED */}
+                                {(assignment.status === AppraisalAssignmentStatus.SUBMITTED ||
+                                  assignment.status === AppraisalAssignmentStatus.IN_PROGRESS ||
+                                  assignment.status === AppraisalAssignmentStatus.NOT_STARTED ||
+                                  assignment.status === AppraisalAssignmentStatus.ACKNOWLEDGED) && (
                                   <Button
                                     onClick={() => handleReviewClick(assignment)}
                                     variant="primary"
@@ -353,13 +357,14 @@ export default function ManagerReviewsView({ managerId }: ManagerReviewsViewProp
                                     Review
                                   </Button>
                                 )}
-                                {assignment.status === AppraisalAssignmentStatus.SUBMITTED && (
+                                {/* View/Edit review for PUBLISHED (in case manager needs to update) */}
+                                {assignment.status === AppraisalAssignmentStatus.PUBLISHED && (
                                   <Button
                                     onClick={() => handleReviewClick(assignment)}
                                     variant="secondary"
                                     size="sm"
                                   >
-                                    View Review
+                                    View/Edit Review
                                   </Button>
                                 )}
                                 {(assignment.status === AppraisalAssignmentStatus.SUBMITTED ||

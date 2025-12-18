@@ -13,6 +13,8 @@ import { SystemRole } from '@/shared/types/auth';
 import { ROUTES } from '@/shared/constants';
 import { Button } from '../Button';
 import { NotificationBell } from '../NotificationBell';
+import { profileApi } from '@/app/modules/employee-profile/api/profileApi';
+import type { ProfileData } from '@/app/modules/employee-profile/api/profileApi';
 import styles from './Navbar.module.css';
 
 interface NavItem {
@@ -27,6 +29,10 @@ export function Navbar() {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [prevPathname, setPrevPathname] = useState<string | null>(null);
+  const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(null);
+  const [imageError, setImageError] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 
   // Refresh auth state when navigating from login/register to another page
   useEffect(() => {
@@ -38,6 +44,78 @@ export function Navbar() {
     }
     setPrevPathname(pathname);
   }, [pathname, prevPathname, refreshUser]);
+
+  // Fetch user profile for name and picture
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (isAuthenticated && user) {
+        try {
+          const profileData = await profileApi.getMyProfile();
+          setProfile(profileData);
+        } catch (err) {
+          console.error('Error fetching profile:', err);
+          setProfile(null);
+        }
+      } else {
+        setProfile(null);
+        setProfilePictureUrl(null);
+      }
+    };
+
+    fetchProfile();
+  }, [isAuthenticated, user]);
+
+  // Load profile picture using the same logic as ProfilePictureSection
+  useEffect(() => {
+    let currentBlobUrl: string | null = null;
+
+    const loadProfilePicture = async () => {
+      if (profile?.profilePictureUrl) {
+        const pictureUrl = profileApi.getProfilePictureUrl(profile.profilePictureUrl);
+        
+        // Check if it's a GridFS URL (needs authentication)
+        if (pictureUrl && pictureUrl.includes('/employee-profile/me/profile-picture')) {
+          try {
+            // Fetch image with credentials
+            const response = await fetch(pictureUrl, {
+              credentials: 'include',
+            });
+            
+            if (response.ok) {
+              const blob = await response.blob();
+              const blobUrl = URL.createObjectURL(blob);
+              currentBlobUrl = blobUrl;
+              setProfilePictureUrl(blobUrl);
+              setImageError(false);
+            } else {
+              setImageError(true);
+              setProfilePictureUrl(null);
+            }
+          } catch (err) {
+            console.error('Error loading profile picture:', err);
+            setImageError(true);
+            setProfilePictureUrl(null);
+          }
+        } else if (pictureUrl) {
+          // External URL - use directly
+          setProfilePictureUrl(pictureUrl);
+          setImageError(false);
+        }
+      } else {
+        setProfilePictureUrl(null);
+        setImageError(false);
+      }
+    };
+
+    loadProfilePicture();
+
+    // Cleanup blob URL on unmount or when URL changes
+    return () => {
+      if (currentBlobUrl) {
+        URL.revokeObjectURL(currentBlobUrl);
+      }
+    };
+  }, [profile?.profilePictureUrl]);
 
   // Don't show navbar on login/register pages
   if (pathname === ROUTES.LOGIN || pathname === ROUTES.REGISTER) {
@@ -125,11 +203,12 @@ export function Navbar() {
     }
 
     // Performance
+    // HR_ADMIN should NOT have access to performance module (not in user stories)
     if (
       userRoles.includes(SystemRole.HR_MANAGER) ||
-      userRoles.includes(SystemRole.HR_ADMIN) ||
       userRoles.includes(SystemRole.SYSTEM_ADMIN) ||
       userRoles.includes(SystemRole.DEPARTMENT_HEAD) ||
+      userRoles.includes(SystemRole.HR_EMPLOYEE) ||
       userType === 'employee'
     ) {
       items.push({
@@ -137,9 +216,9 @@ export function Navbar() {
         route: ROUTES.PERFORMANCE,
         roles: [
           SystemRole.HR_MANAGER,
-          SystemRole.HR_ADMIN,
           SystemRole.SYSTEM_ADMIN,
           SystemRole.DEPARTMENT_HEAD,
+          SystemRole.HR_EMPLOYEE,
         ],
         userTypes: ['employee'],
       });
@@ -168,6 +247,7 @@ export function Navbar() {
   };
 
   const handleLogout = async () => {
+    setIsProfileMenuOpen(false);
     await logout();
   };
 
@@ -175,9 +255,52 @@ export function Navbar() {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 
+  const toggleProfileMenu = () => {
+    setIsProfileMenuOpen(!isProfileMenuOpen);
+  };
+
+  // Close profile menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (isProfileMenuOpen && !target.closest(`.${styles.profileMenuContainer}`)) {
+        setIsProfileMenuOpen(false);
+      }
+    };
+
+    if (isProfileMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [isProfileMenuOpen]);
+
   const getUserDisplayName = () => {
     if (!user) return 'Guest';
+    // Use profile name if available, otherwise fall back to email
+    if (profile?.fullName) {
+      return profile.fullName;
+    }
+    if (profile?.firstName || profile?.lastName) {
+      return [profile.firstName, profile.lastName].filter(Boolean).join(' ') || user.email || 'User';
+    }
     return user.email || 'User';
+  };
+
+  const getUserRole = () => {
+    if (!user) return '';
+    // If candidate, show "Candidate"
+    if (user.userType === 'candidate') {
+      return 'Candidate';
+    }
+    // Otherwise show the first role, or "Employee" as fallback
+    const roles = user.roles || [];
+    if (roles.length > 0) {
+      // Format role name (e.g., "HR Manager" instead of "HR_MANAGER")
+      return roles[0].replace(/_/g, ' ');
+    }
+    return 'Employee';
   };
 
   return (
@@ -208,17 +331,64 @@ export function Navbar() {
             {/* User Section */}
             <div className={styles.rightSection}>
               <NotificationBell />
-              <div className={styles.userInfo}>
-                <span className={styles.userName}>{getUserDisplayName()}</span>
-                {user?.userType && (
-                  <span className={styles.userType}>
-                    {user.userType === 'employee' ? '👤 Employee' : '📝 Candidate'}
-                  </span>
+              <div className={styles.profileMenuContainer}>
+                <div className={styles.userInfo} onClick={toggleProfileMenu}>
+                  {profilePictureUrl && !imageError ? (
+                    <img 
+                      src={profilePictureUrl} 
+                      alt="Profile" 
+                      className={styles.profilePicture}
+                      onError={() => setImageError(true)}
+                      crossOrigin="anonymous"
+                    />
+                  ) : (
+                    <div className={styles.profilePicturePlaceholder}>
+                      {getUserDisplayName().charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <div className={styles.userTextInfo}>
+                    <span className={styles.userName}>{getUserDisplayName()}</span>
+                    <span className={styles.userType}>{getUserRole()}</span>
+                  </div>
+                </div>
+                
+                {isProfileMenuOpen && (
+                  <div className={styles.profileMenu}>
+                    <div className={styles.profileMenuHeader}>
+                      <div className={styles.profileMenuName}>{getUserDisplayName()}</div>
+                      <div className={styles.profileMenuRole}>{getUserRole()}</div>
+                    </div>
+                    <div className={styles.profileMenuDivider}></div>
+                    <div className={styles.profileMenuDetails}>
+                      {user?.email && (
+                        <div className={styles.profileMenuDetail}>
+                          <span className={styles.profileMenuLabel}>Email:</span>
+                          <span className={styles.profileMenuValue}>{user.email}</span>
+                        </div>
+                      )}
+                      {profile?.employeeNumber && (
+                        <div className={styles.profileMenuDetail}>
+                          <span className={styles.profileMenuLabel}>Employee #:</span>
+                          <span className={styles.profileMenuValue}>{profile.employeeNumber}</span>
+                        </div>
+                      )}
+                      {profile?.candidateNumber && (
+                        <div className={styles.profileMenuDetail}>
+                          <span className={styles.profileMenuLabel}>Candidate #:</span>
+                          <span className={styles.profileMenuValue}>{profile.candidateNumber}</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className={styles.profileMenuDivider}></div>
+                    <button 
+                      className={styles.profileMenuLogout}
+                      onClick={handleLogout}
+                    >
+                      Logout
+                    </button>
+                  </div>
                 )}
               </div>
-              <Button variant="outline" size="sm" onClick={handleLogout} className={styles.logoutButton}>
-                Logout
-              </Button>
             </div>
 
             {/* Mobile Menu Button */}
@@ -255,17 +425,64 @@ export function Navbar() {
             </Link>
           ))}
           <div className={styles.mobileUserInfo}>
-            <div className={styles.userInfo}>
-              <span className={styles.userName}>{getUserDisplayName()}</span>
-              {user?.userType && (
-                <span className={styles.userType}>
-                  {user.userType === 'employee' ? '👤 Employee' : '📝 Candidate'}
-                </span>
+            <div className={styles.profileMenuContainer}>
+              <div className={styles.userInfo} onClick={toggleProfileMenu}>
+                {profilePictureUrl && !imageError ? (
+                  <img 
+                    src={profilePictureUrl} 
+                    alt="Profile" 
+                    className={styles.profilePicture}
+                    onError={() => setImageError(true)}
+                    crossOrigin="anonymous"
+                  />
+                ) : (
+                  <div className={styles.profilePicturePlaceholder}>
+                    {getUserDisplayName().charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <div className={styles.userTextInfo}>
+                  <span className={styles.userName}>{getUserDisplayName()}</span>
+                  <span className={styles.userType}>{getUserRole()}</span>
+                </div>
+              </div>
+              
+              {isProfileMenuOpen && (
+                <div className={styles.profileMenu}>
+                  <div className={styles.profileMenuHeader}>
+                    <div className={styles.profileMenuName}>{getUserDisplayName()}</div>
+                    <div className={styles.profileMenuRole}>{getUserRole()}</div>
+                  </div>
+                  <div className={styles.profileMenuDivider}></div>
+                  <div className={styles.profileMenuDetails}>
+                    {user?.email && (
+                      <div className={styles.profileMenuDetail}>
+                        <span className={styles.profileMenuLabel}>Email:</span>
+                        <span className={styles.profileMenuValue}>{user.email}</span>
+                      </div>
+                    )}
+                    {profile?.employeeNumber && (
+                      <div className={styles.profileMenuDetail}>
+                        <span className={styles.profileMenuLabel}>Employee #:</span>
+                        <span className={styles.profileMenuValue}>{profile.employeeNumber}</span>
+                      </div>
+                    )}
+                    {profile?.candidateNumber && (
+                      <div className={styles.profileMenuDetail}>
+                        <span className={styles.profileMenuLabel}>Candidate #:</span>
+                        <span className={styles.profileMenuValue}>{profile.candidateNumber}</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className={styles.profileMenuDivider}></div>
+                  <button 
+                    className={styles.profileMenuLogout}
+                    onClick={handleLogout}
+                  >
+                    Logout
+                  </button>
+                </div>
               )}
             </div>
-            <Button variant="outline" size="sm" onClick={handleLogout} fullWidth>
-              Logout
-            </Button>
           </div>
         </div>
       )}

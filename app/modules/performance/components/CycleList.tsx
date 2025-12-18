@@ -27,15 +27,19 @@ export default function CycleList({ cycles, onRefresh }: CycleListProps) {
   const [selectedCycle, setSelectedCycle] = useState<AppraisalCycle | undefined>();
   const [activatingCycleId, setActivatingCycleId] = useState<string | null>(null);
   const [publishingCycleId, setPublishingCycleId] = useState<string | null>(null);
+  const [deletingCycleId, setDeletingCycleId] = useState<string | null>(null);
 
-  // Check if user can activate cycles (HR_ADMIN or SYSTEM_ADMIN)
-  const canActivateCycle = user?.roles?.includes(SystemRole.HR_ADMIN) || 
-                          user?.roles?.includes(SystemRole.SYSTEM_ADMIN);
+  // REQ-PP-02: HR Manager defines and schedules appraisal cycles (HR_MANAGER ONLY)
+  const canActivateCycle = user?.roles?.includes(SystemRole.HR_MANAGER);
+  const canPublishCycle = user?.roles?.includes(SystemRole.HR_MANAGER);
+  const canDeleteCycle = user?.roles?.includes(SystemRole.HR_MANAGER);
   
-  // Check if user can publish cycles (HR_MANAGER, HR_ADMIN, or SYSTEM_ADMIN)
-  const canPublishCycle = user?.roles?.includes(SystemRole.HR_MANAGER) ||
-                          user?.roles?.includes(SystemRole.HR_ADMIN) ||
-                          user?.roles?.includes(SystemRole.SYSTEM_ADMIN);
+  // Debug: Log permissions
+  console.log('CycleList - Permissions:', {
+    canDeleteCycle,
+    userRoles: user?.roles,
+    isHrManager: user?.roles?.includes(SystemRole.HR_MANAGER)
+  });
 
   const handleCreateNew = () => {
     setSelectedCycle(undefined);
@@ -112,6 +116,39 @@ export default function CycleList({ cycles, onRefresh }: CycleListProps) {
       showError(error.response?.data?.message || error.message || 'Failed to publish cycle');
     } finally {
       setPublishingCycleId(null);
+    }
+  };
+
+  const handleDelete = async (cycle: AppraisalCycle) => {
+    if (!cycle._id) {
+      showError('Cycle ID is missing');
+      return;
+    }
+
+    if (cycle.status !== 'PLANNED') {
+      showError(`Cannot delete cycle. Only PLANNED cycles can be deleted. Current status: ${cycle.status}.`);
+      return;
+    }
+
+    // Confirm before deleting
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${cycle.name}"?\n\n` +
+      `This action cannot be undone. The cycle will be permanently removed from the system.`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setDeletingCycleId(cycle._id);
+      await performanceApi.deleteCycle(cycle._id);
+      showSuccess(`Cycle "${cycle.name}" has been deleted successfully.`);
+      onRefresh();
+    } catch (error: any) {
+      showError(error.response?.data?.message || error.message || 'Failed to delete cycle');
+    } finally {
+      setDeletingCycleId(null);
     }
   };
 
@@ -214,6 +251,18 @@ export default function CycleList({ cycles, onRefresh }: CycleListProps) {
                       disabled={publishingCycleId === cycle._id}
                     >
                       {publishingCycleId === cycle._id ? 'Publishing...' : 'Publish'}
+                    </Button>
+                  )}
+                  {canDeleteCycle && (
+                    <Button
+                      variant="error"
+                      size="sm"
+                      onClick={() => handleDelete(cycle)}
+                      disabled={deletingCycleId === cycle._id || cycle.status !== 'PLANNED'}
+                      title={cycle.status !== 'PLANNED' ? `Cannot delete cycle. Only PLANNED cycles can be deleted. Current status: ${cycle.status}` : 'Delete cycle'}
+                      style={{ opacity: cycle.status !== 'PLANNED' ? 0.6 : 1 }}
+                    >
+                      {deletingCycleId === cycle._id ? 'Deleting...' : 'Delete'}
                     </Button>
                   )}
                 </div>

@@ -207,24 +207,37 @@
   opacity: 0.6;
 }
 
-.stepButton {
-  width: 2.5rem;
-  height: 2.5rem;
-  padding: 0;
+.stepButtons {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
   border: 1px solid #ddd;
   border-radius: 4px;
+  overflow: hidden;
+}
+
+.stepButton {
+  width: 2rem;
+  height: 1.5rem;
+  padding: 0;
+  border: none;
   background-color: #fff;
-  font-size: 1.2rem;
+  font-size: 0.7rem;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
+  color: #333;
+  line-height: 1;
+}
+
+.stepButton:first-child {
+  border-bottom: 1px solid #ddd;
 }
 
 .stepButton:hover:not(:disabled) {
   background-color: #f0f0f0;
-  border-color: #007bff;
 }
 
 .stepButton:active:not(:disabled) {

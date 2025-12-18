@@ -16,6 +16,8 @@ import AcknowledgmentModal from './AcknowledgmentModal';
 import FinalRatingView from './FinalRatingView';
 import PIPViewModal from './PIPViewModal';
 import { useNotification } from '@/shared/hooks';
+import { useAuth } from '@/shared/hooks/useAuth';
+import { SystemRole } from '@/shared/types/auth';
 import type { PerformanceImprovementPlan } from '../types';
 import styles from './EmployeeAssignmentsView.module.css';
 
@@ -24,6 +26,12 @@ interface EmployeeAssignmentsViewProps {
 }
 
 export default function EmployeeAssignmentsView({ employeeId }: EmployeeAssignmentsViewProps) {
+  const { user } = useAuth();
+  const isHrManager = user?.roles?.includes(SystemRole.HR_MANAGER);
+  // REQ-OD-07: HR Manager resolves disputes, does NOT create them
+  // Even if HR Manager has DEPARTMENT_EMPLOYEE role, they should not create disputes
+  const canCreateDispute = !isHrManager;
+  
   const [assignments, setAssignments] = useState<AppraisalAssignment[]>([]);
   const [cycles, setCycles] = useState<AppraisalCycle[]>([]);
   const [loading, setLoading] = useState(true);
@@ -40,7 +48,7 @@ export default function EmployeeAssignmentsView({ employeeId }: EmployeeAssignme
   const [pips, setPips] = useState<PerformanceImprovementPlan[]>([]);
   const [selectedPIP, setSelectedPIP] = useState<PerformanceImprovementPlan | null>(null);
   const [isPIPViewOpen, setIsPIPViewOpen] = useState(false);
-  const { showInfo } = useNotification('performance');
+  const { showInfo, showSuccess, showError } = useNotification('performance');
   const hasShownNotificationRef = useRef(false); // Track if we've already shown the notification
 
   const fetchData = useCallback(async () => {
@@ -245,20 +253,63 @@ export default function EmployeeAssignmentsView({ employeeId }: EmployeeAssignme
                 </div>
 
                 <div className={styles.cardActions}>
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    onClick={() => {
-                      setSelectedAssignment(assignment);
-                      setIsSelfAssessmentOpen(true);
-                    }}
-                  >
-                    {assignment.status === AppraisalAssignmentStatus.NOT_STARTED
-                      ? 'Start Assessment'
-                      : 'View/Edit Assessment'}
-                  </Button>
-                  {(assignment.status === AppraisalAssignmentStatus.PUBLISHED ||
-                    assignment.status === AppraisalAssignmentStatus.ACKNOWLEDGED) && (
+                  {/* REQ-PP-07: Employee acknowledges assignment first (NOT_STARTED → ACKNOWLEDGED) */}
+                  {assignment.status === AppraisalAssignmentStatus.NOT_STARTED && (
+                    <Button
+                      variant="success"
+                      size="sm"
+                      onClick={async () => {
+                        try {
+                          await performanceApi.acknowledgeAssignment(assignment._id!);
+                          showSuccess('Assignment acknowledged successfully');
+                          fetchAssignments(selectedCycleId || undefined);
+                        } catch (err: any) {
+                          showError(err.response?.data?.message || err.message || 'Failed to acknowledge assignment');
+                        }
+                      }}
+                    >
+                      Acknowledge Assignment
+                    </Button>
+                  )}
+                  
+                  {/* After acknowledgment, employee can start self-assessment */}
+                  {/* But NOT if assignment is PUBLISHED - once published, it's final */}
+                  {(assignment.status === AppraisalAssignmentStatus.ACKNOWLEDGED ||
+                    assignment.status === AppraisalAssignmentStatus.IN_PROGRESS ||
+                    (assignment.status === AppraisalAssignmentStatus.SUBMITTED && 
+                     !(assignment as any).latestAppraisalId)) && (
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedAssignment(assignment);
+                        setIsSelfAssessmentOpen(true);
+                      }}
+                    >
+                      {assignment.status === AppraisalAssignmentStatus.SUBMITTED
+                        ? 'View/Edit Assessment'
+                        : 'Start Assessment'}
+                    </Button>
+                  )}
+                  
+                  {/* View submitted assessment (read-only) if manager has reviewed */}
+                  {assignment.status === AppraisalAssignmentStatus.SUBMITTED &&
+                   (assignment as any).latestAppraisalId && (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedAssignment(assignment);
+                        setIsSelfAssessmentOpen(true);
+                      }}
+                    >
+                      View Assessment
+                    </Button>
+                  )}
+                  
+                  {/* View Final Rating only shows when published AND evaluation exists */}
+                  {assignment.status === AppraisalAssignmentStatus.PUBLISHED &&
+                    (assignment as any).latestAppraisalId && (
                     <Button
                       variant="primary"
                       size="sm"
@@ -271,6 +322,8 @@ export default function EmployeeAssignmentsView({ employeeId }: EmployeeAssignme
                       View Final Rating
                     </Button>
                   )}
+                  
+                  {/* Final acknowledgment after publishing (REQ-OD-01) */}
                   {assignment.status === AppraisalAssignmentStatus.PUBLISHED && (
                     <Button
                       variant="success"
@@ -281,10 +334,12 @@ export default function EmployeeAssignmentsView({ employeeId }: EmployeeAssignme
                         setIsAcknowledgmentModalOpen(true);
                       }}
                     >
-                      Acknowledge
+                      Acknowledge Final Rating
                     </Button>
                   )}
-                  {(assignment.status === AppraisalAssignmentStatus.SUBMITTED ||
+                  {/* REQ-AE-07: Employee or HR Employee can create disputes */}
+                  {/* REQ-OD-07: HR Manager resolves disputes, does NOT create them */}
+                  {canCreateDispute && (assignment.status === AppraisalAssignmentStatus.SUBMITTED ||
                     assignment.status === AppraisalAssignmentStatus.PUBLISHED) && (
                     <Button
                       variant="secondary"

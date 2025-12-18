@@ -131,6 +131,23 @@
   font-style: italic;
 }
 
+.rolesContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.roleBadge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-md);
+  background: var(--primary-main);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
 @media (max-width: 1024px) {
   .searchForm {
     grid-template-columns: 1fr;

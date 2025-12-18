@@ -33,8 +33,9 @@ export interface EmployeeProfile {
   department?: string;
   position?: string;
   payGrade?: string;
-  primaryDepartmentId?: string;
-  primaryPositionId?: string;
+  primaryDepartmentId?: string | { _id: string; name: string; code: string };
+  primaryPositionId?: string | { _id: string; title: string; code: string };
+  roles?: string[];
 }
 
 export interface ChangeRequest {

@@ -8,6 +8,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Card, Button } from '@/shared/components';
 import { performanceApi } from '../api/performanceApi';
+import { useAuth } from '@/shared/hooks/useAuth';
+import { SystemRole } from '@/shared/types/auth';
 import type { AppraisalCycle, CycleProgress } from '../types';
 import ExportButton from './ExportButton';
 import OutcomeReportGenerator from './OutcomeReportGenerator';
@@ -19,6 +21,12 @@ interface CycleProgressDashboardProps {
 }
 
 export default function CycleProgressDashboard({ cycles, onRefresh }: CycleProgressDashboardProps) {
+  const { user } = useAuth();
+  const isHrEmployee = user?.roles?.includes(SystemRole.HR_EMPLOYEE);
+  // REQ-AE-11: HR Employee exports ad-hoc appraisal summaries
+  // REQ-OD-06: HR Employee generates outcome reports
+  // Both are HR Employee ONLY, not HR Manager
+  
   const [selectedCycleId, setSelectedCycleId] = useState<string>('');
   const [progress, setProgress] = useState<CycleProgress | null>(null);
   const [loading, setLoading] = useState(false);
@@ -149,19 +157,26 @@ export default function CycleProgressDashboard({ cycles, onRefresh }: CycleProgr
           <p>Monitor appraisal completion status across cycles</p>
         </div>
         <div className={styles.controls}>
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={() => setIsOutcomeReportOpen(true)}
-          >
-            📊 Generate Outcome Report
-          </Button>
-          {selectedCycleId && (
-            <ExportButton
-              cycleId={selectedCycleId}
-              variant="outline"
-              size="sm"
-            />
+          {/* REQ-AE-11: HR Employee exports ad-hoc appraisal summaries */}
+          {/* REQ-OD-06: HR Employee generates outcome reports */}
+          {/* Both are HR Employee ONLY, not HR Manager */}
+          {isHrEmployee && (
+            <>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => setIsOutcomeReportOpen(true)}
+              >
+                📊 Generate Outcome Report
+              </Button>
+              {selectedCycleId && (
+                <ExportButton
+                  cycleId={selectedCycleId}
+                  variant="outline"
+                  size="sm"
+                />
+              )}
+            </>
           )}
           {cyclesList.length > 0 && (
             <select
@@ -339,10 +354,12 @@ export default function CycleProgressDashboard({ cycles, onRefresh }: CycleProgr
         </>
       )}
 
-      <OutcomeReportGenerator
-        isOpen={isOutcomeReportOpen}
-        onClose={() => setIsOutcomeReportOpen(false)}
-      />
+      {isHrEmployee && (
+        <OutcomeReportGenerator
+          isOpen={isOutcomeReportOpen}
+          onClose={() => setIsOutcomeReportOpen(false)}
+        />
+      )}
     </div>
   );
 }

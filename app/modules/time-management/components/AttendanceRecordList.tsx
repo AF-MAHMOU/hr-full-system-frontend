@@ -21,7 +21,7 @@ export interface AttendanceRecord {
 }
 */
 export default function AttendanceRecordList({ attendancerecords, employees, onDelete }: AttendanceRecordListProps) {
-  if (!attendancerecords.length) return <p>No attendancerecords found</p>;
+  if (!attendancerecords.length) return <p>No attendance records yet</p>;
 
   return (
     <div className={s.cardContainer}>

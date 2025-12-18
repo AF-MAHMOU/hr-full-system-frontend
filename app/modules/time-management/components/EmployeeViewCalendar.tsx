@@ -7,8 +7,9 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { useAuth } from '@/shared/hooks'; // Add this import
 import { getAllHolidays, getShiftAssignmentsByEmployee } from '../api/index';
-import '../../../../app/global.css';
 import { getShiftName } from './utils';
+import s from '../page.module.css'
+import Calendar from './Calendar';
 
 const getHolidayColor = (type: string) => {
   switch (type) {
@@ -38,11 +39,11 @@ const getShiftAssignmentColor = (status: string) => {
   }
 };
 
-export default function EmployeeViewCalendar() {
+export default function EmployeeViewCalendar({ defaultView = 'holidays' }: { defaultView?: 'holidays' | 'shifts' }) {
   const { user } = useAuth(); // Get the logged-in user
   const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [calendarView, setCalendarView] = useState<'holidays' | 'shifts'>('shifts');
+  const [calendarView, setCalendarView] = useState<'holidays' | 'shifts'>(defaultView);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -145,7 +146,7 @@ export default function EmployeeViewCalendar() {
   if (loading) return <p>Loading calendar data...</p>;
 
   return (
-    <div>
+    <div className={s.container}>
       {/* View Toggle Buttons */}
       <div style={{
         marginBottom: '1rem',

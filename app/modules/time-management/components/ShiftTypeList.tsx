@@ -39,10 +39,6 @@ export default function ShiftTypeList({
           <h4 className={s.header}>{shifttype.name}</h4>
 
           <p className={s.description}>
-            Type: {shifttype.name}
-          </p>
-
-          <p className={s.description}>
             Status: <span className={shifttype.active ? s.activeStatus : s.inactiveStatus}>
               {shifttype.active ? 'Active' : 'Inactive'}
             </span>

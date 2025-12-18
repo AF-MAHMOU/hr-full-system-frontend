@@ -138,7 +138,7 @@ export default function EmployeeClock() {
       if (existingRecord) {
         // PATCH :D
         await addPunchToAttendance(existingRecord.id, punch);
-        setMessage(`Punch ${punchType} added`);
+        setMessage(`Punch ${punchType} recorded successfully at ${new Date().toLocaleTimeString()}`);
       } else {
         // CREATE new record
         await createAttendanceRecord({
@@ -146,7 +146,7 @@ export default function EmployeeClock() {
           punches: [punch],
           finalisedForPayroll: true,
         });
-        setMessage(`Attendance created (${punchType})`);
+        setMessage(`Attendance record created with ${punchType} punch at ${new Date().toLocaleTimeString()}`);
       }
 
       setPunchType(punchType === PunchType.IN ? PunchType.OUT : PunchType.IN);

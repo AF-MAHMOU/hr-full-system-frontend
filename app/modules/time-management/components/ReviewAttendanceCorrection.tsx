@@ -83,7 +83,7 @@ export default function ReviewAttendanceCorrection({
               .map((at) => (
                 <option key={at.id} value={at.id}>
                   Record #{at.id} · {at.totalWorkMinutes} mins
-                  {at.hasMissedPunch ? " · Missing punch" : ""}
+                  {at.hasMissedPunch ? " · Incomplete shift" : ""}
                 </option>
               ))}
           </select>

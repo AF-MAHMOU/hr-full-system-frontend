@@ -5,7 +5,6 @@ import s from "../page.module.css";
 import { deleteHoliday, getAllHolidays } from "../api/index";
 import CreateHolidayForm from "../components/CreateHolidayForm";
 import HolidayList from "../components/HolidayList";
-import Calendar from "../components/Calendar";
 import { Holiday } from "../types";
 import { SystemRole } from "@/shared/types";
 import { useAuth } from "@/shared/hooks";
@@ -74,12 +73,12 @@ export default function HolidayPage() {
       </p>
       {isAuthorized ? (
         <>
-          <CreateHolidayForm onCreated={load} />
           <HolidayList />
+          <CreateHolidayForm onCreated={load} />
         </>
       ) : (
         <>
-          <EmployeeViewHoliday />
+          <EmployeeViewHoliday defaultView="holidays" />
         </>
       )}
     </div>

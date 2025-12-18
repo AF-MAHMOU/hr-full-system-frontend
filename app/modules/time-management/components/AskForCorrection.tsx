@@ -85,7 +85,7 @@ export default function AskForCorrection({
             .map((at) => (
               <option key={at.id} value={at.id}>
                 Record #{at.id} · {at.totalWorkMinutes} mins
-                {at.hasMissedPunch ? " · Missing punch" : ""}
+                {at.hasMissedPunch ? " · Shift Incomplete/Awaiting Out Punch" : ""}
               </option>
             ))}
         </select>

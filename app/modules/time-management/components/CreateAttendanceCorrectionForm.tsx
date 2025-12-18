@@ -27,23 +27,23 @@ export default function CreateAttendanceCorrectionForm({
     e.preventDefault();
 
     useEffect(() => {
-  getAllEmployees()
-    .then((data) => {
-      setEmployees(data);
-      setLoading(false);
+      getAllEmployees()
+        .then((data) => {
+          setEmployees(data);
+          setLoading(false);
 
-      // Set employeeId to the first employee if available 
-      if (data.length > 0 && !employeeId) {
-        setEmployeeId(data[0]._id);
-      }
-    })
-    .catch((err) => {
-      console.error("Error fetching employees:", err);
-      setLoading(false);
-    });
-}, [setEmployeeId, employeeId]); // Dependency array includes employeeId to ensure it doesn't overwrite after being set
+          // Set employeeId to the first employee if available 
+          if (data.length > 0 && !employeeId) {
+            setEmployeeId(data[0]._id);
+          }
+        })
+        .catch((err) => {
+          console.error("Error fetching employees:", err);
+          setLoading(false);
+        });
+    }, [setEmployeeId, employeeId]); // Dependency array includes employeeId to ensure it doesn't overwrite after being set
 
-    
+
     setLoading(true);
     try {
       await createAttendanceCorrection({
@@ -69,9 +69,9 @@ export default function CreateAttendanceCorrectionForm({
         <div className={s.field}>
           <label className={s.description}>Employee ID</label>
           <Selections
-                      employeeId={employeeId}
-                      setEmployeeId={setEmployeeId}
-                    />
+            employeeId={employeeId}
+            setEmployeeId={setEmployeeId}
+          />
 
           <label className={s.description}>Attendance Record</label>
           <select
@@ -90,7 +90,7 @@ export default function CreateAttendanceCorrectionForm({
               .map((at) => (
                 <option key={at.id} value={at.id}>
                   Record #{at.id} · {at.totalWorkMinutes} mins
-                  {at.hasMissedPunch ? " · Missing punch" : ""}
+                  {at.hasMissedPunch ? " · Incomplete shift" : ""}
                 </option>
               ))}
           </select>
@@ -103,7 +103,7 @@ export default function CreateAttendanceCorrectionForm({
             required
           >
             <option value="" disabled>
-              
+
             </option>
             {Object.values(CorrectionRequestStatus).map((s) => (
               <option key={s} value={s}>

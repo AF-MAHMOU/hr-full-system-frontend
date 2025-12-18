@@ -1,3 +1,4 @@
+import { SystemRole } from "@/shared/types";
 import { EmployeeProfile } from "../../hr/api/hrApi";
 import { Shift } from "../types";
 
@@ -8,8 +9,8 @@ export const getEmployeeName = (employees: EmployeeProfile[], employeeId?: strin
 };
 
 
-export const getShiftName = (shifts: Shift[], shiftId?: string) => {
-    if (!shiftId) return "N/A";
+export const getShiftName = (shifts: Shift[] | undefined, shiftId?: string) => {
+    if (!shifts || !shiftId) return "N/A";
     const shift = shifts.find(shift => shift.id === shiftId);
     return shift ? shift.name : "Unknown Shift";
 };

@@ -20,26 +20,26 @@ export default function CreateAttendanceRecordForm({ onCreated }: CreateAttendan
   const [loading, setLoading] = useState(false);
   const [selectedTimeExceptionId, setSelectedTimeExceptionId] = useState("");
 
-    useEffect(() => {
-  getAllTimeExceptions()
-    .then(setTimeExceptions)
-    .catch(err => console.error("Failed to load exceptions", err));
-}, []);
+  useEffect(() => {
+    getAllTimeExceptions()
+      .then(setTimeExceptions)
+      .catch(err => console.error("Failed to load exceptions", err));
+  }, []);
 
 
   const submit = async (e: React.FormEvent) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  setLoading(true);
-  try {
-    await createAttendanceRecord({
-      employeeId,
-      punches: punches.length > 0 ? punches : undefined,
-      totalWorkMinutes: 0,
-      hasMissedPunch: false,
-      exceptionIds: exceptionIds.length > 0 ? exceptionIds : undefined,
-      finalisedForPayroll
-    });
+    setLoading(true);
+    try {
+      await createAttendanceRecord({
+        employeeId,
+        punches: punches.length > 0 ? punches : undefined,
+        totalWorkMinutes: 0,
+        hasMissedPunch: false,
+        exceptionIds: Array.isArray(exceptionIds) && exceptionIds.length > 0 ? exceptionIds : undefined,
+        finalisedForPayroll
+      });
 
       // Reset form fields
       setEmployeeId("");
@@ -61,9 +61,9 @@ export default function CreateAttendanceRecordForm({ onCreated }: CreateAttendan
         <div className={s.field}>
           <label className={s.description}>Employee</label>
           <Selections
-                      employeeId={employeeId}
-                      setEmployeeId={setEmployeeId}
-                    />
+            employeeId={employeeId}
+            setEmployeeId={setEmployeeId}
+          />
 
           <label className={s.description}>Punches</label>
           <div className={s.punchList}>
@@ -72,12 +72,11 @@ export default function CreateAttendanceRecordForm({ onCreated }: CreateAttendan
                 <input
                   type="time"
                   className={s.punchTime}
-                  value={punch.timestamp}
-                  onChange={(e) => {
-                    const next = [...punches];
-                    next[index] = { ...next[index], timestamp: e.target.value };
-                    setPunches(next);
-                  }}
+                  value={punch.time.toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false
+                  })}
                 />
 
                 <select
@@ -95,7 +94,7 @@ export default function CreateAttendanceRecordForm({ onCreated }: CreateAttendan
                   <option value={PunchType.IN}>IN</option>
                   <option value={PunchType.OUT}>OUT</option>
                 </select>
-                
+
                 <button
                   type="button"
                   className={s.punchDelete}
@@ -111,7 +110,13 @@ export default function CreateAttendanceRecordForm({ onCreated }: CreateAttendan
               type="button"
               className={s.punchAdd}
               onClick={() =>
-                setPunches([...punches, { timestamp: "", type: PunchType.IN }])
+                setPunches([
+                  ...punches,
+                  {
+                    time: new Date(), // Create a Date object with current time
+                    type: PunchType.IN
+                  }
+                ])
               }
             >
               + Add punch

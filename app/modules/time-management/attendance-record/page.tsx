@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import CreateAttendanceRecordForm from "../components/CreateAttendanceRecordForm";
 import AttendanceRecordList from "../components/AttendanceRecordList";
-import Calendar from "../components/Calendar";
 import s from "../page.module.css";
 import { deleteAttendanceRecord, getAllAttendanceRecord } from '../api/index';
 import { AttendanceRecord } from "../types";

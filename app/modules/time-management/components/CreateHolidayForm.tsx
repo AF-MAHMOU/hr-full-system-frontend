@@ -11,7 +11,7 @@ interface CreateHolidayFormProps {
 
 export default function CreateHolidayForm({ onCreated }: CreateHolidayFormProps) {
   const [name, setName] = useState("");
-  const [type, setType] = useState<HolidayType| "">(""); // your HolidayType
+  const [type, setType] = useState<HolidayType | "">(""); // your HolidayType
   const [startDate, setStartDate] = useState(""); // format YYYY-MM-DD
   const [endDate, setEndDate] = useState(""); // optional
   const [active, setActive] = useState(true);
@@ -71,10 +71,10 @@ export default function CreateHolidayForm({ onCreated }: CreateHolidayFormProps)
 
 
           <label className={s.description}>Start Date</label>
-          <input className={s.select}type="date" value={startDate} onChange={e => setStartDate(e.target.value)} required />
+          <input className={s.select} type="date" value={startDate} onChange={e => setStartDate(e.target.value)} required />
 
           <label className={s.description}>End Date</label>
-          <input className={s.select}type="date" value={endDate} onChange={e => setEndDate(e.target.value)} />
+          <input className={s.select} type="date" value={endDate} onChange={e => setEndDate(e.target.value)} />
 
           <label className={s.description}>
             <input type="checkbox" checked={active} onChange={e => setActive(e.target.checked)} /> Active

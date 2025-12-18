@@ -38,7 +38,7 @@ export default function AttendanceRecordList({ attendancerecords, employees, onD
           </p>
 
           <p className={s.description}>
-            Missed Punch? {attendancerecord.hasMissedPunch ? "Yes" : "No"}
+            Status: {attendancerecord.hasMissedPunch ? "Shift Incomplete (Awaiting Out Punch)" : "Complete"}
           </p>
 
           <p className={s.description}>

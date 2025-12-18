@@ -25,7 +25,7 @@ function OnboardingTrackerPageContent() {
             const data = await recruitmentApi.getOnboardingTracker(employeeId);
             setTrackerData(data);
         } catch (err: any) {
-            setError(err.message || 'Tracker not found or access denied.');
+            setError(err.response?.data?.message || err.message || 'Tracker not found or access denied.');
         } finally {
             setLoading(false);
         }

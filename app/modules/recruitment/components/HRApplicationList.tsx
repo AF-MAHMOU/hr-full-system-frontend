@@ -64,19 +64,19 @@ export default function HRApplicationList() {
                     <div key={app._id} className={styles.listItem}>
                         <div className={styles.itemInfo}>
                             <h3 className={styles.itemTitle}>
-                                {app.candidateId}
+                                {app.candidateName || app.candidate?.firstName ? `${app.candidate?.firstName || ''} ${app.candidate?.lastName || ''}`.trim() : `Candidate ${app.candidateId.slice(-6)}`}
                                 <span style={{ fontSize: '0.85rem', fontWeight: 400, color: '#666', marginLeft: '0.5rem' }}>
-                                    applying for {app.requisitionId || 'Unknown'}
+                                    applying for {app.requisitionTitle || app.requisition?.jobTitle || 'Unknown Position'}
                                 </span>
                             </h3>
                             <div className={styles.itemMeta}>
                                 <ApplicationStatusBadge status={app.status} />
-                                <span>Stage: {app.stage}</span>
-                                <span>Date: {new Date(app.appliedDate).toLocaleDateString()}</span>
+                                <span>Stage: {app.currentStage}</span>
+                                <span>Date: {new Date(app.appliedDate || app.createdAt).toLocaleDateString()}</span>
                                 <Button
                                     variant="ghost"
                                     size="sm"
-                                    onClick={() => setConsentTarget({ candidateId: app.candidateId, name: `Candidate ${app.candidateId}` })}
+                                    onClick={() => setConsentTarget({ candidateId: app.candidateId, name: app.candidateName || `Candidate ${app.candidateId.slice(-6)}` })}
                                     style={{ fontSize: '0.75rem', padding: '0 0.5rem', height: 'auto', marginLeft: '0.5rem' }}
                                 >
                                     Manage Consent
@@ -87,41 +87,54 @@ export default function HRApplicationList() {
                             <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => setReferralTarget({ candidateId: app.candidateId, name: `Candidate ${app.candidateId}` })}
+                                onClick={() => setReferralTarget({ candidateId: app.candidateId, name: app.candidateName || app.candidate?.firstName || `Candidate ${app.candidateId.slice(-6)}` })}
                             >
                                 Tag Referral
                             </Button>
-                            <Button variant="outline" size="sm" onClick={() => setListInterviewsTarget({ id: app._id, name: `Candidate ${app.candidateId}` })}>
+                            <Button variant="outline" size="sm" onClick={() => window.location.href = `/modules/recruitment/applications/${app._id}/interviews`}>
                                 Interviews / Feedback
                             </Button>
+                            {app.status !== 'rejected' && (
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                        const params = new URLSearchParams({
+                                            applicationId: app._id,
+                                            candidateId: app.candidateId,
+                                            candidateName: app.candidateName || app.candidate?.firstName || `Candidate ${app.candidateId.slice(-6)}`
+                                        });
+                                        window.location.href = `/modules/recruitment/offers/create?${params.toString()}`;
+                                    }}
+                                >
+                                    Create Offer
+                                </Button>
+                            )}
                             {app.status === 'active' && (
                                 <div style={{ display: 'inline-flex', gap: '0.5rem' }}>
                                     <Button
                                         variant="outline"
                                         size="sm"
-                                        onClick={() => setInterviewTarget({ id: app._id, name: `Candidate ${app.candidateId}` })}
+                                        onClick={() => setInterviewTarget({ id: app._id, name: app.candidateName || app.candidate?.firstName || `Candidate ${app.candidateId.slice(-6)}` })}
                                     >
                                         Schedule
                                     </Button>
                                     <Button
                                         variant="primary"
                                         size="sm"
-                                        onClick={() => setAdvanceTarget({ id: app._id, name: `Candidate ${app.candidateId}`, currentStage: app.stage })}
+                                        onClick={() => setAdvanceTarget({ id: app._id, name: app.candidateName || app.candidate?.firstName || `Candidate ${app.candidateId.slice(-6)}`, currentStage: app.currentStage })}
                                     >
                                         Advance
                                     </Button>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => setOfferTarget({ applicationId: app._id, candidateId: app.candidateId, name: `Candidate ${app.candidateId}` })}
-                                    >
-                                        Create Offer
-                                    </Button>
+
                                 </div>
                             )}
 
+                            {/* Mark Accepted button removed by request */}
+
+
                             {/* Pre-boarding Action for Accepted Offers */}
-                            {(app.status === 'offer_accepted' || app.status === 'hired') && (
+                            {app.status === 'hired' && (
                                 <div className={styles.actions}>
                                     <Button
                                         variant="primary"
@@ -133,7 +146,7 @@ export default function HRApplicationList() {
                                                 if (offers && offers.length > 0) {
                                                     // Use the latest offer
                                                     const latestOffer = offers[offers.length - 1];
-                                                    setPreboardingTarget({ offerId: latestOffer._id, candidateName: `Candidate ${app.candidateId}` });
+                                                    setPreboardingTarget({ offerId: latestOffer._id, candidateName: app.candidateName || app.candidate?.firstName || `Candidate ${app.candidateId.slice(-6)}` });
                                                 } else {
                                                     alert('No offer found for this application.');
                                                 }
@@ -155,7 +168,7 @@ export default function HRApplicationList() {
                                                 const offers = await recruitmentApi.listOffers(app._id);
                                                 if (offers && offers.length > 0) {
                                                     const latestOffer = offers[offers.length - 1];
-                                                    setOnboardingTarget({ contractId: latestOffer._id, candidateName: `Candidate ${app.candidateId}` });
+                                                    setOnboardingTarget({ contractId: latestOffer._id, candidateName: app.candidateName || app.candidate?.firstName || `Candidate ${app.candidateId.slice(-6)}` });
                                                 } else {
                                                     alert('No accepted offer found.');
                                                 }
@@ -174,7 +187,7 @@ export default function HRApplicationList() {
                                 <Button
                                     variant="error"
                                     size="sm"
-                                    onClick={() => setRejectionTarget({ id: app._id, name: `Candidate ${app.candidateId}` })}
+                                    onClick={() => setRejectionTarget({ id: app._id, name: app.candidateName || app.candidate?.firstName || `Candidate ${app.candidateId.slice(-6)}` })}
                                 >
                                     Reject
                                 </Button>
@@ -184,85 +197,103 @@ export default function HRApplicationList() {
                 ))}
             </div>
 
-            {rejectionTarget && (
-                <RejectionModal
-                    applicationId={rejectionTarget.id}
-                    candidateName={rejectionTarget.name}
-                    onClose={() => setRejectionTarget(null)}
-                    onSuccess={() => { fetchApplications(); }}
-                />
-            )}
+            {
+                rejectionTarget && (
+                    <RejectionModal
+                        applicationId={rejectionTarget.id}
+                        candidateName={rejectionTarget.name}
+                        onClose={() => setRejectionTarget(null)}
+                        onSuccess={() => { fetchApplications(); }}
+                    />
+                )
+            }
 
-            {advanceTarget && (
-                <AdvanceStageModal
-                    applicationId={advanceTarget.id}
-                    candidateName={advanceTarget.name}
-                    currentStage={advanceTarget.currentStage}
-                    onClose={() => setAdvanceTarget(null)}
-                    onSuccess={() => { fetchApplications(); }}
-                />
-            )}
+            {
+                advanceTarget && (
+                    <AdvanceStageModal
+                        applicationId={advanceTarget.id}
+                        candidateName={advanceTarget.name}
+                        currentStage={advanceTarget.currentStage}
+                        onClose={() => setAdvanceTarget(null)}
+                        onSuccess={() => { fetchApplications(); }}
+                    />
+                )
+            }
 
-            {interviewTarget && (
-                <ScheduleInterviewModal
-                    applicationId={interviewTarget.id}
-                    candidateName={interviewTarget.name}
-                    onClose={() => setInterviewTarget(null)}
-                    onSuccess={() => { fetchApplications(); }}
-                />
-            )}
+            {
+                interviewTarget && (
+                    <ScheduleInterviewModal
+                        applicationId={interviewTarget.id}
+                        candidateName={interviewTarget.name}
+                        onClose={() => setInterviewTarget(null)}
+                        onSuccess={() => { fetchApplications(); }}
+                    />
+                )
+            }
 
-            {listInterviewsTarget && (
-                <InterviewListModal
-                    applicationId={listInterviewsTarget.id}
-                    candidateName={listInterviewsTarget.name}
-                    onClose={() => setListInterviewsTarget(null)}
-                />
-            )}
+            {
+                listInterviewsTarget && (
+                    <InterviewListModal
+                        applicationId={listInterviewsTarget.id}
+                        candidateName={listInterviewsTarget.name}
+                        onClose={() => setListInterviewsTarget(null)}
+                    />
+                )
+            }
 
-            {referralTarget && (
-                <ReferralModal
-                    candidateId={referralTarget.candidateId}
-                    candidateName={referralTarget.name}
-                    onClose={() => setReferralTarget(null)}
-                    onSuccess={() => { alert('Referral tagged successfully'); }}
-                />
-            )}
+            {
+                referralTarget && (
+                    <ReferralModal
+                        candidateId={referralTarget.candidateId}
+                        candidateName={referralTarget.name}
+                        onClose={() => setReferralTarget(null)}
+                        onSuccess={() => { alert('Referral tagged successfully'); }}
+                    />
+                )
+            }
 
-            {consentTarget && (
-                <ConsentModal
-                    candidateId={consentTarget.candidateId}
-                    candidateName={consentTarget.name}
-                    onClose={() => setConsentTarget(null)}
-                />
-            )}
+            {
+                consentTarget && (
+                    <ConsentModal
+                        candidateId={consentTarget.candidateId}
+                        candidateName={consentTarget.name}
+                        onClose={() => setConsentTarget(null)}
+                    />
+                )
+            }
 
-            {offerTarget && (
-                <CreateOfferModal
-                    applicationId={offerTarget.applicationId}
-                    candidateId={offerTarget.candidateId}
-                    candidateName={offerTarget.name}
-                    onClose={() => setOfferTarget(null)}
-                    onSuccess={() => { fetchApplications(); }}
-                />
-            )}
+            {
+                offerTarget && (
+                    <CreateOfferModal
+                        applicationId={offerTarget.applicationId}
+                        candidateId={offerTarget.candidateId}
+                        candidateName={offerTarget.name}
+                        onClose={() => setOfferTarget(null)}
+                        onSuccess={() => { fetchApplications(); }}
+                    />
+                )
+            }
 
-            {preboardingTarget && (
-                <PreboardingModal
-                    offerId={preboardingTarget.offerId}
-                    candidateName={preboardingTarget.candidateName}
-                    onClose={() => setPreboardingTarget(null)}
-                />
-            )}
+            {
+                preboardingTarget && (
+                    <PreboardingModal
+                        offerId={preboardingTarget.offerId}
+                        candidateName={preboardingTarget.candidateName}
+                        onClose={() => setPreboardingTarget(null)}
+                    />
+                )
+            }
 
-            {onboardingTarget && (
-                <OnboardingProfileModal
-                    contractId={onboardingTarget.contractId}
-                    candidateName={onboardingTarget.candidateName}
-                    onClose={() => setOnboardingTarget(null)}
-                    onSuccess={() => fetchApplications()}
-                />
-            )}
-        </Card>
+            {
+                onboardingTarget && (
+                    <OnboardingProfileModal
+                        contractId={onboardingTarget.contractId}
+                        candidateName={onboardingTarget.candidateName}
+                        onClose={() => setOnboardingTarget(null)}
+                        onSuccess={() => fetchApplications()}
+                    />
+                )
+            }
+        </Card >
     );
 }

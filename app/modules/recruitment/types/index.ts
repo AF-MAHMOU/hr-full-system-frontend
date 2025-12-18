@@ -9,10 +9,21 @@ export interface PublishRequisitionDto {
 export interface JobApplication {
     _id: string;
     candidateId: string;
+    candidateName?: string; // Populated from candidate data
+    candidate?: {
+        firstName?: string;
+        lastName?: string;
+        email?: string;
+    };
     requisitionId: string;
     requisitionTitle?: string;
+    requisition?: {
+        jobTitle?: string;
+        department?: string;
+    };
     currentStage: string;
-    status: 'active' | 'rejected' | 'hired' | 'withdrawn' | 'offer_accepted';
+    stage?: string; // Alias or computed
+    status: 'active' | 'rejected' | 'hired' | 'withdrawn' | 'offer_accepted' | 'offer';
     history?: {
         stage: string;
         status: string;
@@ -20,6 +31,7 @@ export interface JobApplication {
         date: string;
     }[];
     createdAt: string;
+    appliedDate?: string; // Alias for createdAt
     updatedAt: string;
     attachment?: string; // Document ID of the CV
 }
@@ -237,6 +249,15 @@ export interface Offer {
     }[];
     content: string; // The offer letter details
     deadline: string;
+    role?: string;
+    signingBonus?: number;
+    benefits?: string[];
+    conditions?: string;
+    insurances?: string;
+    finalStatus?: string;
+    candidateSignedAt?: string;
+    hrSignedAt?: string;
+    managerSignedAt?: string;
 }
 
 export interface SubmitResignationRequestDto {
@@ -285,6 +306,21 @@ export interface OnboardingChecklist {
     description?: string;
     departmentId?: string;
     taskNames: string[];
+}
+
+// ONB-001: Create Onboarding
+export interface OnboardingTaskInput {
+    name: string;
+    department?: string;
+    deadline?: string;
+    documentId?: string;
+    notes?: string;
+}
+
+export interface CreateEmployeeOnboardingDto {
+    employeeId: string;
+    contractId: string;
+    tasks?: OnboardingTaskInput[];
 }
 
 export enum DocumentType {

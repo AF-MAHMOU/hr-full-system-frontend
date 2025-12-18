@@ -1,38 +1,29 @@
 'use client';
 
 import { Suspense, useState } from 'react';
-import { Button, Input } from '@/shared/components';
-import { recruitmentApi } from '../api/recruitment.api';
-import OffboardingChecklist from '../components/OffboardingChecklist';
+import { Button, Card } from '@/shared/components';
+import { useAuth } from '@/shared/hooks/useAuth';
+import HROffboardingView from '../components/HROffboardingView';
+import EmployeeOffboardingView from '../components/EmployeeOffboardingView';
+import AdminOffboardingView from '../components/AdminOffboardingView';
 import styles from '../page.module.css';
 
+// Role constants from shared types (redefined here or imported if possible, but safe to match strings)
+const ROLES = {
+    HR_MANAGER: 'HR Manager',
+    HR_EMPLOYEE: 'HR Employee',
+    HR_ADMIN: 'HR Admin',
+    SYSTEM_ADMIN: 'System Admin'
+};
+
 function OffboardingPageContent() {
-    const [terminationId, setTerminationId] = useState('');
-    const [showChecklist, setShowChecklist] = useState(false);
-    const [createNew, setCreateNew] = useState(false);
+    const { user } = useAuth();
+    const [activeSection, setActiveSection] = useState<'EMPLOYEE' | 'MANAGER' | 'ADMIN'>('EMPLOYEE');
 
-    const handleSearch = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (terminationId.trim()) {
-            setShowChecklist(true);
-            setCreateNew(false);
-        }
-    };
+    if (!user) return <div>Loading user profile...</div>;
 
-    const handleCreateChecklist = async () => {
-        if (!terminationId.trim()) {
-            alert('Enter a Termination ID first');
-            return;
-        }
-        try {
-            await recruitmentApi.createOffboardingChecklist(terminationId);
-            alert('Offboarding checklist created!');
-            setShowChecklist(true);
-        } catch (e) {
-            alert('Failed to create checklist (may already exist)');
-            setShowChecklist(true); // Try to show existing
-        }
-    };
+    const hasManagerAccess = user.roles.includes(ROLES.HR_MANAGER as any) || user.roles.includes(ROLES.HR_EMPLOYEE as any);
+    const hasAdminAccess = user.roles.includes(ROLES.HR_ADMIN as any) || user.roles.includes(ROLES.SYSTEM_ADMIN as any);
 
     return (
         <div className={styles.container}>
@@ -44,34 +35,47 @@ function OffboardingPageContent() {
             </header>
 
             <div className={styles.content}>
-                <div style={{ marginBottom: '1.5rem' }}>
-                    <Button variant="outline" onClick={() => window.location.href = '/modules/recruitment/recruitent'}>
+                <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between' }}>
+                    <Button variant="outline" onClick={() => window.location.href = '/modules/recruitment'}>
                         Back to Recruitment
                     </Button>
                 </div>
 
-                <div style={{ maxWidth: '600px', margin: '0 0 2rem' }}>
-                    <form onSubmit={handleSearch} style={{ display: 'flex', gap: '0.5rem' }}>
-                        <Input
-                            placeholder="Enter Termination ID"
-                            value={terminationId}
-                            onChange={(e) => { setTerminationId(e.target.value); setShowChecklist(false); }}
-                        />
-                        <Button type="submit" variant="primary">
-                            View Checklist
-                        </Button>
-                        <Button type="button" variant="outline" onClick={handleCreateChecklist}>
-                            Create New
-                        </Button>
-                    </form>
+                <div className={styles.tabs} style={{ marginBottom: '2rem', borderBottom: '2px solid #e5e7eb' }}>
+                    <button
+                        className={`${styles.tab} ${activeSection === 'EMPLOYEE' ? styles.active : ''}`}
+                        onClick={() => setActiveSection('EMPLOYEE')}
+                        style={{ padding: '0.75rem 1.5rem', marginRight: '1rem' }}
+                    >
+                        My Offboarding
+                    </button>
+
+                    {hasManagerAccess && (
+                        <button
+                            className={`${styles.tab} ${activeSection === 'MANAGER' ? styles.active : ''}`}
+                            onClick={() => setActiveSection('MANAGER')}
+                            style={{ padding: '0.75rem 1.5rem', marginRight: '1rem' }}
+                        >
+                            HR Management
+                        </button>
+                    )}
+
+                    {hasAdminAccess && (
+                        <button
+                            className={`${styles.tab} ${activeSection === 'ADMIN' ? styles.active : ''}`}
+                            onClick={() => setActiveSection('ADMIN')}
+                            style={{ padding: '0.75rem 1.5rem' }}
+                        >
+                            Admin Console
+                        </button>
+                    )}
                 </div>
 
-                {showChecklist && terminationId && (
-                    <OffboardingChecklist
-                        terminationId={terminationId}
-                        onRefresh={() => setShowChecklist(true)}
-                    />
-                )}
+                {activeSection === 'EMPLOYEE' && <EmployeeOffboardingView />}
+
+                {activeSection === 'MANAGER' && hasManagerAccess && <HROffboardingView />}
+
+                {activeSection === 'ADMIN' && hasAdminAccess && <AdminOffboardingView />}
             </div>
         </div>
     );

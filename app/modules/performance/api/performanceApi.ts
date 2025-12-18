@@ -67,15 +67,42 @@ export const getTemplateById = async (id: string): Promise<AppraisalTemplate> =>
  * Backend returns data directly (not wrapped)
  */
 export const createTemplate = async (data: CreateAppraisalTemplateDto): Promise<AppraisalTemplate> => {
-  const response = await apiClient.post<AppraisalTemplate | { success: boolean; message: string; data: AppraisalTemplate }>(
-    `${API_ENDPOINTS.PERFORMANCE}/templates`,
-    data
-  );
-  // Handle both wrapped and unwrapped responses
-  if (response.data && '_id' in response.data) {
-    return response.data as AppraisalTemplate;
+  console.log('[performanceApi] Creating template:', {
+    endpoint: `${API_ENDPOINTS.PERFORMANCE}/templates`,
+    data: data,
+    dataKeys: Object.keys(data),
+    timestamp: new Date().toISOString(),
+  });
+  
+  try {
+    const response = await apiClient.post<AppraisalTemplate | { success: boolean; message: string; data: AppraisalTemplate }>(
+      `${API_ENDPOINTS.PERFORMANCE}/templates`,
+      data
+    );
+    
+    console.log('[performanceApi] Template creation response:', {
+      status: response.status,
+      statusText: response.statusText,
+      data: response.data,
+      timestamp: new Date().toISOString(),
+    });
+    
+    // Handle both wrapped and unwrapped responses
+    if (response.data && '_id' in response.data) {
+      return response.data as AppraisalTemplate;
+    }
+    return (response.data as any).data;
+  } catch (error: any) {
+    console.error('[performanceApi] Template creation error:', {
+      error: error,
+      response: error.response,
+      responseData: error.response?.data,
+      responseStatus: error.response?.status,
+      message: error.message,
+      timestamp: new Date().toISOString(),
+    });
+    throw error;
   }
-  return (response.data as any).data;
 };
 
 /**
@@ -162,6 +189,14 @@ export const activateCycle = async (cycleId: string): Promise<AppraisalCycle> =>
     return response.data as AppraisalCycle;
   }
   return (response.data as any).data;
+};
+
+/**
+ * Delete an appraisal cycle
+ * Only PLANNED cycles with no assignments can be deleted
+ */
+export const deleteCycle = async (cycleId: string): Promise<void> => {
+  await apiClient.delete(`${API_ENDPOINTS.PERFORMANCE}/cycles/${cycleId}`);
 };
 
 /**
@@ -527,7 +562,18 @@ export const resolveDispute = async (
 };
 
 /**
- * Acknowledge an appraisal evaluation (Employee action)
+ * Acknowledge an assignment (REQ-PP-07: Employee acknowledges assigned objectives)
+ * Changes status from NOT_STARTED to ACKNOWLEDGED
+ */
+export const acknowledgeAssignment = async (assignmentId: string): Promise<AppraisalAssignment> => {
+  const response = await apiClient.post<AppraisalAssignment>(
+    `${API_ENDPOINTS.PERFORMANCE}/assignments/${assignmentId}/acknowledge`
+  );
+  return response.data;
+};
+
+/**
+ * Acknowledge an appraisal evaluation (Employee action - final acknowledgment after publishing)
  */
 export const acknowledgeEvaluation = async (
   evaluationId: string,
@@ -851,6 +897,106 @@ export const deleteOneOnOneMeeting = async (id: string): Promise<void> => {
   await apiClient.delete(`${API_ENDPOINTS.PERFORMANCE}/meetings/${id}`);
 };
 
+/**
+ * Performance Goals API - REQ-PP-12: Line Manager sets and reviews employee objectives
+ */
+export interface PerformanceGoal {
+  id?: string;
+  goalTitle: string;
+  description: string;
+  employeeId: string;
+  setBy: string;
+  cycleId?: string;
+  category?: string;
+  type?: string;
+  priority?: string;
+  targetMetric?: string;
+  targetValue?: number;
+  targetUnit?: string;
+  currentValue?: number;
+  startDate: string | Date;
+  dueDate: string | Date;
+  status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'ON_HOLD';
+  finalComments?: string;
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
+  completedAt?: string | Date;
+}
+
+export interface CreatePerformanceGoalDto {
+  goalTitle: string;
+  description: string;
+  employeeId: string;
+  setBy: string;
+  cycleId?: string;
+  category?: string;
+  type?: string;
+  priority?: string;
+  targetMetric?: string;
+  targetValue?: number;
+  targetUnit?: string;
+  startDate: string;
+  dueDate: string;
+}
+
+export interface UpdatePerformanceGoalDto {
+  goalTitle?: string;
+  description?: string;
+  category?: string;
+  type?: string;
+  priority?: string;
+  targetMetric?: string;
+  targetValue?: number;
+  targetUnit?: string;
+  currentValue?: number;
+  startDate?: string;
+  dueDate?: string;
+  status?: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'ON_HOLD';
+  finalComments?: string;
+}
+
+export const createGoal = async (data: CreatePerformanceGoalDto): Promise<PerformanceGoal> => {
+  const response = await apiClient.post<PerformanceGoal>(
+    `${API_ENDPOINTS.PERFORMANCE}/goals`,
+    data
+  );
+  return response.data;
+};
+
+export const getGoalsByEmployee = async (
+  employeeId: string,
+  status?: string
+): Promise<PerformanceGoal[]> => {
+  const params = status ? { status } : {};
+  const response = await apiClient.get<PerformanceGoal[]>(
+    `${API_ENDPOINTS.PERFORMANCE}/employees/${employeeId}/goals`,
+    { params }
+  );
+  return response.data;
+};
+
+export const getGoalById = async (id: string): Promise<PerformanceGoal> => {
+  const response = await apiClient.get<PerformanceGoal>(
+    `${API_ENDPOINTS.PERFORMANCE}/goals/${id}`
+  );
+  return response.data;
+};
+
+export const updateGoal = async (
+  id: string,
+  data: UpdatePerformanceGoalDto
+): Promise<PerformanceGoal> => {
+  const response = await apiClient.put<PerformanceGoal>(
+    `${API_ENDPOINTS.PERFORMANCE}/goals/${id}`,
+    data
+  );
+  return response.data;
+};
+
+export const deleteGoal = async (id: string): Promise<void> => {
+  await apiClient.delete(`${API_ENDPOINTS.PERFORMANCE}/goals/${id}`);
+};
+
 export const performanceApi = {
   getTemplates,
   getTemplateById,
@@ -862,6 +1008,7 @@ export const performanceApi = {
   updateCycle,
   activateCycle,
   publishCycle,
+  deleteCycle,
   getAssignments,
   getAssignmentById,
   assignTemplateToEmployees,
@@ -882,6 +1029,7 @@ export const performanceApi = {
   getEmployeeDisputes,
   getDisputeById,
   resolveDispute,
+  acknowledgeAssignment,
   acknowledgeEvaluation,
   exportAppraisalSummaries,
   generateOutcomeReport,
@@ -912,5 +1060,11 @@ export const performanceApi = {
   getMeetingById,
   updateOneOnOneMeeting,
   deleteOneOnOneMeeting,
+  // Performance Goals - REQ-PP-12
+  createGoal,
+  getGoalsByEmployee,
+  getGoalById,
+  updateGoal,
+  deleteGoal,
 };
 

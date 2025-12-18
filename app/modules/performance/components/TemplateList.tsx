@@ -153,12 +153,13 @@ export default function TemplateList({ templates, onRefresh }: TemplateListProps
       )}
 
       {isFormOpen && (
-        <TemplateFormModal
-          template={selectedTemplate}
-          isOpen={isFormOpen}
-          onClose={handleFormClose}
-          onSuccess={handleFormSuccess}
-        />
+      <TemplateFormModal
+        template={selectedTemplate}
+        isOpen={isFormOpen}
+        onClose={handleFormClose}
+        onSuccess={handleFormSuccess}
+        existingTemplates={templates}
+      />
       )}
     </>
   );

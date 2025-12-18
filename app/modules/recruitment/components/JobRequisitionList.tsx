@@ -13,10 +13,12 @@ import styles from './RecruitmentForms.module.css';
 interface JobRequisitionListProps {
     onCreateClick?: () => void;
     isCandidate?: boolean;
+    status?: string;
+    department?: string;
 }
 // ... imports kept as is in file, replacing component body
 
-export default function JobRequisitionList({ onCreateClick, isCandidate = false }: JobRequisitionListProps) {
+export default function JobRequisitionList({ onCreateClick, isCandidate = false, status, department }: JobRequisitionListProps) {
     const router = useRouter();
     const [requisitions, setRequisitions] = useState<JobRequisition[]>([]);
     const [loading, setLoading] = useState(true);
@@ -29,13 +31,13 @@ export default function JobRequisitionList({ onCreateClick, isCandidate = false 
 
     useEffect(() => {
         fetchRequisitions();
-    }, []);
+    }, [status, department]);
 
     const fetchRequisitions = async () => {
         try {
             setLoading(true);
             // Candidates only see published; HR sees all (or filtered)
-            const data = await recruitmentApi.listJobRequisitions();
+            const data = await recruitmentApi.listJobRequisitions({ status, department });
             // Note: Backend filtering for candidates should handle status='PUBLISHED' validation.
             // For now, assuming API returns appropriate list based on role/token context or we filter client-side if needed.
             setRequisitions(data);

@@ -9,24 +9,41 @@ import styles from './RecruitmentForms.module.css';
 export default function AccessRevocationList() {
     const { user } = useAuth();
     const [revokedList, setRevokedList] = useState<any[]>([]);
+    const [approvedRequests, setApprovedRequests] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [showRevokeModal, setShowRevokeModal] = useState(false);
     const [revokeData, setRevokeData] = useState({ terminationId: '', employeeId: '', accessType: 'ALL_ACCESS', comments: '' });
     const [historyModal, setHistoryModal] = useState<{ show: boolean; employeeId: string; data: any }>({ show: false, employeeId: '', data: null });
 
     useEffect(() => {
-        fetchRevokedList();
+        loadData();
     }, []);
 
-    const fetchRevokedList = async () => {
+    const loadData = async () => {
         setLoading(true);
         try {
-            const data = await recruitmentApi.getTerminatedEmployeesWithRevokedAccess();
-            setRevokedList(Array.isArray(data) ? data : []);
+            const [revoked, approved] = await Promise.all([
+                recruitmentApi.getTerminatedEmployeesWithRevokedAccess(),
+                recruitmentApi.getApprovedTerminationRequests()
+            ]);
+            setRevokedList(Array.isArray(revoked) ? revoked : []);
+            setApprovedRequests(Array.isArray(approved) ? approved : []);
         } catch (error: any) {
-            console.error('Failed to fetch revoked access list', error);
+            console.error('Failed to fetch data', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleRemoveAccess = async (employeeId: string) => {
+        if (!confirm('Are you sure you want to remove this employee profile? This action cannot be undone.')) return;
+
+        try {
+            await recruitmentApi.removeEmployeeProfile(employeeId);
+            alert('Employee profile removed successfully.');
+            loadData(); // Refresh list
+        } catch (e) {
+            alert('Failed to remove employee profile');
         }
     };
 
@@ -45,7 +62,7 @@ export default function AccessRevocationList() {
             alert('Access revoked successfully! Employee profile set to INACTIVE.');
             setShowRevokeModal(false);
             setRevokeData({ terminationId: '', employeeId: '', accessType: 'ALL_ACCESS', comments: '' });
-            fetchRevokedList();
+            loadData();
         } catch (e) {
             alert('Failed to revoke access');
         }
@@ -65,16 +82,63 @@ export default function AccessRevocationList() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h3>Access Revocation Management</h3>
                 <Button variant="error" onClick={() => setShowRevokeModal(true)}>
-                    Revoke Access
+                    Manual Revoke (Legacy)
                 </Button>
             </div>
 
+            {/* Approved Termination Requests (Pending Removal) */}
             <Card padding="md">
-                <h4 style={{ marginBottom: '1rem' }}>Terminated Employees with Revoked Access</h4>
+                <h4 style={{ marginBottom: '1rem', color: '#dc2626' }}>Pending Revocation (Approved Terminations)</h4>
+                {loading ? (
+                    <p>Loading...</p>
+                ) : approvedRequests.length === 0 ? (
+                    <p style={{ color: '#666' }}>No approved termination requests pending removal.</p>
+                ) : (
+                    approvedRequests.map((req: any) => (
+                        <div
+                            key={req._id}
+                            style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                padding: '1rem',
+                                borderBottom: '1px solid #f3f4f6'
+                            }}
+                        >
+                            <div>
+                                <p style={{ fontWeight: 600 }}>
+                                    {req.employeeId?.firstName} {req.employeeId?.lastName}
+                                </p>
+                                <p style={{ fontSize: '0.8rem', color: '#666' }}>
+                                    Position: {req.employeeId?.position} | Dept: {req.employeeId?.department}
+                                </p>
+                                <p style={{ fontSize: '0.8rem', color: '#888' }}>
+                                    Termination Date: {req.terminationDate ? new Date(req.terminationDate).toLocaleDateString() : 'N/A'}
+                                </p>
+                                <p style={{ fontSize: '0.8rem', fontStyle: 'italic' }}>
+                                    Reason: {req.reason}
+                                </p>
+                            </div>
+                            <div>
+                                <Button
+                                    size="sm"
+                                    variant="error"
+                                    onClick={() => handleRemoveAccess(req.employeeId?._id || req.employeeId)}
+                                >
+                                    Remove Access (Delete Profile)
+                                </Button>
+                            </div>
+                        </div>
+                    ))
+                )}
+            </Card>
+
+            <Card padding="md">
+                <h4 style={{ marginBottom: '1rem' }}>Revocation History</h4>
                 {loading ? (
                     <p>Loading...</p>
                 ) : revokedList.length === 0 ? (
-                    <p style={{ color: '#666' }}>No employees with revoked access</p>
+                    <p style={{ color: '#666' }}>No history available</p>
                 ) : (
                     revokedList.map((item: any) => (
                         <div

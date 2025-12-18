@@ -46,7 +46,8 @@ import {
     ApproveBenefitsDto,
     SigningBonus,
     TerminationReview,
-    InitiateTerminationReviewDto
+    InitiateTerminationReviewDto,
+    CreateEmployeeOnboardingDto
 } from '../types';
 
 // Templates
@@ -285,11 +286,17 @@ export const addOfferApprover = async (offerId: string, data: AddOfferApproverDt
     return response.data;
 };
 
+export const respondToOffer = async (offerId: string, response: 'accepted' | 'rejected'): Promise<Offer> => {
+    const result = await apiClient.post<Offer>(`/recruitment/offers/${offerId}/respond`, { response });
+    return result.data;
+};
+
 // Resignation (REC-018 / OFF-018)
 export const submitResignation = async (data: SubmitResignationRequestDto): Promise<ResignationRequest> => {
-    const response = await apiClient.post<ResignationRequest>('/recruitment/resignations', data);
+    const response = await apiClient.post<ResignationRequest>('/recruitment/resignations/submit', data);
     return response.data;
 };
+
 
 export const getEmployeeResignations = async (employeeId: string): Promise<any> => {
     const response = await apiClient.get<any>(`/recruitment/employees/${employeeId}/resignations`);
@@ -320,6 +327,11 @@ export const completePreboardingTask = async (offerId: string, taskId: string, c
 // Onboarding (ONB-001)
 export const createChecklist = async (data: CreateChecklistDto): Promise<OnboardingChecklist> => {
     const response = await apiClient.post<OnboardingChecklist>('/recruitment/onboarding/create-checklist', data);
+    return response.data;
+};
+
+export const createEmployeeOnboarding = async (data: CreateEmployeeOnboardingDto): Promise<any> => {
+    const response = await apiClient.post<any>('/recruitment/onboarding/create', data);
     return response.data;
 };
 
@@ -354,6 +366,12 @@ export const createEmployeeProfile = async (contractId: string, createdBy: strin
     return response.data;
 };
 
+export const listEmployees = async (params?: { status?: string }): Promise<any[]> => {
+    const query = new URLSearchParams(params as any).toString();
+    const response = await apiClient.get<any[]>(`/recruitment/employees?${query}`);
+    return response.data;
+};
+
 // Onboarding Tracker (ONB-005)
 export const getOnboardingTracker = async (employeeId: string): Promise<OnboardingTrackerResponse> => {
     const response = await apiClient.get<OnboardingTrackerResponse>(`/recruitment/onboarding/tracker/${employeeId}`);
@@ -383,8 +401,8 @@ export const autoSendReminders = async (): Promise<any> => {
 };
 
 // Offboarding (ONB-012)
-export const createOffboardingChecklist = async (terminationId: string): Promise<any> => {
-    const response = await apiClient.post(`/recruitment/terminations/${terminationId}/offboarding-checklist`);
+export const createOffboardingChecklist = async (terminationId: string, data?: any): Promise<any> => {
+    const response = await apiClient.post(`/recruitment/terminations/${terminationId}/offboarding-checklist`, data);
     return response.data;
 };
 
@@ -477,6 +495,12 @@ export const getTerminationReviewsForEmployee = async (employeeId: string): Prom
     return response.data;
 };
 
+export const listTerminationReviews = async (params?: { status?: string }): Promise<TerminationReview[]> => {
+    const query = new URLSearchParams(params as any).toString();
+    const response = await apiClient.get<TerminationReview[]>(`/recruitment/termination-reviews?${query}`);
+    return response.data;
+};
+
 export const updateTerminationReviewStatus = async (reviewId: string, status: string, hrComments?: string): Promise<TerminationReview> => {
     const response = await apiClient.put<TerminationReview>(`/recruitment/termination-reviews/${reviewId}/status`, { status, hrComments });
     return response.data;
@@ -550,6 +574,49 @@ export const listCandidateCVs = async (candidateId: string): Promise<any> => {
     return response.data;
 };
 
+// ONB-002: Create Employee Profile from Contract
+export const createEmployeeFromContract = async (contractId: string, createdBy: string): Promise<any> => {
+    const response = await apiClient.post<any>(`/recruitment/onboarding/contract/${contractId}/create-profile`, { createdBy });
+    return response.data;
+};
+
+// ONB-009: Provision System Access
+export const createAccessRequest = async (employeeId: string, data: { resource: string; accessType: string; requestedBy?: string }): Promise<any> => {
+    const response = await apiClient.post<any>(`/recruitment/onboarding/${employeeId}/access`, data);
+    return response.data;
+};
+
+// ONB-012: Allocate Resources (Equipment)
+export const createResourceRequest = async (employeeId: string, data: { itemType: string; preferredModel?: string; requestedBy?: string }): Promise<any> => {
+    const response = await apiClient.post<any>(`/recruitment/onboarding/${employeeId}/equipment`, data);
+    return response.data;
+};
+
+// ONB-018: Payroll Initiation
+export const createPayrollInitiation = async (employeeId: string, data: { payrollType: string; amount?: number; frequency?: string; initiatedBy?: string }): Promise<any> => {
+    const response = await apiClient.post<any>(`/recruitment/onboarding/${employeeId}/payroll`, data);
+    return response.data;
+};
+
+// ONB-019: Process Signing Bonus
+export const processSigningBonus = async (employeeId: string, contractId: string): Promise<any> => {
+    const response = await apiClient.post<any>(`/recruitment/onboarding/${employeeId}/signing-bonus`, { contractId });
+    return response.data;
+};
+
+// ONB-013: Schedule Access Revocation
+export const scheduleAccessRevocation = async (employeeId: string, taskIndex: number, revocationDate: string, reason?: string): Promise<any> => {
+    const response = await apiClient.post<any>(`/recruitment/onboarding/${employeeId}/access/${taskIndex}/schedule-revocation`, { revocationDate, reason });
+    return response.data;
+};
+
+// ONB-013: Cancel No-Show Access
+export const cancelNoShowAccess = async (employeeId: string, reason?: string): Promise<any> => {
+    const response = await apiClient.post<any>(`/recruitment/onboarding/${employeeId}/cancel-no-show`, { reason });
+    return response.data;
+};
+
+
 export const recruitmentApi = {
     createJobTemplate,
     listJobTemplates,
@@ -592,6 +659,7 @@ export const recruitmentApi = {
     getOffer,
     finalizeOffer,
     addOfferApprover,
+    respondToOffer,
     submitResignation,
     getEmployeeResignations,
     getResignationStatus,
@@ -605,6 +673,7 @@ export const recruitmentApi = {
     rejectDocument,
     getContractDetails,
     createEmployeeProfile,
+    listEmployees,
     getOnboardingTracker,
     createEquipmentRequest,
     assignEquipment,
@@ -627,6 +696,7 @@ export const recruitmentApi = {
     getSigningBonusByPosition,
     initiateTerminationReview,
     getPendingTerminationReviews,
+    listTerminationReviews,
     getTerminationReviewsForEmployee,
     updateTerminationReviewStatus,
     revokeTerminatedEmployeeAccess,
@@ -638,5 +708,31 @@ export const recruitmentApi = {
     triggerBenefitsTermination,
     getOffboardingNotificationHistory,
     applyToRequisition,
-    listCandidateCVs
+    listCandidateCVs,
+    // ONB methods
+    createEmployeeFromContract,
+    listContracts: async () => {
+        const response = await apiClient.get<any>('/recruitment/onboarding/contracts');
+        return response.data;
+    }, // Add listContracts here
+    createAccessRequest,
+    createResourceRequest,
+    createPayrollInitiation,
+    processSigningBonus,
+    scheduleAccessRevocation,
+    cancelNoShowAccess,
+
+    // OFF-007: Admin Console
+    getApprovedTerminationRequests: async () => {
+        const response = await apiClient.get<any[]>('/recruitment/terminations/approved');
+        return response.data;
+    },
+
+    removeEmployeeProfile: async (employeeId: string) => {
+        const response = await apiClient.delete<any>(`/recruitment/employees/${employeeId}/profile`);
+        return response.data;
+    },
+
+    // ONB-001: Create Onboarding
+    createEmployeeOnboarding
 };

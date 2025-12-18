@@ -289,12 +289,18 @@ export default function SelfAssessmentForm({
                       required={criterion.required}
                       className={styles.select}
                     >
-                      {generateRatingOptions().map((value) => (
-                        <option key={value} value={value}>
-                          {value} {template.ratingScale.labels && `- ${getRatingLabel(value)}`}
-                        </option>
-                      ))}
+                      {generateRatingOptions().map((value) => {
+                        const label = template.ratingScale.labels ? getRatingLabel(value) : null;
+                        return (
+                          <option key={value} value={value}>
+                            {value}{label ? ` - ${label}` : ''}
+                          </option>
+                        );
+                      })}
                     </select>
+                    <div className={styles.ratingHint}>
+                      Select a rating from {template.ratingScale.min} to {template.ratingScale.max}
+                    </div>
                   </div>
 
                   <div className={styles.commentsInput}>

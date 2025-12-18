@@ -22,10 +22,13 @@ export default function DisputeList() {
   const { user } = useAuth();
   const isHrEmployee = user?.roles?.includes(SystemRole.HR_EMPLOYEE);
   const isHrManager = user?.roles?.includes(SystemRole.HR_MANAGER);
-  const isHrAdmin = user?.roles?.includes(SystemRole.HR_ADMIN);
-  const isSystemAdmin = user?.roles?.includes(SystemRole.SYSTEM_ADMIN);
-  // Only HR Manager, HR Admin, and System Admin can resolve disputes
-  const canResolveDisputes = isHrManager || isHrAdmin || isSystemAdmin;
+  const isDepartmentEmployee = user?.roles?.includes(SystemRole.DEPARTMENT_EMPLOYEE);
+  // REQ-OD-07: HR Manager resolves disputes (HR_MANAGER ONLY)
+  const canResolveDisputes = isHrManager;
+  // REQ-AE-07: Employee or HR Employee can create disputes
+  // BUT: HR Manager should NOT create disputes even if they have DEPARTMENT_EMPLOYEE role
+  // HR Manager only resolves disputes (REQ-OD-07)
+  const canCreateDispute = (isDepartmentEmployee || isHrEmployee) && !isHrManager;
   
   const [disputes, setDisputes] = useState<AppraisalDispute[]>([]);
   const [loading, setLoading] = useState(true);
@@ -133,13 +136,15 @@ export default function DisputeList() {
         <div>
           <h2>Appraisal Disputes</h2>
           <p>
-            {isHrEmployee 
-              ? 'View disputes you have raised about appraisal ratings'
-              : 'Review and resolve employee concerns about appraisal ratings'}
+            {canCreateDispute 
+              ? 'View and create disputes about appraisal ratings'
+              : canResolveDisputes
+              ? 'Review and resolve employee concerns about appraisal ratings'
+              : 'View disputes about appraisal ratings'}
           </p>
         </div>
         <div className={styles.controls}>
-          {isHrEmployee && (
+          {canCreateDispute && (
             <Button
               variant="primary"
               size="sm"
@@ -148,11 +153,14 @@ export default function DisputeList() {
               + Create Dispute
             </Button>
           )}
-          <ExportButton
-            status={statusFilter || undefined}
-            variant="outline"
-            size="sm"
-          />
+          {/* REQ-AE-11: HR Employee exports ad-hoc appraisal summaries */}
+          {isHrEmployee && (
+            <ExportButton
+              status={statusFilter || undefined}
+              variant="outline"
+              size="sm"
+            />
+          )}
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as AppraisalDisputeStatus | '')}
@@ -286,7 +294,7 @@ export default function DisputeList() {
         />
       )}
       
-      {isHrEmployee && (
+      {canCreateDispute && (
         <CreateDisputeForEmployeeModal
           isOpen={isCreateDisputeModalOpen}
           onClose={() => setIsCreateDisputeModalOpen(false)}

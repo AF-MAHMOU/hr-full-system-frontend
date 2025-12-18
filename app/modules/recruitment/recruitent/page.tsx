@@ -18,6 +18,12 @@ export default function RecruitmentRedirectPage() {
                     <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
                         <Button
                             variant="primary"
+                            onClick={() => router.push('/modules/recruitment/hr-manager')}
+                        >
+                            HR Manager Dashboard
+                        </Button>
+                        <Button
+                            variant="primary"
                             onClick={() => router.push('/modules/recruitment')}
                         >
                             Go to Job Postings (HR)

@@ -105,11 +105,11 @@ export default function RequisitionDetailsPage() {
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <div>
                                     <h4 style={{ fontWeight: '600' }}>Candidate ID: {app.candidateId}</h4>
-                                    <p style={{ fontSize: '0.9rem', color: '#666' }}>Applied on: {new Date(app.appliedDate || app.updatedAt).toLocaleDateString()}</p>
+                                    <p style={{ fontSize: '0.9rem', color: '#666' }}>Applied on: {new Date(app.createdAt).toLocaleDateString()}</p>
                                 </div>
                                 <div style={{ textAlign: 'right' }}>
                                     <span className={styles.badge} style={{ display: 'inline-block', marginBottom: '0.5rem' }}>
-                                        {app.stage}
+                                        {app.currentStage}
                                     </span>
                                     <div style={{ fontSize: '0.85rem' }}>
                                         Status: {app.status}

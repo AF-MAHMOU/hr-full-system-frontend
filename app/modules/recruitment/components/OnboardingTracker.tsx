@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -7,11 +8,40 @@ import { OnboardingTrackerResponse, OnboardingTrackerTask } from '../types';
 import styles from './RecruitmentForms.module.css';
 
 interface OnboardingTrackerProps {
-    trackerData: OnboardingTrackerResponse;
+    trackerData?: OnboardingTrackerResponse;
+    employeeId?: string;
 }
 
-export default function OnboardingTracker({ trackerData }: OnboardingTrackerProps) {
-    const { tasks, progress, nextTask, employeeId } = trackerData;
+export default function OnboardingTracker({ trackerData: initialData, employeeId }: OnboardingTrackerProps) {
+    const [trackerData, setTrackerData] = useState<OnboardingTrackerResponse | null>(initialData || null);
+    const [loading, setLoading] = useState(!initialData && !!employeeId);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (!initialData && employeeId) {
+            fetchTracker();
+        }
+    }, [employeeId, initialData]);
+
+    const fetchTracker = async () => {
+        if (!employeeId) return;
+        try {
+            setLoading(true);
+            const data = await recruitmentApi.getOnboardingTracker(employeeId);
+            setTrackerData(data);
+            setError(null);
+        } catch (err: any) {
+            setError(err.message || 'Failed to load tracker');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (loading) return <div>Loading tracker...</div>;
+    if (error) return <div className={styles.error}>{error}</div>;
+    if (!trackerData) return <div>No tracker data available.</div>;
+
+    const { tasks, progress, nextTask, employeeId: dataEmployeeId } = trackerData;
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -19,11 +49,11 @@ export default function OnboardingTracker({ trackerData }: OnboardingTrackerProp
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
                         <h3>Onboarding Tracker</h3>
-                        <p style={{ color: '#666', fontSize: '0.9rem' }}>Employee ID: {employeeId}</p>
+                        <p style={{ color: '#666', fontSize: '0.9rem' }}>Employee ID: {dataEmployeeId}</p>
                     </div>
                     <div style={{ textAlign: 'right' }}>
                         <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#2563eb' }}>
-                            {Math.round(progress.percentage)}%
+                            {Math.round(progress?.percentage || 0)}%
                         </div>
                         <p style={{ fontSize: '0.8rem' }}>Completed</p>
                     </div>
@@ -31,7 +61,7 @@ export default function OnboardingTracker({ trackerData }: OnboardingTrackerProp
 
                 <div style={{ width: '100%', height: '8px', background: '#e5e7eb', borderRadius: '4px', marginTop: '1rem' }}>
                     <div style={{
-                        width: `${progress.percentage}%`,
+                        width: `${progress?.percentage || 0}%`,
                         height: '100%',
                         background: '#2563eb',
                         borderRadius: '4px',
@@ -59,7 +89,7 @@ export default function OnboardingTracker({ trackerData }: OnboardingTrackerProp
 
             <div className={styles.taskList}>
                 <h4 style={{ marginBottom: '1rem' }}>Task List</h4>
-                {tasks.map((task: OnboardingTrackerTask) => (
+                {tasks?.map((task: OnboardingTrackerTask) => (
                     <div
                         key={task._id}
                         style={{
@@ -122,7 +152,7 @@ export default function OnboardingTracker({ trackerData }: OnboardingTrackerProp
                                         variant="outline"
                                         onClick={async () => {
                                             try {
-                                                await recruitmentApi.sendTaskReminder(employeeId, task.sequence - 1);
+                                                await recruitmentApi.sendTaskReminder(dataEmployeeId, task.sequence - 1);
                                                 alert('Reminder sent!');
                                             } catch (e) {
                                                 alert('Failed to send reminder');
@@ -140,3 +170,4 @@ export default function OnboardingTracker({ trackerData }: OnboardingTrackerProp
         </div>
     );
 }
+

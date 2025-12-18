@@ -112,6 +112,22 @@
   gap: 0.5rem;
 }
 
+.highPerformerBadge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background-color: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffc107;
+}
+
+.notHighPerformer {
+  color: #999;
+  font-style: italic;
+}
+
 @media (max-width: 768px) {
   .table {
     font-size: 0.8rem;

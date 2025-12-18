@@ -28,7 +28,6 @@ export default function CandidateRecruitmentView() {
           }
         } catch (error) {
           console.error('Error checking consent:', error);
-          // If check fails, show consent to be safe
           setShowConsent(true);
         }
       }
@@ -56,6 +55,9 @@ export default function CandidateRecruitmentView() {
           <Button variant="outline" onClick={() => window.location.href = '/modules/recruitment/my-applications'}>
             My Applications
           </Button>
+          <Button variant="primary" style={{ marginLeft: '1rem' }} onClick={() => window.location.href = '/modules/recruitment/offer'}>
+            My Offers
+          </Button>
         </div>
 
         <div className={styles.searchSection}>
@@ -75,7 +77,7 @@ export default function CandidateRecruitmentView() {
         </div>
 
         <div className={styles.content}>
-          <JobRequisitionList isCandidate={true} />
+          <JobRequisitionList isCandidate={true} status="OPEN" />
         </div>
       </Card>
 

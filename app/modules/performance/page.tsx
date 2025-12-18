@@ -8,6 +8,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/shared/hooks/useAuth';
 import { SystemRole } from '@/shared/types/auth';
 import { Card, ProtectedRoute } from '@/shared/components';
@@ -27,71 +28,85 @@ import PIPListView from './components/PIPListView';
 import VisibilityRulesView from './components/VisibilityRulesView';
 import OneOnOneMeetingsView from './components/OneOnOneMeetingsView';
 import EmployeeMeetingsView from './components/EmployeeMeetingsView';
+import GoalsView from './components/GoalsView';
+import EmployeeGoalsView from './components/EmployeeGoalsView';
 import styles from './page.module.css';
 
 function PerformanceContent() {
   const { user } = useAuth();
+  const router = useRouter();
   const [templates, setTemplates] = useState<AppraisalTemplate[]>([]);
   const [cycles, setCycles] = useState<AppraisalCycle[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isDepartmentHeadByPosition, setIsDepartmentHeadByPosition] = useState(false);
+  const [hasTeamReviews, setHasTeamReviews] = useState(false);
   
   // Check user roles first to determine default tab
   const isSystemAdmin = user?.roles?.includes(SystemRole.SYSTEM_ADMIN);
   const isHrAdmin = user?.roles?.includes(SystemRole.HR_ADMIN);
   const isHrManager = user?.roles?.includes(SystemRole.HR_MANAGER);
   const isHrEmployee = user?.roles?.includes(SystemRole.HR_EMPLOYEE);
+  const isDepartmentEmployee = user?.roles?.includes(SystemRole.DEPARTMENT_EMPLOYEE);
   
   // Department Head can be:
   // 1. Has SystemRole.DEPARTMENT_HEAD role, OR
-  // 2. Is an HR Manager (who can also act as department head for meeting scheduling), OR
-  // 3. Has primaryPositionId that matches a department's headPositionId (position-based)
+  // 2. Has primaryPositionId that matches a department's headPositionId (position-based)
   const isDepartmentHead = 
     user?.roles?.includes(SystemRole.DEPARTMENT_HEAD) || 
-    isHrManager ||
     isDepartmentHeadByPosition;
-  // REQ-PP-01: System Admin configures templates, REQ-PP-02: HR Manager creates cycles
-  const canManageTemplates = isSystemAdmin || isHrAdmin || isHrManager;
-  // REQ-PP-05: HR Employee assigns appraisal forms/templates
-  const canManageAssignments = isSystemAdmin || isHrAdmin || isHrManager || isHrEmployee;
-  // REQ-AE-06: HR Employee monitors appraisal progress (Progress Dashboard)
-  const canViewProgressDashboard = isSystemAdmin || isHrAdmin || isHrEmployee;
-  // REQ-AE-10: HR Manager consolidated dashboard (Consolidated Dashboard)
-  const canViewConsolidatedDashboard = isSystemAdmin || isHrAdmin || isHrManager;
-  // REQ-AE-07: HR Employee can view disputes
-  const canViewDisputes = isSystemAdmin || isHrAdmin || isHrManager || isHrEmployee;
+  
+  // REQ-PP-01: HR Manager configures templates (HR_MANAGER ONLY)
+  const canManageTemplates = isHrManager;
+  // REQ-PP-02: HR Manager creates cycles (HR_MANAGER ONLY)
+  const canManageCycles = isHrManager;
+  // REQ-PP-05: HR Employee assigns appraisal forms/templates (HR_EMPLOYEE ONLY)
+  const canManageAssignments = isHrEmployee;
+  // REQ-AE-10: HR Manager tracks appraisal completion via consolidated dashboard (HR_MANAGER ONLY)
+  const canViewConsolidatedDashboard = isHrManager;
+  // REQ-AE-06: HR Employee monitors appraisal progress
+  // REQ-AE-10: HR Manager gets cycle progress
+  // Both HR Employee and HR Manager can view cycle progress
+  const canViewCycleProgress = isHrEmployee || isHrManager;
+  // Disputes: Anyone can view, but only DEPARTMENT_EMPLOYEE and HR_EMPLOYEE can create, HR_MANAGER can resolve
+  // REQ-AE-07: Employee or HR Employee creates disputes
+  // REQ-OD-07: HR Manager resolves disputes (NOT creates)
+  const canViewDisputes = true; // Anyone can view disputes
+  // HR Manager should NOT create disputes even if they have DEPARTMENT_EMPLOYEE role
+  const canCreateDispute = (isDepartmentEmployee || isHrEmployee) && !isHrManager;
+  const canResolveDispute = isHrManager;
+  // REQ-OD-16: System Admin configures visibility rules (SYSTEM_ADMIN ONLY)
+  const canManageVisibilityRules = isSystemAdmin;
   const isEmployee = user?.userType === 'employee';
   
-  // Debug logging
-  console.log('Performance page - User roles check:', {
-    userid: user?.userid,
-    roles: user?.roles,
-    isHrEmployee,
-    isHrManager,
-    isHrAdmin,
-    isSystemAdmin,
-    canManageTemplates,
-    canManageAssignments,
-    canViewProgressDashboard,
-    canViewConsolidatedDashboard,
-    canViewDisputes,
-    isEmployee,
-  });
-  
   // Set default tab based on role
-  const getDefaultTab = () => {
-    if (isHrEmployee && !canManageTemplates) {
-      return 'dashboard'; // HR Employee defaults to Progress Dashboard (REQ-AE-06)
+  const getDefaultTab = (): 'templates' | 'cycles' | 'assignments' | 'dashboard' | 'consolidated' | 'disputes' | 'my-performance' | 'team-reviews' | 'improvement-plans' | 'history' | 'visibility-rules' | 'meetings' | 'goals' => {
+    if (isSystemAdmin) {
+      return 'visibility-rules'; // SYSTEM_ADMIN defaults to Visibility Rules (REQ-OD-16)
     }
-    if (isHrManager && !isHrAdmin && !isSystemAdmin) {
+    if (isHrEmployee) {
+      return 'assignments'; // HR Employee defaults to Assignments (REQ-PP-05)
+    }
+    if (isHrManager) {
       return 'consolidated'; // HR Manager defaults to Consolidated Dashboard (REQ-AE-10)
+    }
+    if (isDepartmentHead) {
+      return 'team-reviews'; // Department Head defaults to Team Reviews
+    }
+    if (isEmployee) {
+      return 'my-performance'; // Employee defaults to My Performance
     }
     return 'templates';
   };
   
-  const [activeTab, setActiveTab] = useState<'templates' | 'cycles' | 'assignments' | 'dashboard' | 'consolidated' | 'disputes' | 'my-performance' | 'team-reviews' | 'improvement-plans' | 'history' | 'visibility-rules' | 'meetings'>(getDefaultTab());
-  const [hasTeamReviews, setHasTeamReviews] = useState(false);
+  const [activeTab, setActiveTab] = useState<'templates' | 'cycles' | 'assignments' | 'dashboard' | 'consolidated' | 'disputes' | 'my-performance' | 'team-reviews' | 'improvement-plans' | 'history' | 'visibility-rules' | 'meetings' | 'goals'>(getDefaultTab());
+  
+  // HR_ADMIN should not have access to performance module - redirect to home
+  useEffect(() => {
+    if (isHrAdmin && !isSystemAdmin && !isHrManager && !isHrEmployee) {
+      router.push('/');
+    }
+  }, [isHrAdmin, isSystemAdmin, isHrManager, isHrEmployee, router]);
   
   // Set default tab when hasTeamReviews changes
   useEffect(() => {
@@ -155,10 +170,25 @@ function PerformanceContent() {
         isHrManager,
         isHrAdmin,
         isSystemAdmin,
+        isHrEmployee,
       });
       
+      // SYSTEM_ADMIN doesn't need team reviews check - they only see Visibility Rules
+      if (isSystemAdmin) {
+        console.log('System Admin - skipping team reviews check');
+        setHasTeamReviews(false);
+        return;
+      }
+      
+      // HR Employee doesn't need team reviews - they manage assignments, not reviews
+      if (isHrEmployee) {
+        console.log('HR Employee - skipping team reviews check');
+        setHasTeamReviews(false);
+        return;
+      }
+      
       // Line Manager (DEPARTMENT_HEAD) should always see Team Reviews tab
-      if (isDepartmentHead || isHrManager || isHrAdmin || isSystemAdmin) {
+      if (isDepartmentHead) {
         console.log('User has authorized role, setting hasTeamReviews to true');
         setHasTeamReviews(true);
         return;
@@ -185,11 +215,14 @@ function PerformanceContent() {
       }
     };
     
-    if (canManageTemplates) {
+    // SYSTEM_ADMIN doesn't need templates/cycles - they only see Visibility Rules
+    if (isSystemAdmin) {
+      setLoading(false);
+    } else if (canManageTemplates || canManageCycles) {
       fetchTemplates();
       fetchCycles();
-    } else if (canViewProgressDashboard || canViewConsolidatedDashboard || canViewDisputes || canManageAssignments) {
-      // HR Employee/Manager can view dashboards, disputes, or assignments, fetch cycles
+    } else if (canManageAssignments || canViewConsolidatedDashboard || canViewCycleProgress) {
+      // HR Employee/Manager can view dashboards or assignments, fetch cycles
       fetchCycles();
     } else {
       setLoading(false);
@@ -197,7 +230,82 @@ function PerformanceContent() {
     
     checkTeamReviews();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [canManageTemplates, canViewProgressDashboard, canViewConsolidatedDashboard, canViewDisputes, canManageAssignments, user?.userid, isDepartmentHead, isHrManager, isHrAdmin, isHrEmployee, isSystemAdmin]);
+  }, [canManageTemplates, canManageCycles, canManageAssignments, canViewConsolidatedDashboard, canViewCycleProgress, user?.userid, isDepartmentHead, isHrManager, isHrEmployee]);
+
+  // SYSTEM_ADMIN should only see Visibility Rules (and optionally My Performance/History)
+  if (isSystemAdmin) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.header}>
+          <div>
+            <h1>Performance Management</h1>
+            <p>Configure visibility rules for performance feedback entries</p>
+          </div>
+        </div>
+
+        <div className={styles.tabs}>
+          {/* REQ-OD-16: System Admin configures visibility rules (SYSTEM_ADMIN ONLY) */}
+          <button
+            className={`${styles.tab} ${activeTab === 'visibility-rules' ? styles.active : ''}`}
+            onClick={() => setActiveTab('visibility-rules')}
+          >
+            Visibility Rules
+          </button>
+          {/* SYSTEM_ADMIN can also view their own performance as an employee */}
+          <button
+            className={`${styles.tab} ${activeTab === 'my-performance' ? styles.active : ''}`}
+            onClick={() => setActiveTab('my-performance')}
+          >
+            My Performance
+          </button>
+          <button
+            className={`${styles.tab} ${activeTab === 'history' ? styles.active : ''}`}
+            onClick={() => setActiveTab('history')}
+          >
+            History
+          </button>
+        </div>
+
+        {/* REQ-OD-16: System Admin configures visibility rules */}
+        {activeTab === 'visibility-rules' && (
+          <VisibilityRulesView />
+        )}
+
+        {activeTab === 'my-performance' && (
+          <>
+            {user?.userid ? (
+              <EmployeeAssignmentsView employeeId={user.userid} />
+            ) : (
+              <Card padding="lg" shadow="warm">
+                <div className={styles.errorMessage} role="alert">
+                  Unable to load employee ID. Please refresh the page or contact support.
+                </div>
+              </Card>
+            )}
+          </>
+        )}
+
+        {activeTab === 'history' && (
+          <>
+            {user?.userid ? (
+              <PerformanceHistoryView employeeId={user.userid} />
+            ) : (
+              <Card padding="lg" shadow="warm">
+                <div className={styles.errorMessage} role="alert">
+                  Unable to load employee ID. Please refresh the page or contact support.
+                </div>
+              </Card>
+            )}
+          </>
+        )}
+      </div>
+    );
+  }
+
+  // Early return if HR_ADMIN (without other HR roles) tries to access
+  if (isHrAdmin && !isSystemAdmin && !isHrManager && !isHrEmployee) {
+    return null; // Will redirect via useEffect
+  }
 
   // For employees without admin access (but not HR employees), show tabs if they have team reviews
   // HR employees should see the dashboard view, not the regular employee view
@@ -252,6 +360,15 @@ function PerformanceContent() {
             >
               1-on-1 Meetings
             </button>
+            <button
+              className={`${styles.tab} ${activeTab === 'goals' ? styles.active : ''}`}
+              onClick={() => {
+                console.log('Switching to goals tab');
+                setActiveTab('goals');
+              }}
+            >
+              Goals
+            </button>
           </div>
         )}
 
@@ -305,6 +422,34 @@ function PerformanceContent() {
           </>
         )}
 
+        {activeTab === 'goals' && isDepartmentHead && (
+          <>
+            {user?.userid ? (
+              <GoalsView managerId={user.userid} />
+            ) : (
+              <Card padding="lg" shadow="warm">
+                <div className={styles.errorMessage} role="alert">
+                  Unable to load manager ID. Please refresh the page or contact support.
+                </div>
+              </Card>
+            )}
+          </>
+        )}
+
+        {activeTab === 'goals' && !isDepartmentHead && isDepartmentEmployee && (
+          <>
+            {user?.userid ? (
+              <EmployeeGoalsView employeeId={user.userid} />
+            ) : (
+              <Card padding="lg" shadow="warm">
+                <div className={styles.errorMessage} role="alert">
+                  Unable to load employee ID. Please refresh the page or contact support.
+                </div>
+              </Card>
+            )}
+          </>
+        )}
+
         {!hasTeamReviews && (
           <>
             {user?.userid ? (
@@ -323,10 +468,11 @@ function PerformanceContent() {
   }
 
   // For admins/managers/HR employees, show tabs
-  // REQ-PP-05: HR Employee can assign templates
-  // REQ-AE-06: HR Employee monitors progress (Progress Dashboard)
+  // REQ-PP-01: HR Manager configures templates
+  // REQ-PP-02: HR Manager creates cycles
+  // REQ-PP-05: HR Employee assigns templates
   // REQ-AE-10: HR Manager sees consolidated dashboard
-  if (canManageTemplates || canManageAssignments || canViewProgressDashboard || canViewConsolidatedDashboard || canViewDisputes) {
+  if (canManageTemplates || canManageCycles || canManageAssignments || canViewConsolidatedDashboard || canViewCycleProgress || canViewDisputes || canManageVisibilityRules) {
     console.log('Rendering HR/Admin view:', { isHrEmployee, isHrManager, canManageTemplates, canManageAssignments, userRoles: user?.roles });
     return (
       <div className={styles.container}>
@@ -338,24 +484,25 @@ function PerformanceContent() {
         </div>
 
         <div className={styles.tabs}>
-          {/* REQ-PP-01: System Admin configures templates, REQ-PP-02: HR Manager creates cycles */}
+          {/* REQ-PP-01: HR Manager configures templates (HR_MANAGER ONLY) */}
           {canManageTemplates && (
-            <>
-              <button
-                className={`${styles.tab} ${activeTab === 'templates' ? styles.active : ''}`}
-                onClick={() => setActiveTab('templates')}
-              >
-                Template Configuration
-              </button>
-              <button
-                className={`${styles.tab} ${activeTab === 'cycles' ? styles.active : ''}`}
-                onClick={() => setActiveTab('cycles')}
-              >
-                Cycles
-              </button>
-            </>
+            <button
+              className={`${styles.tab} ${activeTab === 'templates' ? styles.active : ''}`}
+              onClick={() => setActiveTab('templates')}
+            >
+              Template Configuration
+            </button>
           )}
-          {/* REQ-PP-05: HR Employee assigns appraisal forms/templates */}
+          {/* REQ-PP-02: HR Manager creates cycles (HR_MANAGER ONLY) */}
+          {canManageCycles && (
+            <button
+              className={`${styles.tab} ${activeTab === 'cycles' ? styles.active : ''}`}
+              onClick={() => setActiveTab('cycles')}
+            >
+              Cycles
+            </button>
+          )}
+          {/* REQ-PP-05: HR Employee assigns appraisal forms/templates (HR_EMPLOYEE ONLY) */}
           {canManageAssignments && (
             <button
               className={`${styles.tab} ${activeTab === 'assignments' ? styles.active : ''}`}
@@ -364,16 +511,7 @@ function PerformanceContent() {
               Assignments
             </button>
           )}
-          {/* REQ-AE-06: HR Employee monitors appraisal progress (Progress Dashboard) */}
-          {canViewProgressDashboard && (
-            <button
-              className={`${styles.tab} ${activeTab === 'dashboard' ? styles.active : ''}`}
-              onClick={() => setActiveTab('dashboard')}
-            >
-              Progress Dashboard
-            </button>
-          )}
-          {/* REQ-AE-10: HR Manager consolidated dashboard */}
+          {/* REQ-AE-10: HR Manager consolidated dashboard (HR_MANAGER ONLY) */}
           {canViewConsolidatedDashboard && (
             <button
               className={`${styles.tab} ${activeTab === 'consolidated' ? styles.active : ''}`}
@@ -382,7 +520,16 @@ function PerformanceContent() {
               Consolidated Dashboard
             </button>
           )}
-          {/* REQ-AE-07: HR Employee can view disputes */}
+          {/* REQ-AE-10: HR Manager cycle progress (HR_MANAGER ONLY) */}
+          {canViewCycleProgress && (
+            <button
+              className={`${styles.tab} ${activeTab === 'dashboard' ? styles.active : ''}`}
+              onClick={() => setActiveTab('dashboard')}
+            >
+              Cycle Progress
+            </button>
+          )}
+          {/* Disputes: Anyone can view */}
           {canViewDisputes && (
             <button
               className={`${styles.tab} ${activeTab === 'disputes' ? styles.active : ''}`}
@@ -391,7 +538,7 @@ function PerformanceContent() {
               Disputes
             </button>
           )}
-          {/* REQ-PP-13, REQ-AE-03: Line Manager views assigned forms and completes ratings */}
+          {/* REQ-PP-13, REQ-AE-03: Line Manager views assigned forms and completes ratings (DEPARTMENT_HEAD ONLY) */}
           {hasTeamReviews && (
             <button
               className={`${styles.tab} ${activeTab === 'team-reviews' ? styles.active : ''}`}
@@ -400,9 +547,8 @@ function PerformanceContent() {
               Team Reviews
             </button>
           )}
-          {/* REQ-OD-05: Line Manager initiates Performance Improvement Plans */}
-          {/* HR Managers, HR Admins, System Admins, and Department Heads can view PIPs */}
-          {(isDepartmentHead || isHrManager || isHrAdmin || isSystemAdmin) && (
+          {/* REQ-OD-05: Line Manager initiates Performance Improvement Plans (DEPARTMENT_HEAD create/manage, HR_MANAGER view all) */}
+          {(isDepartmentHead || isHrManager) && (
             <button
               className={`${styles.tab} ${activeTab === 'improvement-plans' ? styles.active : ''}`}
               onClick={() => setActiveTab('improvement-plans')}
@@ -410,7 +556,7 @@ function PerformanceContent() {
               Improvement Plans
             </button>
           )}
-          {/* REQ-OD-14: Line Manager schedules 1-on-1 meetings */}
+          {/* REQ-OD-14: Line Manager schedules 1-on-1 meetings (DEPARTMENT_HEAD ONLY) */}
           {isDepartmentHead && (
             <button
               className={`${styles.tab} ${activeTab === 'meetings' ? styles.active : ''}`}
@@ -419,8 +565,18 @@ function PerformanceContent() {
               1-on-1 Meetings
             </button>
           )}
-          {/* REQ-OD-16: System Admin configures visibility rules */}
-          {isSystemAdmin && (
+          {/* REQ-PP-12: Line Manager sets and reviews employee objectives (DEPARTMENT_HEAD create/manage) */}
+          {/* REQ-PP-12: Employee views goals set by line manager (DEPARTMENT_EMPLOYEE view) */}
+          {(isDepartmentHead || isDepartmentEmployee) && (
+            <button
+              className={`${styles.tab} ${activeTab === 'goals' ? styles.active : ''}`}
+              onClick={() => setActiveTab('goals')}
+            >
+              Goals
+            </button>
+          )}
+          {/* REQ-OD-16: System Admin configures visibility rules (SYSTEM_ADMIN ONLY) */}
+          {canManageVisibilityRules && (
             <button
               className={`${styles.tab} ${activeTab === 'visibility-rules' ? styles.active : ''}`}
               onClick={() => setActiveTab('visibility-rules')}
@@ -428,20 +584,22 @@ function PerformanceContent() {
               Visibility Rules
             </button>
           )}
+          {/* All employees can view their own performance */}
           <button
             className={`${styles.tab} ${activeTab === 'my-performance' ? styles.active : ''}`}
             onClick={() => setActiveTab('my-performance')}
           >
             My Performance
           </button>
+          {/* All employees can view their history */}
           <button
             className={`${styles.tab} ${activeTab === 'history' ? styles.active : ''}`}
             onClick={() => setActiveTab('history')}
           >
             History
           </button>
-          {/* HR Employees can view their own 1-on-1 meetings */}
-          {isHrEmployee && (
+          {/* DEPARTMENT_EMPLOYEE (not head) can view their own 1-on-1 meetings */}
+          {isDepartmentEmployee && !isDepartmentHead && (
             <button
               className={`${styles.tab} ${activeTab === 'meetings' ? styles.active : ''}`}
               onClick={() => setActiveTab('meetings')}
@@ -469,7 +627,7 @@ function PerformanceContent() {
           </>
         )}
 
-        {activeTab === 'cycles' && canManageTemplates && (
+        {activeTab === 'cycles' && canManageCycles && (
           <CycleList cycles={cycles} onRefresh={fetchCycles} />
         )}
 
@@ -478,8 +636,8 @@ function PerformanceContent() {
           <AssignmentList />
         )}
 
-        {/* REQ-AE-06: HR Employee monitors appraisal progress */}
-        {activeTab === 'dashboard' && canViewProgressDashboard && (
+        {/* REQ-AE-10: HR Manager cycle progress */}
+        {activeTab === 'dashboard' && canViewCycleProgress && (
           <CycleProgressDashboard cycles={cycles} onRefresh={fetchCycles} />
         )}
 
@@ -502,14 +660,13 @@ function PerformanceContent() {
           </>
         )}
 
-        {/* REQ-OD-05: Line Manager initiates Performance Improvement Plans */}
-        {/* HR Managers, HR Admins, System Admins, and Department Heads can view PIPs */}
-        {activeTab === 'improvement-plans' && (isDepartmentHead || isHrManager || isHrAdmin || isSystemAdmin) && (
+        {/* REQ-OD-05: Line Manager initiates Performance Improvement Plans (DEPARTMENT_HEAD create/manage, HR_MANAGER view all) */}
+        {activeTab === 'improvement-plans' && (isDepartmentHead || isHrManager) && (
           <>
             {user?.userid && (
               <PIPListView 
                 managerId={user.userid} 
-                showAllPIPs={isHrManager || isHrAdmin || isSystemAdmin}
+                showAllPIPs={isHrManager}
               />
             )}
           </>
@@ -536,16 +693,34 @@ function PerformanceContent() {
           <VisibilityRulesView />
         )}
 
-        {/* REQ-OD-14: Line Manager schedules 1-on-1 meetings */}
+        {/* REQ-OD-14: Line Manager schedules 1-on-1 meetings (DEPARTMENT_HEAD create/manage) */}
         {activeTab === 'meetings' && isDepartmentHead && (
           <OneOnOneMeetingsView />
         )}
 
-        {/* HR Employees can view their own 1-on-1 meetings */}
-        {activeTab === 'meetings' && isHrEmployee && !isDepartmentHead && (
+        {/* DEPARTMENT_EMPLOYEE (not head) can view their own 1-on-1 meetings */}
+        {activeTab === 'meetings' && isDepartmentEmployee && !isDepartmentHead && (
           <>
             {user?.userid && (
               <EmployeeMeetingsView employeeId={user.userid} />
+            )}
+          </>
+        )}
+
+        {/* REQ-PP-12: Line Manager sets and reviews employee objectives (DEPARTMENT_HEAD ONLY) */}
+        {activeTab === 'goals' && isDepartmentHead && (
+          <>
+            {user?.userid && (
+              <GoalsView managerId={user.userid} />
+            )}
+          </>
+        )}
+
+        {/* REQ-PP-12: Employee views goals set by line manager (DEPARTMENT_EMPLOYEE) */}
+        {activeTab === 'goals' && !isDepartmentHead && isDepartmentEmployee && (
+          <>
+            {user?.userid && (
+              <EmployeeGoalsView employeeId={user.userid} />
             )}
           </>
         )}

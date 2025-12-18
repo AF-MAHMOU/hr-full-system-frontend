@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useAuthNoCheck } from '@/shared/hooks/useAuthNoCheck';
 import { Button, Input, Card } from '@/shared/components';
 import type { LoginDto } from '@/shared/types/auth';
-import styles from './login.module.css';
+{/*import styles from './login.module.css';*/}
+import styles from '../modules/time-management/page.module.css'
 
 export default function LoginPage() {
   const router = useRouter();

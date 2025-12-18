@@ -139,6 +139,8 @@ export default function Home() {
   }, [user]);
 
   useEffect(() => {
+    console.log("Hello")
+    console.log(user?.roles)
     if (isAuthenticated && user) {
       fetchDashboardStats();
     }
@@ -291,6 +293,16 @@ export default function Home() {
         label: 'Performance',
         route: ROUTES.PERFORMANCE,
         icon: '📈',
+        userTypes: ['employee'],
+      });
+    }
+
+    // Time Management
+    if (userType === 'employee') {
+      actions.push({
+        label: 'Time Management',
+        route: ROUTES.TIME_MANAGEMENT,
+        icon: '🕐',
         userTypes: ['employee'],
       });
     }

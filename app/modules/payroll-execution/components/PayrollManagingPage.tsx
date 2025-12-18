@@ -387,7 +387,7 @@ export default function PayrollManagingPage({ runId, onBack }: PayrollManagingPa
       {/* Warnings */}
       {(exceptionsCount > 0 || missingBankCount > 0) && (
         <div className={styles.alertBox}>
-          <h3 className={styles.alertTitle}>⚠️ Review Required</h3>
+          <h3 className={styles.alertTitle}>Review Required</h3>
           {exceptionsCount > 0 && (
             <p className={styles.alertMessage}>
               {exceptionsCount} employee(s) have exceptions requiring attention.
@@ -462,7 +462,7 @@ export default function PayrollManagingPage({ runId, onBack }: PayrollManagingPa
                             cursor: 'pointer'
                           }}
                         >
-                          ✏️ Resolve
+                          Resolve
                         </button>
                       )}
                     </td>
@@ -600,7 +600,7 @@ export default function PayrollManagingPage({ runId, onBack }: PayrollManagingPa
             onClick={handleFreeze}
             disabled={processing}
           >
-            {processing ? 'Freezing...' : '🔒 Freeze Payroll'}
+            {processing ? 'Freezing...' : 'Freeze Payroll'}
           </button>
           <p className={styles.actionNote}>
             Freezing will lock this payroll run and prevent any further modifications.
@@ -616,7 +616,7 @@ export default function PayrollManagingPage({ runId, onBack }: PayrollManagingPa
             onClick={() => setShowUnlockModal(true)}
             disabled={processing}
           >
-            🔓 Unfreeze Payroll
+            Unfreeze Payroll
           </button>
           <p className={styles.actionNote}>
             Unfreezing requires providing a reason and will allow modifications again.

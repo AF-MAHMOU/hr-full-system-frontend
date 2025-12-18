@@ -295,7 +295,7 @@ export default function PayrollReviewPage({ runId, onBack }: PayrollReviewPagePr
       {/* Period Review Section - Phase 1 */}
       {payrollRun.status === 'draft' && !periodApproved && !showEditPeriod && (
         <div className={styles.periodReviewCard}>
-          <h2 className={styles.sectionTitle}>📅 Step 1: Review Payroll Period</h2>
+          <h2 className={styles.sectionTitle}>Step 1: Review Payroll Period</h2>
           <div style={{ padding: '1.5rem' }}>
             <div style={{ marginBottom: '1.5rem' }}>
               <span style={{ fontSize: '0.875rem', color: '#6b7280', display: 'block', marginBottom: '0.5rem' }}>Current Period:</span>
@@ -319,7 +319,7 @@ export default function PayrollReviewPage({ runId, onBack }: PayrollReviewPagePr
                   cursor: 'pointer'
                 }}
               >
-                ✓ Approve Period
+                Approve Period
               </button>
               <button
                 onClick={handleRejectPeriod}
@@ -333,7 +333,7 @@ export default function PayrollReviewPage({ runId, onBack }: PayrollReviewPagePr
                   cursor: 'pointer'
                 }}
               >
-                ✗ Reject & Edit Period
+                Reject & Edit Period
               </button>
             </div>
           </div>
@@ -447,7 +447,7 @@ export default function PayrollReviewPage({ runId, onBack }: PayrollReviewPagePr
       {/* Exceptions Alert */}
       {(exceptionsCount > 0 || missingBankCount > 0) && (
         <div className={styles.alertBox}>
-          <h3 className={styles.alertTitle}>⚠️ Action Required</h3>
+          <h3 className={styles.alertTitle}>Action Required</h3>
           {exceptionsCount > 0 && (
             <p className={styles.alertMessage}>
               {exceptionsCount} employee(s) have exceptions that need review.
@@ -485,7 +485,7 @@ export default function PayrollReviewPage({ runId, onBack }: PayrollReviewPagePr
                   <td colSpan={9} className={styles.emptyState}>
                     <div style={{ textAlign: 'center', padding: '40px 20px' }}>
                       <p style={{ marginBottom: '20px', fontSize: '16px', color: '#666' }}>
-                        ⚠️ No employee payroll data generated yet
+                        No employee payroll data generated yet
                       </p>
                       {payrollRun?.status === 'draft' && (
                         <>
@@ -504,7 +504,7 @@ export default function PayrollReviewPage({ runId, onBack }: PayrollReviewPagePr
                               transition: 'all 0.3s ease'
                             }}
                           >
-                            {generating ? '⏳ Generating Draft...' : (!periodApproved ? '🔒 Approve Period First' : '🔄 Generate Payroll Draft (Phase 1.1)')}
+                            {generating ? 'Generating Draft...' : (!periodApproved ? 'Approve Period First' : 'Generate Payroll Draft (Phase 1.1)')}
                           </button>
                           <p style={{ marginTop: '12px', fontSize: '13px', color: '#999' }}>
                             {!periodApproved ? 'Please approve the payroll period before generating draft' : 'Calculate salaries, allowances, deductions, taxes, and identify exceptions'}
@@ -549,7 +549,7 @@ export default function PayrollReviewPage({ runId, onBack }: PayrollReviewPagePr
                             cursor: 'pointer'
                           }}
                         >
-                          ✏️ Fix
+                          Fix
                         </button>
                       )}
                     </td>

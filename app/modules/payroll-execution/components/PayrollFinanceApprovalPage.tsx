@@ -286,7 +286,7 @@ export default function PayrollFinanceApprovalPage({ runId, onBack }: PayrollFin
       {/* Critical Warnings */}
       {(exceptionsCount > 0 || missingBankCount > 0) && (
         <div className={styles.warningBox}>
-          <h3 className={styles.warningTitle}>⚠️ Critical Issues Detected</h3>
+          <h3 className={styles.warningTitle}>Critical Issues Detected</h3>
           {exceptionsCount > 0 && (
             <p className={styles.warningMessage}>
               <strong>{exceptionsCount}</strong> employee(s) have payroll exceptions.
@@ -416,14 +416,14 @@ export default function PayrollFinanceApprovalPage({ runId, onBack }: PayrollFin
               onClick={handleApprove}
               disabled={approving || rejecting}
             >
-              {approving ? 'Approving...' : '✓ Approve Payment'}
+              {approving ? 'Approving...' : 'Approve Payment'}
             </button>
             <button
               className={styles.rejectButton}
               onClick={() => setShowRejectModal(true)}
               disabled={approving || rejecting}
             >
-              ✗ Reject Payroll
+              Reject Payroll
             </button>
           </div>
         </div>
@@ -471,16 +471,16 @@ export default function PayrollFinanceApprovalPage({ runId, onBack }: PayrollFin
       {payrollRun.status !== 'pending finance approval' && (
         <div className={styles.infoBox}>
           {payrollRun.status === 'approved' && (
-            <p>✓ This payroll has been approved and payment status is PAID. Payslips have been generated.</p>
+            <p>This payroll has been approved and payment status is PAID. Payslips have been generated.</p>
           )}
           {payrollRun.status === 'locked' && (
-            <p>🔒 This payroll has been frozen by the Payroll Manager.</p>
+            <p>This payroll has been frozen by the Payroll Manager.</p>
           )}
           {payrollRun.status === 'rejected' && (
-            <p>✗ This payroll was rejected. Reason: {payrollRun.rejectionReason || 'No reason provided'}</p>
+            <p>This payroll was rejected. Reason: {payrollRun.rejectionReason || 'No reason provided'}</p>
           )}
           {payrollRun.status === 'under review' && (
-            <p>⏳ This payroll is still under manager review. Finance approval is not yet available.</p>
+            <p>This payroll is still under manager review. Finance approval is not yet available.</p>
           )}
         </div>
       )}

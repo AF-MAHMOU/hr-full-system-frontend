@@ -59,11 +59,11 @@ export default function TerminationBenefitList() {
   const handleDelete = async (id: string, status: ApprovalStatus) => {
     if (!isPayrollSpecialist && status === ApprovalStatus.DRAFT) return;
     if (!isPayrollManager && status === ApprovalStatus.APPROVED) return;
-    
-    const message = status === ApprovalStatus.APPROVED 
+
+    const message = status === ApprovalStatus.APPROVED
       ? 'This is an approved termination benefit. Are you sure you want to delete it? This action requires manager approval.'
       : 'Are you sure you want to delete this termination benefit?';
-    
+
     if (!confirm(message)) return;
 
     try {

@@ -32,7 +32,7 @@ export default function CompanySettingsList() {
     try {
       setLoading(true);
       setError(null);
-      
+
       // Fetch active settings separately
       try {
         const active = await companySettingsApi.getActive();
@@ -41,7 +41,7 @@ export default function CompanySettingsList() {
         // No active settings yet
         setActiveSettings(null);
       }
-      
+
       // Fetch all settings
       const data = await companySettingsApi.getAll(filter);
       setSettings(data);
@@ -132,8 +132,8 @@ export default function CompanySettingsList() {
   const getStatusBadge = (status: ApprovalStatus, isActive: boolean = false) => {
     if (isActive) {
       return (
-        <span className={`${styles.statusBadge} ${styles.statusApproved}`} style={{ 
-          background: '#059669', 
+        <span className={`${styles.statusBadge} ${styles.statusApproved}`} style={{
+          background: '#059669',
           color: 'white',
           fontWeight: 'bold',
         }}>
@@ -141,7 +141,7 @@ export default function CompanySettingsList() {
         </span>
       );
     }
-    
+
     const statusMap = {
       [ApprovalStatus.DRAFT]: styles.statusDraft,
       [ApprovalStatus.APPROVED]: styles.statusApproved,
@@ -205,11 +205,11 @@ export default function CompanySettingsList() {
               </div>
             </div>
             {isSystemAdmin && (
-              <Button 
-                variant="secondary" 
+              <Button
+                variant="secondary"
                 onClick={handleEditAsNew}
-                style={{ 
-                  background: 'white', 
+                style={{
+                  background: 'white',
                   color: '#059669',
                   border: 'none',
                 }}

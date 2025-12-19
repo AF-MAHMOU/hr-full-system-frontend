@@ -20,7 +20,7 @@ export function withAuth<P extends object>(Component: React.ComponentType<P>, re
       } else {
         setLoading(false); // User is authorized, stop loading and render the component
       }
-    }, [user, router, requiredRole]);
+    }, [user, router]);
 
     if (loading) {
       return <p>Loading...</p>; // Show loading state while checking authorization

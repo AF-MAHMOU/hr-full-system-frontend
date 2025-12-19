@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/shared/hooks/useAuth';
 import { Card, Button, Input, ProtectedRoute } from '@/shared/components';
@@ -27,28 +27,16 @@ function EmployeesListContent() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
-  useEffect(() => {
-    fetchEmployees();
-    fetchDepartments();
-    fetchPositions();
-  }, []);
-
-  useEffect(() => {
-    // Fetch roles for all employees
-    if (employees.length > 0) {
-      fetchEmployeeRoles();
-    }
-  }, [employees]);
 
   // Check if user has HR role
   const userRoles = user?.roles || [];
-  const hasHrRole = 
+  const hasHrRole =
     userRoles.includes(SystemRole.HR_ADMIN) ||
     userRoles.includes(SystemRole.HR_MANAGER) ||
     userRoles.includes(SystemRole.HR_EMPLOYEE) ||
     userRoles.includes(SystemRole.SYSTEM_ADMIN);
 
-  const fetchEmployees = async () => {
+  const fetchEmployees = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -59,29 +47,27 @@ function EmployeesListContent() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const fetchDepartments = async () => {
+  const fetchDepartments = useCallback(async () => {
     try {
       const response = await getDepartments({ limit: 1000, isActive: true });
       setDepartments(response.data || []);
     } catch (err) {
       console.error('Error fetching departments:', err);
-      // Don't set error state - this is a fallback, not critical
     }
-  };
+  }, []);
 
-  const fetchPositions = async () => {
+  const fetchPositions = useCallback(async () => {
     try {
       const response = await getPositions({ limit: 1000, isActive: true });
       setPositions(response.data || []);
     } catch (err) {
       console.error('Error fetching positions:', err);
-      // Don't set error state - this is a fallback, not critical
     }
-  };
+  }, []);
 
-  const fetchEmployeeRoles = async () => {
+  const fetchEmployeeRoles = useCallback(async () => {
     try {
       const rolesMap: Record<string, string[]> = {};
       // Roles should now be included in the employee data from backend
@@ -96,7 +82,20 @@ function EmployeesListContent() {
     } catch (err) {
       console.error('Error processing employee roles:', err);
     }
-  };
+  }, [employees]);
+
+  useEffect(() => {
+    fetchEmployees();
+    fetchDepartments();
+    fetchPositions();
+  }, [fetchEmployees, fetchDepartments, fetchPositions]);
+
+  useEffect(() => {
+    // Fetch roles for all employees
+    if (employees.length > 0) {
+      fetchEmployeeRoles();
+    }
+  }, [employees, fetchEmployeeRoles]);
 
   const handleSearch = async () => {
     try {
@@ -167,8 +166,8 @@ function EmployeesListContent() {
     return employeeRoles[employeeId] || [];
   };
 
-  const isAdmin = 
-    userRoles.includes(SystemRole.HR_ADMIN) || 
+  const isAdmin =
+    userRoles.includes(SystemRole.HR_ADMIN) ||
     userRoles.includes(SystemRole.SYSTEM_ADMIN);
 
   if (!hasHrRole) {

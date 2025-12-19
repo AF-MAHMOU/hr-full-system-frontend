@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@/shared/hooks/useAuth';
 import { Card, Button, Input, ProtectedRoute } from '@/shared/components';
@@ -43,23 +43,8 @@ function EditEmployeeContent() {
     primaryPositionId: '',
   });
 
-  useEffect(() => {
-    if (employeeId) {
-      fetchEmployee();
-      fetchDepartments();
-    }
-  }, [employeeId]);
 
-  useEffect(() => {
-    // When department changes, fetch positions for that department
-    if (formData.primaryDepartmentId) {
-      fetchPositionsForDepartment(formData.primaryDepartmentId);
-    } else {
-      setPositions([]);
-    }
-  }, [formData.primaryDepartmentId]);
-
-  const fetchEmployee = async () => {
+  const fetchEmployee = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -82,9 +67,9 @@ function EditEmployeeContent() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [employeeId]);
 
-  const fetchDepartments = async () => {
+  const fetchDepartments = useCallback(async () => {
     try {
       const response = await getDepartments({ limit: 100, isActive: true });
       setDepartments(response.data);
@@ -92,28 +77,28 @@ function EditEmployeeContent() {
     } catch (err) {
       console.error('Error fetching departments:', err);
     }
-  };
+  }, []);
 
   // Helper function to check if a position is a head position
   const isHeadPosition = (positionId: string): boolean => {
     return allDepartments.some(dept => {
-      const headId = typeof dept.headPositionId === 'string' 
-        ? dept.headPositionId 
-        : (dept.headPositionId as any)?._id 
+      const headId = typeof dept.headPositionId === 'string'
+        ? dept.headPositionId
+        : (dept.headPositionId as any)?._id
           ? String((dept.headPositionId as any)._id)
-          : dept.headPositionId 
+          : dept.headPositionId
             ? String(dept.headPositionId)
             : null;
       return headId === positionId;
     });
   };
 
-  const fetchPositionsForDepartment = async (departmentId: string) => {
+  const fetchPositionsForDepartment = useCallback(async (departmentId: string) => {
     try {
       const response = await getPositionsByDepartment(departmentId);
       const positionsList = response.data || [];
       setPositions(positionsList);
-      
+
       // If current position is not in the new department, clear it
       if (formData.primaryPositionId) {
         const currentPosition = positionsList.find(
@@ -127,7 +112,23 @@ function EditEmployeeContent() {
       console.error('Error fetching positions:', err);
       setPositions([]);
     }
-  };
+  }, [formData.primaryPositionId]);
+
+  useEffect(() => {
+    if (employeeId) {
+      fetchEmployee();
+      fetchDepartments();
+    }
+  }, [employeeId, fetchEmployee, fetchDepartments]);
+
+  useEffect(() => {
+    // When department changes, fetch positions for that department
+    if (formData.primaryDepartmentId) {
+      fetchPositionsForDepartment(formData.primaryDepartmentId);
+    } else {
+      setPositions([]);
+    }
+  }, [formData.primaryDepartmentId, fetchPositionsForDepartment]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -176,7 +177,7 @@ function EditEmployeeContent() {
   };
 
   const userRoles = user?.roles || [];
-  const hasHrRole = 
+  const hasHrRole =
     userRoles.includes(SystemRole.HR_ADMIN) ||
     userRoles.includes(SystemRole.HR_MANAGER) ||
     userRoles.includes(SystemRole.SYSTEM_ADMIN);

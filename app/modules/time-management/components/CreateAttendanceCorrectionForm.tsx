@@ -23,25 +23,24 @@ export default function CreateAttendanceCorrectionForm({
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
   const [employees, setEmployees] = useState<EmployeeProfile[]>([]);
 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [empData, recordData] = await Promise.all([
+          getAllEmployees(),
+          getAllAttendanceRecord()
+        ]);
+        setEmployees(empData);
+        setAttendanceRecords(recordData);
+      } catch (err) {
+        console.error("Error fetching data:", err);
+      }
+    };
+    fetchData();
+  }, []);
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    useEffect(() => {
-      getAllEmployees()
-        .then((data) => {
-          setEmployees(data);
-          setLoading(false);
-
-          // Set employeeId to the first employee if available 
-          if (data.length > 0 && !employeeId) {
-            setEmployeeId(data[0]._id);
-          }
-        })
-        .catch((err) => {
-          console.error("Error fetching employees:", err);
-          setLoading(false);
-        });
-    }, [setEmployeeId, employeeId]); // Dependency array includes employeeId to ensure it doesn't overwrite after being set
 
 
     setLoading(true);

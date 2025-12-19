@@ -1,0 +1,75 @@
+
+> hr-system-frontend@0.0.1 build
+> next build
+
+  ظû▓ Next.js 14.2.33
+  - Environments: .env.local, .env
+
+   Creating an optimized production build ...
+ ظ£ô Compiled successfully
+   Linting and checking validity of types ...
+
+Failed to compile.
+
+./app/modules/hr/employees/page.tsx
+41:6  Warning: React Hook useEffect has a missing dependency: 'fetchEmployeeRoles'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./app/modules/hr/employees/[id]/edit/page.tsx
+51:6  Warning: React Hook useEffect has a missing dependency: 'fetchEmployee'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+60:6  Warning: React Hook useEffect has a missing dependency: 'fetchPositionsForDepartment'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./app/modules/performance/components/EmployeeAssignmentsView.tsx
+92:6  Warning: React Hook useCallback has a missing dependency: 'showInfo'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./app/modules/performance/components/FinalRatingView.tsx
+69:6  Warning: React Hook useEffect has a missing dependency: 'fetchEvaluationData'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./app/modules/performance/components/VisibilityRulesView.tsx
+52:6  Warning: React Hook useEffect has a missing dependency: 'fetchRules'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./app/modules/time-management/components/CreateAttendanceCorrectionForm.tsx
+29:5  Error: React Hook "useEffect" is called in function "submit" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
+44:8  Warning: React Hook useEffect has unnecessary dependencies: 'employeeId' and 'setEmployeeId'. Either exclude them or remove the dependency array. Outer scope values like 'setEmployeeId' aren't valid dependencies because mutating them doesn't re-render the component.  react-hooks/exhaustive-deps
+
+./app/modules/time-management/components/CreateShiftAssignmentDepartmentForm.tsx
+75:6  Warning: React Hook useEffect has a missing dependency: 'shiftId'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./app/modules/time-management/components/CreateShiftAssignmentEmployeeForm.tsx
+72:6  Warning: React Hook useEffect has a missing dependency: 'shiftId'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./app/modules/time-management/components/CreateShiftAssignmentPositionForm.tsx
+75:6  Warning: React Hook useEffect has a missing dependency: 'shiftId'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./app/modules/time-management/components/EditAttendanceRecord.tsx
+13:51  Error: React Hook "useState" cannot be called at the top level. React Hooks must be called in a React function component or a custom React Hook function.  react-hooks/rules-of-hooks
+14:31  Error: React Hook "useState" cannot be called at the top level. React Hooks must be called in a React function component or a custom React Hook function.  react-hooks/rules-of-hooks
+15:43  Error: React Hook "useState" cannot be called at the top level. React Hooks must be called in a React function component or a custom React Hook function.  react-hooks/rules-of-hooks
+16:43  Error: React Hook "useState" cannot be called at the top level. React Hooks must be called in a React function component or a custom React Hook function.  react-hooks/rules-of-hooks
+28:1  Error: React Hook "useEffect" cannot be called at the top level. React Hooks must be called in a React function component or a custom React Hook function.  react-hooks/rules-of-hooks
+
+./app/modules/time-management/components/EmployeeViewLateness.tsx
+46:60  Error: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+
+./app/modules/time-management/components/ReviewAttendanceCorrection.tsx
+29:5  Error: React Hook "useEffect" is called in function "submit" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
+44:8  Warning: React Hook useEffect has unnecessary dependencies: 'employeeId' and 'setEmployeeId'. Either exclude them or remove the dependency array. Outer scope values like 'setEmployeeId' aren't valid dependencies because mutating them doesn't re-render the component.  react-hooks/exhaustive-deps
+
+./app/modules/time-management/components/ShiftAssignmentList.tsx
+18:45  Error: React Hook "useState" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?  react-hooks/rules-of-hooks
+19:41  Error: React Hook "useState" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?  react-hooks/rules-of-hooks
+20:37  Error: React Hook "useState" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?  react-hooks/rules-of-hooks
+
+./app/modules/time-management/components/withAuth.tsx
+23:8  Warning: React Hook useEffect has an unnecessary dependency: 'requiredRole'. Either exclude it or remove the dependency array. Outer scope values like 'requiredRole' aren't valid dependencies because mutating them doesn't re-render the component.  react-hooks/exhaustive-deps
+
+./app/modules/time-management/time-exception/page.tsx
+13:47  Error: React Hook "useState" is called in function "timeExceptionPage" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
+14:33  Error: React Hook "useState" is called in function "timeExceptionPage" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
+15:20  Error: React Hook "usePathname" is called in function "timeExceptionPage" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
+30:3  Error: React Hook "useEffect" is called in function "timeExceptionPage" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use".  react-hooks/rules-of-hooks
+
+./app/not-found.tsx
+21:50  Error: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+21:71  Error: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/basic-features/eslint#disabling-rules

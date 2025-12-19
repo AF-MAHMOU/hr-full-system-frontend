@@ -9,43 +9,6 @@ interface EditAttendanceRecordProps {
   onEdit: (record: AttendanceRecord) => void; // Add this prop
 }
 
-// In your parent page component
-const [attendancerecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
-const [loading, setLoading] = useState(true);
-const [editingRecord, setEditingRecord] = useState<AttendanceRecord | null>(null);
-const [showEditModal, setShowEditModal] = useState(false);
-
-// Load function
-const load = async () => {
-  try {
-    const data = await getAllAttendanceRecord();
-    setAttendanceRecords(data);
-  } catch (err) {
-    console.error("Failed to load attendance records", err);
-  }
-};
-
-useEffect(() => {
-  load();
-}, []);
-
-// Handle edit
-const handleEdit = (record: AttendanceRecord) => {
-  setEditingRecord(record);
-  setShowEditModal(true);
-};
-
-// Save edited record
-const handleSaveEdit = async (updatedRecord: AttendanceRecord) => {
-  try {
-    await updateAttendanceRecord(updatedRecord.id, updatedRecord);
-    await load();
-    setShowEditModal(false);
-    setEditingRecord(null);
-  } catch (err) {
-    console.error("Failed to update record", err);
-  }
-};
 
 export default function EditAttendanceRecord({
   attendancerecords,

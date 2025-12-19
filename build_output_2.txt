@@ -1,0 +1,43 @@
+
+> hr-system-frontend@0.0.1 build
+> next build
+
+  ظû▓ Next.js 14.2.33
+  - Environments: .env.local, .env
+
+   Creating an optimized production build ...
+ ظ£ô Compiled successfully
+   Linting and checking validity of types ...
+
+./app/modules/hr/employees/page.tsx
+41:6  Warning: React Hook useEffect has a missing dependency: 'fetchEmployeeRoles'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./app/modules/hr/employees/[id]/edit/page.tsx
+51:6  Warning: React Hook useEffect has a missing dependency: 'fetchEmployee'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+60:6  Warning: React Hook useEffect has a missing dependency: 'fetchPositionsForDepartment'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./app/modules/performance/components/EmployeeAssignmentsView.tsx
+92:6  Warning: React Hook useCallback has a missing dependency: 'showInfo'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./app/modules/performance/components/FinalRatingView.tsx
+69:6  Warning: React Hook useEffect has a missing dependency: 'fetchEvaluationData'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./app/modules/performance/components/VisibilityRulesView.tsx
+52:6  Warning: React Hook useEffect has a missing dependency: 'fetchRules'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./app/modules/time-management/components/CreateShiftAssignmentDepartmentForm.tsx
+75:6  Warning: React Hook useEffect has a missing dependency: 'shiftId'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./app/modules/time-management/components/CreateShiftAssignmentEmployeeForm.tsx
+72:6  Warning: React Hook useEffect has a missing dependency: 'shiftId'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./app/modules/time-management/components/CreateShiftAssignmentPositionForm.tsx
+75:6  Warning: React Hook useEffect has a missing dependency: 'shiftId'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./app/modules/time-management/components/withAuth.tsx
+23:8  Warning: React Hook useEffect has an unnecessary dependency: 'requiredRole'. Either exclude it or remove the dependency array. Outer scope values like 'requiredRole' aren't valid dependencies because mutating them doesn't re-render the component.  react-hooks/exhaustive-deps
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/basic-features/eslint#disabling-rules
+   Collecting page data ...
+   Generating static pages (0/38) ...
+ ظذ» Next.js build worker exited with code: 3221226505 and signal: null

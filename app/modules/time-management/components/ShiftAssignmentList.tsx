@@ -14,10 +14,11 @@ interface Props {
 }
 
 export default function ShiftAssignmentList({ shiftassignments, employees, shifts, onDelete }: Props) {
-  if (!shiftassignments.length) return <p>No shift assignments found</p>;
   const [scheduleRules, setScheduleRules] = useState<ScheduleRule[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [positions, setPositions] = useState<Position[]>([]);
+
+  if (!shiftassignments.length) return <p>No shift assignments found</p>;
 
   return (
     <div className={s.cardContainer}>

@@ -9,7 +9,7 @@ import TimeExceptionList from "../components/TimeExceptionList";
 
 import { TimeException } from "../types";
 
-export default function timeExceptionPage() {
+export default function TimeExceptionPage() {
   const [timeexceptions, setTimeExceptions] = useState<TimeException[]>([]);
   const [loading, setLoading] = useState(true);
   const pathname = usePathname();

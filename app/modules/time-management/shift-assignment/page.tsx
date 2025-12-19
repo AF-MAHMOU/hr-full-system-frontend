@@ -149,10 +149,6 @@ export default function ShiftAssignmentPage() {
         <p>Loading...</p>
       ) : (
         <>
-          <ShiftAssignmentList
-            shiftassignments={shiftassignments}
-            onDelete={handleDelete}
-          />
           <button className={s.button} onClick={() => goToDepartmentPage()}>Assign by Department</button>
           <button className={s.button} onClick={() => goToEmployeePage()}>Assign by Employee</button>
           <button className={s.button} onClick={() => gotoPositionPage()}>Assign by Position</button>

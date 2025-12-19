@@ -6,7 +6,7 @@ import { Card } from '@/shared/components/Card';
 import { Button } from '@/shared/components/Button';
 import { useAuth } from '@/shared/hooks/useAuth';
 import { SystemRole } from '@/shared/types/auth';
-import { leavesApi } from '@/shared/api/leavesApi';
+import { leavesApi } from './api/leavesApi';
 import styles from './leaves.module.css';
 import { useLeaves } from './contexts/LeavesContext';
 

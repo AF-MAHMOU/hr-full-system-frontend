@@ -1,6 +1,6 @@
-import { apiClient } from '../utils/api';
-import { API_ENDPOINTS } from '../constants';
-import { LeaveType, Entitlement } from '../../app/modules/leaves/contexts/LeavesContext';
+import { apiClient } from '@/shared/utils/api';
+import { API_ENDPOINTS } from '@/shared/constants';
+import { LeaveType, Entitlement } from '@/modules/leaves/contexts/LeavesContext';
 
 // Define DTOs based on Backend Config
 export interface CreateLeaveTypeDto {

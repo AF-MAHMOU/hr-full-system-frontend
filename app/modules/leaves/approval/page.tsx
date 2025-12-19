@@ -6,7 +6,7 @@ import { Button } from '@/shared/components/Button';
 import styles from '../leaves.module.css';
 import { useLeaves } from '../contexts/LeavesContext';
 import { LeaveFilterBar } from '../components/LeaveFilterBar';
-import { leavesApi } from '@/shared/api/leavesApi';
+import { leavesApi } from '../api/leavesApi';
 
 export default function LeaveApprovalPage() {
     console.log('LeaveApprovalPage rendered');

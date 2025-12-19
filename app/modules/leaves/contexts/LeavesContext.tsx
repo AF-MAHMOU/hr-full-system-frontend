@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { leavesApi, CreateLeaveTypeDto } from '../../../../shared/api/leavesApi';
+import { leavesApi, CreateLeaveTypeDto } from '../api/leavesApi';
 
 // Types
 export type LeaveStatus = 'Pending' | 'Approved' | 'Rejected' | 'Cancelled';

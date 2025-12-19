@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getPayslipList } from '@/shared/utils/payslipService';
-import { Payslip } from '@/shared/types/payslip';
+import { getPayslipList } from '@/app/modules/payroll-tracking/utils/payslipService';
+import { Payslip } from '@/app/modules/payroll-tracking/utils/payslip';
 import { PayslipTable } from '../components/PayslipTable';
 import styles from './Payslips.module.css';
 

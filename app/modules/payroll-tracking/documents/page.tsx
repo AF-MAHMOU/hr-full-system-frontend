@@ -1,8 +1,8 @@
-'use client';
+  'use client';
 
 import { useEffect, useState } from 'react';
-import { getDocuments } from '../../../shared/utils/documentService';
-import { Document } from '../../../shared/types/document';
+import { getDocuments } from '../../payroll-tracking/utils/documentService';
+import { Document } from '../../payroll-tracking/utils/document';
 import { DocumentList } from '../components/DocumentList';
 import styles from './Documents.module.css';
 

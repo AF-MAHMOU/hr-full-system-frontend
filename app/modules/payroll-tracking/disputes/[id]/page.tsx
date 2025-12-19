@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { getDisputeById } from '../../../shared/utils/disputeService';
-import { Dispute } from '../../../shared/types/dispute';
+import { getDisputeById } from '../../utils/disputeService';
+import { Dispute } from '../../utils/dispute';
 import { StatusTimeline } from '../../components/StatusTimeline';
 import { RefundSummary } from '../../components/RefundSummary';
 import styles from './DisputeDetails.module.css';
@@ -32,8 +32,7 @@ export default function DisputeDetailsPage() {
         <h1>Dispute Details</h1>
         <p>Track the progress and resolution of your claim</p>
       </div>
-      <StatusTimeline statusHistory={dispute.statusHistory} />
-      <RefundSummary refund={dispute.refund} />
-    </div>
+<StatusTimeline status={dispute.statusHistory} />
+<RefundSummary amount={dispute.refund} />    </div>
   );
 }

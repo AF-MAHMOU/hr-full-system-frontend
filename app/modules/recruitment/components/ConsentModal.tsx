@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button, Modal } from '@/shared/components';
 import { recruitmentApi } from '../api/recruitment.api';
 import { ConsentLog } from '../types';
@@ -19,11 +19,7 @@ export default function ConsentModal({ candidateId, candidateName, onClose }: Co
     const [actionLoading, setActionLoading] = useState(false);
     const [latestStatus, setLatestStatus] = useState<boolean | null>(null);
 
-    useEffect(() => {
-        fetchConsents();
-    }, []);
-
-    const fetchConsents = async () => {
+    const fetchConsents = useCallback(async () => {
         try {
             setLoading(true);
             const data = await recruitmentApi.getCandidateConsents(candidateId);
@@ -39,7 +35,11 @@ export default function ConsentModal({ candidateId, candidateName, onClose }: Co
         } finally {
             setLoading(false);
         }
-    };
+    }, [candidateId]);
+
+    useEffect(() => {
+        fetchConsents();
+    }, [fetchConsents]);
 
     const handleAction = async (granted: boolean) => {
         setActionLoading(true);

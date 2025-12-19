@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button, Card, Input } from '@/shared/components';
 import { recruitmentApi } from '../api/recruitment.api';
 import { useAuth } from '@/shared/hooks/useAuth';
@@ -17,11 +17,7 @@ export default function ClearanceTracker({ terminationId, onRefresh }: Clearance
     const [loading, setLoading] = useState(true);
     const [isCleared, setIsCleared] = useState(false);
 
-    useEffect(() => {
-        fetchStatus();
-    }, [terminationId]);
-
-    const fetchStatus = async () => {
+    const fetchStatus = useCallback(async () => {
         setLoading(true);
         try {
             const data = await recruitmentApi.getFullClearanceStatus(terminationId);
@@ -33,7 +29,11 @@ export default function ClearanceTracker({ terminationId, onRefresh }: Clearance
         } finally {
             setLoading(false);
         }
-    };
+    }, [terminationId]);
+
+    useEffect(() => {
+        fetchStatus();
+    }, [terminationId, fetchStatus]);
 
     const handleUpdateStatus = async (department: string, newStatus: 'approved' | 'rejected') => {
         try {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button, Card } from '@/shared/components';
 import { recruitmentApi } from '../../api/recruitment.api';
@@ -25,13 +25,7 @@ export default function RequisitionDetailsPage() {
     const [listInterviewsTarget, setListInterviewsTarget] = useState<{ id: string, name: string } | null>(null);
     const [rejectionTarget, setRejectionTarget] = useState<{ id: string, name: string } | null>(null);
 
-    useEffect(() => {
-        if (id) {
-            fetchData();
-        }
-    }, [id]);
-
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         try {
             setLoading(true);
             const [reqData, appData] = await Promise.all([
@@ -46,7 +40,13 @@ export default function RequisitionDetailsPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [id]);
+
+    useEffect(() => {
+        if (id) {
+            fetchData();
+        }
+    }, [id, fetchData]);
 
     if (loading) return <div>Loading details...</div>;
     if (error) return <div className={styles.error}>{error}</div>;

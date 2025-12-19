@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button, Input, Modal } from '@/shared/components';
 import { recruitmentApi } from '../api/recruitment.api';
 import { PreboardingTask, TriggerPreboardingDto } from '../types';
@@ -31,11 +31,7 @@ export default function PreboardingModal({ offerId, candidateName, onClose }: Pr
         { title: 'Upload Personal Documents', description: 'Passport, ID, Certificates', assignee: 'candidate', dueDays: 3 }
     ]);
 
-    useEffect(() => {
-        fetchTasks();
-    }, [offerId]);
-
-    const fetchTasks = async () => {
+    const fetchTasks = useCallback(async () => {
         try {
             setLoading(true);
             const data = await recruitmentApi.listPreboardingTasks(offerId);
@@ -50,7 +46,11 @@ export default function PreboardingModal({ offerId, candidateName, onClose }: Pr
         } finally {
             setLoading(false);
         }
-    };
+    }, [offerId]);
+
+    useEffect(() => {
+        fetchTasks();
+    }, [offerId, fetchTasks]);
 
     const handleTrigger = async () => {
         try {

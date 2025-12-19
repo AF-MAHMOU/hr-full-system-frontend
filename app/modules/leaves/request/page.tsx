@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card } from '@/shared/components/Card';
 import { Button } from '@/shared/components/Button';
@@ -8,7 +8,7 @@ import { Input } from '@/shared/components/Input';
 import styles from '../leaves.module.css';
 import { useLeaves } from '../contexts/LeavesContext';
 
-export default function LeaveRequestPage() {
+function LeaveRequestContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const editId = searchParams.get('editId');
@@ -255,7 +255,7 @@ export default function LeaveRequestPage() {
                                 ))}
                             </ul>
                             <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.8rem' }}>
-                                Make sure your new request doesn't overlap with existing ones.
+                                Make sure your new request doesn&apos;t overlap with existing ones.
                             </p>
                         </div>
                     )}
@@ -289,5 +289,13 @@ export default function LeaveRequestPage() {
                 </form>
             </Card>
         </div>
+    );
+}
+
+export default function LeaveRequestPage() {
+    return (
+        <Suspense fallback={<div style={{ padding: '2rem' }}>Loading...</div>}>
+            <LeaveRequestContent />
+        </Suspense>
     );
 }

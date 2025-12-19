@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/shared/components';
 import { recruitmentApi } from '../api/recruitment.api';
 import { PanelMember } from '../types';
@@ -12,11 +12,7 @@ export default function PanelManagement() {
     const [selectedMember, setSelectedMember] = useState<PanelMember | null>(null);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        fetchMembers();
-    }, []);
-
-    const fetchMembers = async () => {
+    const fetchMembers = useCallback(async () => {
         try {
             setLoading(true);
             const data = await recruitmentApi.listPanelMembers();
@@ -29,7 +25,11 @@ export default function PanelManagement() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [selectedMember]);
+
+    useEffect(() => {
+        fetchMembers();
+    }, [fetchMembers]);
 
     return (
         <Card padding="lg">

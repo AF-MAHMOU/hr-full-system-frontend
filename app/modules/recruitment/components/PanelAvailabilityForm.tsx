@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/shared/components';
 import { recruitmentApi } from '../api/recruitment.api';
 import { PanelMember, PanelAvailability } from '../types';
@@ -28,10 +28,9 @@ export default function PanelAvailabilityForm({ member }: PanelAvailabilityFormP
             d.push(date.toISOString().split('T')[0]);
         }
         setDates(d);
-        fetchAvailability();
-    }, [member._id]);
+    }, []);
 
-    const fetchAvailability = async () => {
+    const fetchAvailability = useCallback(async () => {
         try {
             setLoading(true);
             const data = await recruitmentApi.getPanelAvailability(member._id);
@@ -42,7 +41,11 @@ export default function PanelAvailabilityForm({ member }: PanelAvailabilityFormP
         } finally {
             setLoading(false);
         }
-    };
+    }, [member._id]);
+
+    useEffect(() => {
+        fetchAvailability();
+    }, [member._id, fetchAvailability]);
 
     const handleToggleSlot = (date: string, time: string) => {
         const currentSlots = availability[date] || [];

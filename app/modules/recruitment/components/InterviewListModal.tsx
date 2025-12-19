@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Button, Modal } from '@/shared/components';
 import { recruitmentApi } from '../api/recruitment.api';
 import { Interview } from '../types';
@@ -23,11 +23,7 @@ export default function InterviewListModal({ applicationId, candidateName, onClo
     const [structuredTarget, setStructuredTarget] = useState<{ id: string, title: string } | null>(null);
     const [showScheduleModal, setShowScheduleModal] = useState(false);
 
-    useEffect(() => {
-        fetchInterviews();
-    }, [applicationId]);
-
-    const fetchInterviews = async () => {
+    const fetchInterviews = useCallback(async () => {
         try {
             setLoading(true);
             const data = await recruitmentApi.listInterviews(applicationId);
@@ -38,7 +34,11 @@ export default function InterviewListModal({ applicationId, candidateName, onClo
         } finally {
             setLoading(false);
         }
-    };
+    }, [applicationId]);
+
+    useEffect(() => {
+        fetchInterviews();
+    }, [applicationId, fetchInterviews]);
 
     return (
         <Modal isOpen={true} onClose={onClose} title={`Interviews for ${candidateName}`}>

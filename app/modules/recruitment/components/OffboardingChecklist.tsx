@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button, Card } from '@/shared/components';
 import { recruitmentApi } from '../api/recruitment.api';
 import { OffboardingChecklistSummary } from '../types';
@@ -16,11 +16,7 @@ export default function OffboardingChecklist({ terminationId, onRefresh }: Offbo
     const [loading, setLoading] = useState(true);
     const [finalPay, setFinalPay] = useState<any>(null);
 
-    useEffect(() => {
-        fetchSummary();
-    }, [terminationId]);
-
-    const fetchSummary = async () => {
+    const fetchSummary = useCallback(async () => {
         setLoading(true);
         try {
             const data = await recruitmentApi.getOffboardingChecklistSummary(terminationId);
@@ -30,7 +26,11 @@ export default function OffboardingChecklist({ terminationId, onRefresh }: Offbo
         } finally {
             setLoading(false);
         }
-    };
+    }, [terminationId]);
+
+    useEffect(() => {
+        fetchSummary();
+    }, [terminationId, fetchSummary]);
 
     const handleDeptApproval = async (dept: string, status: 'approved' | 'rejected') => {
         try {

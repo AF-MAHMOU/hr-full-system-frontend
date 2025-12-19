@@ -46,7 +46,7 @@ export default function CreateShiftAssignmentDepartmentForm({
   const shiftId = params.get("shiftId");
 
   useEffect(() => {
-    
+
     if (shiftId) {
       setSelectedShiftId(shiftId);
       console.log("URL shiftId =", shiftId);
@@ -72,7 +72,7 @@ export default function CreateShiftAssignmentDepartmentForm({
         setError("Failed to load form data");
       }
     })();
-  }, []);
+  }, [shiftId]);
 
 
   const submit = async (e: React.FormEvent) => {
@@ -117,7 +117,7 @@ export default function CreateShiftAssignmentDepartmentForm({
   useEffect(() => {
     const badShifts = shifts.filter(s => !(s as any).id && !(s as any)._id);
     const badRules = scheduleRules.filter(r => !(r as any).id && !(r as any)._id);
-    
+
     if (badShifts.length || badRules.length) {
       console.error("❌ BAD SHIFTS:", badShifts);
       console.error("❌ BAD RULES:", badRules);
@@ -126,7 +126,7 @@ export default function CreateShiftAssignmentDepartmentForm({
 
 
   return (
-    
+
     <form onSubmit={submit} className={s.formContainer}>
       {error && <div style={{ color: "red", marginBottom: "10px" }}>{error}</div>}
 
@@ -143,8 +143,8 @@ export default function CreateShiftAssignmentDepartmentForm({
               Select a Department
             </option>
             {departments.map((dept) => (
-              <option key={dept.id} value={dept.id}>
-                {dept.name ?? dept.id}
+              <option key={dept._id} value={dept._id}>
+                {dept.contractType ?? dept._id}
               </option>
             ))}
           </select>
@@ -181,10 +181,10 @@ export default function CreateShiftAssignmentDepartmentForm({
           </select>
 
           <label className={s.description}>Start Date</label>
-          <input className={s.select}type="date" value={startDate} onChange={e => setStartDate(e.target.value)} required />
+          <input className={s.select} type="date" value={startDate} onChange={e => setStartDate(e.target.value)} required />
 
           <label className={s.description}>End Date</label>
-          <input className={s.select}type="date" value={endDate} onChange={e => setEndDate(e.target.value)} />
+          <input className={s.select} type="date" value={endDate} onChange={e => setEndDate(e.target.value)} />
 
           <label className={s.description}>Status</label>
           <select

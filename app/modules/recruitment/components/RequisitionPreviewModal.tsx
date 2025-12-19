@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Button, Modal } from '@/shared/components';
 import { recruitmentApi } from '../api/recruitment.api';
 import { JobRequisition } from '../types';
@@ -16,11 +16,7 @@ export default function RequisitionPreviewModal({ requisitionId, onClose }: Requ
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        loadPreview();
-    }, [requisitionId]);
-
-    const loadPreview = async () => {
+    const loadPreview = useCallback(async () => {
         try {
             setLoading(true);
             const data = await recruitmentApi.previewRequisition(requisitionId);
@@ -31,7 +27,11 @@ export default function RequisitionPreviewModal({ requisitionId, onClose }: Requ
         } finally {
             setLoading(false);
         }
-    };
+    }, [requisitionId]);
+
+    useEffect(() => {
+        loadPreview();
+    }, [requisitionId, loadPreview]);
 
     if (loading) return <Modal isOpen={true} onClose={onClose} title="Loading..."><div className={styles.loading}>Loading preview...</div></Modal>;
     if (error) return <Modal isOpen={true} onClose={onClose} title="Error"><div className={styles.error}>{error}</div></Modal>;

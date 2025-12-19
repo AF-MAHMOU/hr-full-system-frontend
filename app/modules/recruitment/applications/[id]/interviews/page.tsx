@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Card, Button, Modal } from '@/shared/components';
 import { recruitmentApi } from '../../../api/recruitment.api';
@@ -19,13 +19,7 @@ export default function ApplicationInterviewsPage() {
     const [showScheduleModal, setShowScheduleModal] = useState(false);
     const [showFeedbackModal, setShowFeedbackModal] = useState<{ interviewId: string, candidateName: string } | null>(null);
 
-    useEffect(() => {
-        if (applicationId) {
-            fetchData();
-        }
-    }, [applicationId]);
-
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         try {
             setLoading(true);
             console.log('Fetching interviews for application:', applicationId);
@@ -42,7 +36,13 @@ export default function ApplicationInterviewsPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [applicationId]);
+
+    useEffect(() => {
+        if (applicationId) {
+            fetchData();
+        }
+    }, [applicationId, fetchData]);
 
     if (loading) return <div>Loading...</div>;
     if (!application) return <div>Application not found</div>;

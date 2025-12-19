@@ -244,36 +244,39 @@ export default function Home() {
       });
     }
 
-    // Time Management
+    // Payroll Configuration
     if (
       userRoles.includes(SystemRole.HR_ADMIN) ||
       userRoles.includes(SystemRole.SYSTEM_ADMIN) ||
       userRoles.includes(SystemRole.HR_MANAGER) ||
-      userRoles.includes(SystemRole.DEPARTMENT_HEAD)
+      userRoles.includes(SystemRole.PAYROLL_MANAGER) ||
+      userRoles.includes(SystemRole.PAYROLL_SPECIALIST)
     ) {
       actions.push({
-        label: 'Time Management',
-        route: ROUTES.TIME_MANAGEMENT,
-        icon: '🕐',
+        label: 'Payroll Configuration',
+        route: ROUTES.PAYROLL_CONFIGURATION,
+        icon: '⚙️',
         roles: [
           SystemRole.HR_ADMIN,
           SystemRole.SYSTEM_ADMIN,
           SystemRole.HR_MANAGER,
-          SystemRole.DEPARTMENT_HEAD,
+          SystemRole.PAYROLL_MANAGER,
+          SystemRole.PAYROLL_SPECIALIST,
         ],
       });
     }
 
-    // Payroll
+    // Payroll Execution
     if (
       userRoles.includes(SystemRole.PAYROLL_SPECIALIST) ||
-      userRoles.includes(SystemRole.PAYROLL_MANAGER)
+      userRoles.includes(SystemRole.PAYROLL_MANAGER) ||
+      userRoles.includes(SystemRole.FINANCE_STAFF)
     ) {
       actions.push({
-        label: 'Payroll',
-        route: ROUTES.PAYROLL_TRACKING,
-        icon: '💵',
-        roles: [SystemRole.PAYROLL_SPECIALIST, SystemRole.PAYROLL_MANAGER],
+        label: 'Payroll Execution',
+        route: ROUTES.PAYROLL_EXECUTION,
+        icon: '⚡',
+        roles: [SystemRole.PAYROLL_SPECIALIST, SystemRole.PAYROLL_MANAGER, SystemRole.FINANCE_STAFF],
       });
     }
 
@@ -301,7 +304,7 @@ export default function Home() {
     if (userType === 'employee') {
       actions.push({
         label: 'Time Management',
-        route: ROUTES.TIME_MANAGEMENT,
+        route: ROUTES.EMPLOYEE_TIME_MANAGEMENT,
         icon: '🕐',
         userTypes: ['employee'],
       });

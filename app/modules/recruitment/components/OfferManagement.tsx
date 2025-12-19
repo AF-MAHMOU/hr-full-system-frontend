@@ -527,7 +527,7 @@ export default function OfferManagement() {
                     {filteredOffers.map((offer) => {
                         const statusStyle = getStatusStyle(offer.status);
                         return (
-                            <div style={{ cursor: 'pointer' }} onClick={() => setSelectedOffer(offer)}><Card key={offer._id} padding="md">
+                            <div key={offer._id} style={{ cursor: 'pointer' }} onClick={() => setSelectedOffer(offer)}><Card padding="md">
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                     <div>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/shared/components';
 import { recruitmentApi } from '../api/recruitment.api';
@@ -29,11 +29,7 @@ export default function JobRequisitionList({ onCreateClick, isCandidate = false,
     const [publishId, setPublishId] = useState<string | null>(null);
     const [applyModalData, setApplyModalData] = useState<{ id: string; title: string; } | null>(null);
 
-    useEffect(() => {
-        fetchRequisitions();
-    }, [status, department]);
-
-    const fetchRequisitions = async () => {
+    const fetchRequisitions = useCallback(async () => {
         try {
             setLoading(true);
             // Candidates only see published; HR sees all (or filtered)
@@ -47,7 +43,11 @@ export default function JobRequisitionList({ onCreateClick, isCandidate = false,
         } finally {
             setLoading(false);
         }
-    };
+    }, [status, department]);
+
+    useEffect(() => {
+        fetchRequisitions();
+    }, [status, department, fetchRequisitions]);
 
     const getStatusClass = (status: string) => {
         switch (status) {

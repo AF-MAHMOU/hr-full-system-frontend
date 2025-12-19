@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button, Card } from '@/shared/components';
 import { recruitmentApi } from '../api/recruitment.api';
 import { OnboardingTrackerResponse, OnboardingTrackerTask } from '../types';
@@ -17,13 +17,7 @@ export default function OnboardingTracker({ trackerData: initialData, employeeId
     const [loading, setLoading] = useState(!initialData && !!employeeId);
     const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        if (!initialData && employeeId) {
-            fetchTracker();
-        }
-    }, [employeeId, initialData]);
-
-    const fetchTracker = async () => {
+    const fetchTracker = useCallback(async () => {
         if (!employeeId) return;
         try {
             setLoading(true);
@@ -35,7 +29,13 @@ export default function OnboardingTracker({ trackerData: initialData, employeeId
         } finally {
             setLoading(false);
         }
-    };
+    }, [employeeId]);
+
+    useEffect(() => {
+        if (!initialData && employeeId) {
+            fetchTracker();
+        }
+    }, [employeeId, initialData, fetchTracker]);
 
     if (loading) return <div>Loading tracker...</div>;
     if (error) return <div className={styles.error}>{error}</div>;

@@ -69,7 +69,7 @@ export default function CreateShiftAssignmentEmployeeForm({
         setError("Failed to load form data");
       }
     })();
-  }, []);
+  }, [shiftId]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();

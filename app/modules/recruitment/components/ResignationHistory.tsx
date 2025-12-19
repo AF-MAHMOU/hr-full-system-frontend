@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, Button } from '@/shared/components';
 import { recruitmentApi } from '../api/recruitment.api';
 import { useAuth } from '@/shared/hooks/useAuth';
@@ -10,13 +10,7 @@ export default function ResignationHistory() {
     const [resignations, setResignations] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        if (user?.userid) {
-            fetchResignations();
-        }
-    }, [user?.userid]);
-
-    const fetchResignations = async () => {
+    const fetchResignations = useCallback(async () => {
         setLoading(true);
         try {
             // Fetch termination requests for this employee using their employee ID
@@ -39,7 +33,13 @@ export default function ResignationHistory() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [user]);
+
+    useEffect(() => {
+        if (user?.userid) {
+            fetchResignations();
+        }
+    }, [user?.userid, fetchResignations]);
 
     if (loading) return <div>Loading history...</div>;
 

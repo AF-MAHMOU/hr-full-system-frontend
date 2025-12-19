@@ -71,7 +71,7 @@ export default function AdjustBalancePage() {
                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
 
                     <div style={{ backgroundColor: '#eff6ff', padding: '1rem', borderRadius: '8px', border: '1px solid #bfdbfe', color: '#1e40af', fontSize: '0.875rem' }}>
-                        <strong>Note:</strong> This action will modify the employee's leave balance immediately and create an audit log entry.
+                        <strong>Note:</strong> This action will modify the employee&apos;s leave balance immediately and create an audit log entry.
                     </div>
 
                     <Input

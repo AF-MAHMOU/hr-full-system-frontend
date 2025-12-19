@@ -6,7 +6,7 @@ import { Button } from '@/shared/components/Button';
 import styles from '../leaves.module.css';
 import { useLeaves } from '../contexts/LeavesContext';
 import { LeaveFilterBar } from '../components/LeaveFilterBar';
-import { leavesApi } from '@/shared/api/leavesApi';
+import { leavesApi } from '../api/leavesApi';
 
 export default function LeaveApprovalPage() {
     console.log('LeaveApprovalPage rendered');
@@ -25,7 +25,6 @@ export default function LeaveApprovalPage() {
             setLoading(true);
             try {
                 await fetchPendingApprovals();
-                console.log('Pending approvals loaded:', pendingApprovals.length);
                 setError(null);
             } catch (error: any) {
                 console.error('Failed to load pending approvals:', error);

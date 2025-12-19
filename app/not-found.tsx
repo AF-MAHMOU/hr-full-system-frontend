@@ -8,17 +8,17 @@ export default function NotFound() {
     <div className={s.container}>
       <h1 className={s.header}>404 - Page Not Found</h1>
       <div className="max-w-2xl text-center">
-    </div>
-    <Image
-        src="/error.gif" 
+      </div>
+      <Image
+        src="/error.gif"
         alt="404 Error Animation"
         width={450}
         height={400}
         className={s.errorImage}
-        unoptimized 
+        unoptimized
       />
       <div className={s.description}>
-        <p className={s.description}>The page you're looking for doesn't exist.</p>
+        <p className={s.description}>The page you&apos;re looking for doesn&apos;t exist.</p>
         <Link href="/" className={s.button}>
           Return Home
         </Link>

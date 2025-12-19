@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Card } from '@/shared/components/Card';
@@ -17,7 +17,7 @@ const getStatusColor = (status: string) => {
     }
 };
 
-export default function LeaveHistoryPage() {
+function LeaveHistoryContent() {
     const { requests, updateRequestStatus } = useLeaves();
     const searchParams = useSearchParams();
     const targetId = searchParams.get('employeeId');
@@ -124,5 +124,13 @@ export default function LeaveHistoryPage() {
                 </div>
             </Card>
         </div>
+    );
+}
+
+export default function LeaveHistoryPage() {
+    return (
+        <Suspense fallback={<div style={{ padding: '2rem' }}>Loading...</div>}>
+            <LeaveHistoryContent />
+        </Suspense>
     );
 }

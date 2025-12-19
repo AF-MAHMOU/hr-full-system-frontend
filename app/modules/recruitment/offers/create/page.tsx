@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Card, Button } from '@/shared/components';
 import { useAuth } from '@/shared/hooks/useAuth';
@@ -8,7 +9,7 @@ import { recruitmentApi } from '../../api/recruitment.api';
 import { CreateOfferDto } from '../../types';
 import styles from '../../components/RecruitmentForms.module.css';
 
-export default function CreateOfferPage() {
+function CreateOfferContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const { user } = useAuth();
@@ -56,5 +57,13 @@ export default function CreateOfferPage() {
                 />
             </Card>
         </div>
+    );
+}
+
+export default function CreateOfferPage() {
+    return (
+        <Suspense fallback={<div style={{ padding: '2rem' }}>Loading...</div>}>
+            <CreateOfferContent />
+        </Suspense>
     );
 }

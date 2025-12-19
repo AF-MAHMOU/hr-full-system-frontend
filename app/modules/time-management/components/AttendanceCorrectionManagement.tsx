@@ -52,7 +52,7 @@ export function AttendanceCorrectionManagementForHRManager() {
           <div className={s.punchList}>
             {r.punches.map((p, i) => (
               <div key={i}>
-                {p.type} — {new Date(p.timestamp).toLocaleString()}
+                {p.type} — {new Date(p.time).toLocaleString()}
               </div>
             ))}
           </div>

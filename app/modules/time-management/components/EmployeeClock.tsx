@@ -3,11 +3,12 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/shared/hooks";
 import { useRouter } from "next/navigation";
-import { addPunchToAttendance, createAttendanceRecord, getAllAttendanceRecord, getAllHolidays, getAllShiftAssignmentsByDepartment, getAllShiftAssignmentsByEmployee, getAllShiftAssignmentsByPosition } from "../api/index";
+import { addPunchToAttendance, createAttendanceRecord, getAllAttendanceRecord, getAllHolidays, getShiftAssignmentsByDepartment, getShiftAssignmentsByEmployee, getShiftAssignmentsByPosition } from "../api/index";
 import s from "../page.module.css";
 import { PunchType } from "../types";
 import * as XLSX from "xlsx";
-import { getAllEmployees } from "../../hr/api/hrApi";
+import { profileApi } from "../../employee-profile/api/profileApi";
+import styles from "./EmployeeClock.module.css";
 
 export default function EmployeeClock() {
   const { user } = useAuth();
@@ -20,7 +21,14 @@ export default function EmployeeClock() {
     failed: number;
     errors: string[];
   } | null>(null);
-  const router = useRouter(); // This is the router hook for navigation.
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const router = useRouter();
+
+  // Live clock effect
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Handle manual punch for clocking in/out 
   const handlePunch = async () => {
@@ -41,20 +49,24 @@ export default function EmployeeClock() {
 
       try {
         const [
-          allEmployees,
-          employeeAssignments,
-          departmentAssignments,
-          positionAssignments,
+          profile,
           holidays
         ] = await Promise.all([
-          getAllEmployees(),
-          getAllShiftAssignmentsByEmployee(),
-          getAllShiftAssignmentsByDepartment(),
-          getAllShiftAssignmentsByPosition(),
+          profileApi.getMyProfile(),
           getAllHolidays()
         ]);
 
-        const currentUserProfile = allEmployees.find((e: any) => e._id === user.userid);
+        const [
+          employeeAssignments,
+          departmentAssignments,
+          positionAssignments
+        ] = await Promise.all([
+          getShiftAssignmentsByEmployee(user.userid),
+          profile.primaryDepartmentId ? getShiftAssignmentsByDepartment(profile.primaryDepartmentId) : Promise.resolve([]),
+          profile.primaryPositionId ? getShiftAssignmentsByPosition(profile.primaryPositionId) : Promise.resolve([])
+        ]);
+
+        const currentUserProfile = profile;
 
         // Helper to compare IDs safely
         const getIdsMatch = (id1: any, id2: any) => {
@@ -261,31 +273,44 @@ export default function EmployeeClock() {
   };
 
   return (
-    <>
-      <h1 className={s.header}>Employee Clock In/Out</h1>
-
-      <div style={{ marginBottom: '2rem' }}>
-        <h2 className={s.description}>Manual Clock In/Out</h2>
-        <button className={s.button} onClick={handlePunch} disabled={loading}>
-          {loading ? "Processing..." : `Clock ${punchType}`}
-        </button>
+    <div className={styles.clockCard}>
+      <div className={styles.statusBadge}>
+        {punchType === PunchType.IN ? "Currently Off Shift" : "Shift In Progress"}
       </div>
 
-      <div style={{ borderTop: '2px solid #e5e7eb', paddingTop: '2rem', marginTop: '2rem' }}>
-        <h2 className={s.description}>Bulk Import from Excel</h2>
+      <div style={{ textAlign: 'center' }}>
+        <h2 style={{ fontSize: '3rem', fontWeight: '800', margin: 0, letterSpacing: '-1px' }}>
+          {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+        </h2>
+        <p style={{ color: 'rgba(255,255,255,0.5)', margin: '5px 0 0 0' }}>
+          {currentTime.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })}
+        </p>
+      </div>
 
-        <div style={{ marginBottom: '1rem' }}>
-          <button onClick={downloadTemplate} className={s.button}>
-            Download Template
-          </button>
+      <button
+        className={`${styles.punchCircle} ${punchType === PunchType.OUT ? styles.punchOut : ''}`}
+        onClick={handlePunch}
+        disabled={loading}
+      >
+        <span style={{ fontSize: '2.5rem' }}>{punchType === PunchType.IN ? "📥" : "📤"}</span>
+        <span>{loading ? "..." : `Clock ${punchType}`}</span>
+      </button>
+
+      {message && (
+        <div className={`${styles.message} ${message.includes('success') || message.includes('recorded') ? styles.success : styles.error}`}>
+          {message}
         </div>
+      )}
 
-        <div style={{ marginBottom: '1rem' }}>
-          <label
-            htmlFor="excel-upload"
-            className={s.button}
-          >
-            {importLoading ? 'Importing...' : 'Upload Excel File'}
+      <div className={styles.importSection}>
+        <h3 className={styles.importTitle}>Bulk Management</h3>
+        <div className={styles.importGrid}>
+          <button onClick={downloadTemplate} className={styles.actionBtn}>
+            📄 Download Template
+          </button>
+
+          <label htmlFor="excel-upload" className={`${styles.actionBtn} ${styles.primary}`}>
+            {importLoading ? '...' : '📤 Upload'}
           </label>
           <input
             id="excel-upload"
@@ -298,55 +323,17 @@ export default function EmployeeClock() {
         </div>
 
         {importResults && (
-          <div style={{
-            padding: '1rem',
-            backgroundColor: '#f3f4f6',
-            borderRadius: '0.375rem',
-            marginTop: '1rem',
-          }}>
-            <h3 style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>
-              Import Results
-            </h3>
-            <p style={{ color: '#059669' }}>
-              ✓ Successful: {importResults.success}
-            </p>
-            <p style={{ color: '#dc2626' }}>
-              ✗ Failed: {importResults.failed}
-            </p>
-
+          <div className={styles.results}>
+            <p style={{ color: '#10b981', margin: '0 0 5px 0' }}>✓ Success: {importResults.success}</p>
+            <p style={{ color: '#ef4444', margin: 0 }}>✗ Failed: {importResults.failed}</p>
             {importResults.errors.length > 0 && (
-              <div style={{ marginTop: '1rem' }}>
-                <p style={{ fontWeight: '600', marginBottom: '0.5rem' }}>
-                  Errors:
-                </p>
-                <ul style={{ fontSize: '0.875rem', color: '#dc2626', paddingLeft: '1.5rem' }}>
-                  {importResults.errors.map((error, idx) => (
-                    <li key={idx}>{error}</li>
-                  ))}
-                  {importResults.failed > 10 && (
-                    <li style={{ fontStyle: 'italic' }}>
-                      ... and {importResults.failed - 10} more errors
-                    </li>
-                  )}
-                </ul>
-              </div>
+              <ul style={{ fontSize: '12px', opacity: 0.7, paddingLeft: '15px', marginTop: '10px' }}>
+                {importResults.errors.map((e, i) => <li key={i}>{e}</li>)}
+              </ul>
             )}
           </div>
         )}
-
-        <div className={s.textBox}>
-          <p style={{ fontWeight: '600', marginBottom: '0.5rem' }}>
-            Excel Format Requirements:
-          </p>
-          <ul style={{ paddingLeft: '1.5rem' }}>
-            <li>Column: <strong>punchType</strong> (required: IN or OUT)</li>
-            <li>Column: <strong>timestamp</strong> (optional, uses current time if empty)</li>
-            <li><em>Note: Employee ID is automatically taken from your logged-in session</em></li>
-          </ul>
-        </div>
       </div>
-
-      {message && <p className={s.message}>{message}</p>}
-    </>
+    </div>
   );
 }

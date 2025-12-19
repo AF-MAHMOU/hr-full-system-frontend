@@ -273,7 +273,7 @@ export default function HRJobTemplateManager() {
             ) : (
                 <div style={{ display: 'grid', gap: '1rem', marginTop: '1rem' }}>
                     {templates.map((template) => (
-                        <div style={{ cursor: 'pointer' }} onClick={() => handleViewTemplate(template)}><Card key={template._id} padding="md" className={styles.listItem}>
+                        <div key={template._id} style={{ cursor: 'pointer' }} onClick={() => handleViewTemplate(template)}><Card padding="md" className={styles.listItem}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                 <div>
                                     <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>

@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useState, useEffect } from 'react';
+import { Suspense, useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/shared/hooks/useAuth';
 import { Card, Button } from '@/shared/components';
 import { recruitmentApi } from '../api/recruitment.api';
@@ -13,13 +13,7 @@ function ResignationPageContent() {
     const [resignationData, setResignationData] = useState<any>(null);
     const [checkingStatus, setCheckingStatus] = useState(true);
 
-    useEffect(() => {
-        if (user) {
-            checkResignationStatus();
-        }
-    }, [user]);
-
-    const checkResignationStatus = async () => {
+    const checkResignationStatus = useCallback(async () => {
         if (!user) return;
         try {
             setCheckingStatus(true);
@@ -41,7 +35,13 @@ function ResignationPageContent() {
         } finally {
             setCheckingStatus(false);
         }
-    };
+    }, [user]);
+
+    useEffect(() => {
+        if (user) {
+            checkResignationStatus();
+        }
+    }, [user, checkResignationStatus]);
 
     if (isLoading || checkingStatus) return <div>Loading...</div>;
     if (!user) return <div>Please log in.</div>;

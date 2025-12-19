@@ -1,7 +1,7 @@
 
 
 import axios from 'axios';
-import { Payslip } from '../types/payslip';
+import { Payslip } from './payslip';
 export const getCurrentPayslip = async (): Promise<Payslip> => {
   const res = await api.get('/payroll-tracking/employee/me/payslips/current');
   return res.data;

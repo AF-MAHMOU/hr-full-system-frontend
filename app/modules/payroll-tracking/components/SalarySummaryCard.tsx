@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Payslip } from '../../../../shared/types/payslip';
+import { Payslip } from '../utils/payslip';
 import styles from './SalarySummaryCard.module.css';
 
 interface Props {

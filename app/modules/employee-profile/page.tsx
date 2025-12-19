@@ -149,7 +149,7 @@ function EmployeeProfileContent() {
                 <h3>Password</h3>
                 <p>Change your account password</p>
               </div>
-              <Button
+              <Button className={styles.button}
                 variant="primary"
                 onClick={() => setIsChangePasswordOpen(true)}
               >

@@ -461,6 +461,25 @@
   /* needed for dropdown positioning */
 }
 
+.backButton {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #F9F9F5;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-bottom: 2rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  align-self: flex-start;
+}
+
+.backButton:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--primary-main, #6d65ff);
+  transform: translateX(-4px);
+}
+
 .navbar-item {
   position: relative;
   cursor: pointer;

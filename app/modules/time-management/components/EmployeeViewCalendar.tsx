@@ -8,7 +8,7 @@ import interactionPlugin from '@fullcalendar/interaction';
 import { useAuth } from '@/shared/hooks'; // Add this import
 import { getAllHolidays, getShiftAssignmentsByEmployee } from '../api/index';
 import { getShiftName } from './utils';
-import s from '../page.module.css'
+import s from './EmployeeViewCalendar.module.css';
 import Calendar from './Calendar';
 
 const getHolidayColor = (type: string) => {
@@ -20,7 +20,7 @@ const getHolidayColor = (type: string) => {
     case 'WEEKLY_REST':
       return '#ff0000ff';
     default:
-      return '#383875ff';
+      return '#6d65ff';
   }
 };
 
@@ -146,139 +146,98 @@ export default function EmployeeViewCalendar({ defaultView = 'holidays' }: { def
   if (loading) return <p>Loading calendar data...</p>;
 
   return (
-    <div className={s.container}>
-      {/* View Toggle Buttons */}
-      <div style={{
-        marginBottom: '1rem',
-        display: 'flex',
-        gap: '1rem',
-        justifyContent: 'center'
-      }}>
-        <button
-          onClick={() => setCalendarView('shifts')}
-          style={{
-            padding: '0.75rem 1.5rem',
-            borderRadius: '0.5rem',
-            border: 'none',
-            backgroundColor: calendarView === 'shifts' ? '#3b82f6' : '#e5e7eb',
-            color: calendarView === 'shifts' ? 'white' : '#4b5563',
-            cursor: 'pointer',
-            fontWeight: '600',
-            transition: 'all 0.2s ease',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
-          }}
-        >
-          My Shifts
-        </button>
-        <button
-          onClick={() => setCalendarView('holidays')}
-          style={{
-            padding: '0.5rem 1rem',
-            borderRadius: '0.375rem',
-            border: 'none',
-            backgroundColor: calendarView === 'holidays' ? '#10b981' : '#6b7280',
-            color: 'white',
-            cursor: 'pointer',
-            fontWeight: calendarView === 'holidays' ? 'bold' : 'normal'
-          }}
-        >
-          Holidays
-        </button>
-      </div>
+    <div className={s.calendarContainer}>
+      <div className={s.controls}>
+        <div className={s.toggleContainer}>
+          <button
+            onClick={() => setCalendarView('shifts')}
+            className={`${s.toggleBtn} ${calendarView === 'shifts' ? s.active : ''}`}
+          >
+            My Shifts
+          </button>
+          <button
+            onClick={() => setCalendarView('holidays')}
+            className={`${s.toggleBtn} ${calendarView === 'holidays' ? s.active : ''}`}
+          >
+            Holidays
+          </button>
+        </div>
 
-      {/* Legend */}
-      <div style={{
-        marginBottom: '1rem',
-        display: 'flex',
-        flexWrap: 'wrap',
-        gap: '1rem',
-        justifyContent: 'center',
-        fontSize: '0.875rem'
-      }}>
-        {calendarView === 'shifts' ? (
-          <>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-              <div style={{ width: '12px', height: '12px', backgroundColor: '#10b981', borderRadius: '2px' }}></div>
-              <span>Approved</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-              <div style={{ width: '12px', height: '12px', backgroundColor: '#f59e0b', borderRadius: '2px' }}></div>
-              <span>Pending</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-              <div style={{ width: '12px', height: '12px', backgroundColor: '#ef4444', borderRadius: '2px' }}></div>
-              <span>Rejected</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-              <div style={{ width: '12px', height: '12px', backgroundColor: '#6b7280', borderRadius: '2px' }}></div>
-              <span>Cancelled</span>
-            </div>
-          </>
-        ) : (
-          <>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-              <div style={{ width: '12px', height: '12px', backgroundColor: '#584d4dff', borderRadius: '2px' }}></div>
-              <span>National Holiday</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-              <div style={{ width: '12px', height: '12px', backgroundColor: '#00ff2fff', borderRadius: '2px' }}></div>
-              <span>Organizational Holiday</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-              <div style={{ width: '12px', height: '12px', backgroundColor: '#ff0000ff', borderRadius: '2px' }}></div>
-              <span>Weekly Rest</span>
-            </div>
-          </>
-        )}
-      </div>
-
-      <FullCalendar
-        plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-        initialView="dayGridMonth"
-        events={events}
-        height="auto"
-        headerToolbar={{
-          left: 'prev,next today',
-          center: 'title',
-          right: 'dayGridMonth,timeGridWeek,timeGridDay'
-        }}
-        eventClick={(info) => {
-          const event = info.event;
-          const extendedProps = event.extendedProps;
-
-          if (extendedProps.type === 'shift') {
-            alert(
-              `Shift: ${extendedProps.shiftName}\n` +
-              `Status: ${extendedProps.status}\n` +
-              `Time: ${extendedProps.startTime} - ${extendedProps.endTime}\n` +
-              `Date: ${event.start?.toLocaleDateString()}`
-            );
-          } else {
-            alert(
-              `Holiday: ${event.title}\n` +
-              `Date: ${event.start?.toLocaleDateString()}`
-            );
-          }
-        }}
-        eventContent={(eventInfo) => {
-          const timeText = eventInfo.event.allDay
-            ? ''
-            : eventInfo.timeText;
-
-          return (
-            <div style={{ padding: '2px' }}>
-              <div style={{ fontWeight: 'bold', fontSize: '0.85em' }}>
-                {eventInfo.event.title}
+        <div className={s.legend}>
+          {calendarView === 'shifts' ? (
+            <>
+              <div className={s.legendItem}>
+                <div className={s.dot} style={{ backgroundColor: '#10b981' }}></div>
+                <span>Approved</span>
               </div>
-              {timeText && (
-                <div style={{ fontSize: '0.75em', opacity: 0.8 }}>
-                  {timeText}
-                </div>
-              )}
-            </div>
-          );
-        }}
-      />
+              <div className={s.legendItem}>
+                <div className={s.dot} style={{ backgroundColor: '#f59e0b' }}></div>
+                <span>Pending</span>
+              </div>
+              <div className={s.legendItem}>
+                <div className={s.dot} style={{ backgroundColor: '#ef4444' }}></div>
+                <span>Rejected</span>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className={s.legendItem}>
+                <div className={s.dot} style={{ backgroundColor: '#584d4d' }}></div>
+                <span>National</span>
+              </div>
+              <div className={s.legendItem}>
+                <div className={s.dot} style={{ backgroundColor: '#00ff2f' }}></div>
+                <span>Org</span>
+              </div>
+              <div className={s.legendItem}>
+                <div className={s.dot} style={{ backgroundColor: '#ff0000' }}></div>
+                <span>Rest</span>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      <div className={s.calendarWrapper}>
+        <FullCalendar
+          plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+          initialView="dayGridMonth"
+          events={events}
+          height="auto"
+          headerToolbar={{
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+          }}
+          eventClick={(info) => {
+            const event = info.event;
+            const extendedProps = event.extendedProps;
+
+            if (extendedProps.type === 'shift') {
+              alert(
+                `Shift: ${extendedProps.shiftName}\n` +
+                `Status: ${extendedProps.status}\n` +
+                `Time: ${extendedProps.startTime} - ${extendedProps.endTime}\n` +
+                `Date: ${event.start?.toLocaleDateString()}`
+              );
+            } else {
+              alert(
+                `Holiday: ${event.title}\n` +
+                `Date: ${event.start?.toLocaleDateString()}`
+              );
+            }
+          }}
+          eventContent={(eventInfo) => {
+            const timeText = eventInfo.event.allDay ? '' : eventInfo.timeText;
+            return (
+              <div style={{ padding: '4px 8px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600 }}>
+                {eventInfo.event.title}
+                {timeText && <div style={{ fontSize: '0.7rem', opacity: 0.8 }}>{timeText}</div>}
+              </div>
+            );
+          }}
+        />
+      </div>
     </div>
   );
 }

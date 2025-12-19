@@ -152,6 +152,16 @@ export const updateAttendanceRecord = async (id: string, payload: UpdateAttendan
   }
 };
 
+export const addPunchToAttendance = async (id: string, punch: any) => {
+  try {
+    const { data } = await axiosInstance.patch(`/attendance/${id}/punch`, punch, { withCredentials: true });
+    return data;
+  } catch (err: any) {
+    console.error("Add punch error:", err.message);
+    throw err;
+  }
+};
+
 
 export const getTimeException = async (id: string) => {
   try {
@@ -210,6 +220,16 @@ export const updateShiftAssignmentByEmployee = async (id: string, payload: any) 
 export const getShiftAssignmentsByPosition = async (id: string) => {
   try {
     const { data } = await axios.get(`${BASE_URL}/shift-assignments/position/${id}`, { withCredentials: true });
+    return data;
+  } catch (error: any) {
+    console.error("Error:", error.message);
+    return [];
+  }
+};
+
+export const getShiftAssignmentsByDepartment = async (id: string) => {
+  try {
+    const { data } = await axios.get(`${BASE_URL}/shift-assignments/department/${id}`, { withCredentials: true });
     return data;
   } catch (error: any) {
     console.error("Error:", error.message);
@@ -978,16 +998,3 @@ async function giveError(error: any) {
   return errorResponse;
 }
 
-//
-//
-//
-
-export const addPunchToAttendance = async (
-  attendanceId: string,
-  punch: { type: PunchType; time: Date }
-) => {
-  return axiosInstance.patch(
-    `/attendance/${attendanceId}/punch`,
-    punch
-  );
-};

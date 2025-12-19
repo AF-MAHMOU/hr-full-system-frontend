@@ -2,6 +2,7 @@ import { AttendanceRecord } from "../types";
 import s from "../page.module.css";
 import { getEmployeeName } from "./utils";
 import { EmployeeProfile } from "../../hr/api/hrApi";
+import Link from "next/link";
 
 interface AttendanceRecordListProps {
   attendancerecords: AttendanceRecord[];
@@ -57,9 +58,14 @@ export default function AttendanceRecordList({ attendancerecords, employees, onD
           </div>
 
 
-          <button className={s.button} onClick={() => onDelete(attendancerecord.id)}>
-            Delete
-          </button>
+          <div className={s.buttonGroup}>
+            <Link href={`/modules/time-management/attendance-record/edit?id=${attendancerecord.id}`}>
+              <button className={s.button}>Edit</button>
+            </Link>
+            <button className={`${s.button} ${s.danger}`} onClick={() => onDelete(attendancerecord.id)}>
+              Delete
+            </button>
+          </div>
         </div>
       ))}
     </div>

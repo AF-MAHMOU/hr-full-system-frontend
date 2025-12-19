@@ -106,52 +106,28 @@ export default function TimeManagementPage() {
     <div className={s.welcomeContainer}>
       <section className={s.welcomeSection}>
         <div className={s.welcomeContent}>
+          <button
+            className={s.backButton}
+            onClick={() => router.back()}
+            title="Go back"
+          >
+            ← Back
+          </button>
           <h1 className={s.welcomeTitle}>Time Management</h1>
-          <p className={s.welcomeSubtitle}>
-            Manage attendance, shifts, and policies in one place.
-          </p>
         </div>
       </section>
 
       {!roles?.includes(SystemRole.SYSTEM_ADMIN) && !roles?.includes(SystemRole.HR_ADMIN) ? (
         /* NON ADMIN VIEW*/
         <section className={s.quickActionsSection}>
-          <h2 className={s.sectionTitle}>Quick actions</h2>
-
-          <div className={s.actionsGrid}>
-            <div
-              className={s.actionCard}
-              onClick={() => router.push('/modules/time-management/attendance-record')}
-            >
-              <span className={s.actionIcon}>📅</span>
-              <span className={s.actionLabel}>Attendance</span>
-            </div>
-
-            <div
-              className={s.actionCard}
-              onClick={() => router.push('/modules/time-management/shifts')}
-            >
-              <span className={s.actionIcon}>⏱</span>
-              <span className={s.actionLabel}>My shifts</span>
-            </div>
-
-            <div
-              className={s.actionCard}
-              onClick={() => router.push('/modules/time-management/holiday')}
-            >
-              <span className={s.actionIcon}>🏖</span>
-              <span className={s.actionLabel}>Holidays</span>
-            </div>
-
-            <div
-              className={s.actionCard}
-              onClick={() => router.push('/modules/time-management/holiday')}
-            >
-              <span className={s.actionIcon}>🏖</span>
-              <span className={s.actionLabel}>Holidays</span>
-            </div>
-
+          <div
+            className={s.actionCard}
+            onClick={() => router.push('/modules/time-management/EmployeeDashboard')}
+          >
+            <span className={s.actionIcon}>🏠</span>
+            <span className={s.actionLabel}>Dashboard</span>
           </div>
+
         </section>
       ) : (
         <div className={s.welcomeContainer}>
@@ -167,6 +143,9 @@ export default function TimeManagementPage() {
 
           <section className={s.quickActionsSection}>
             <h2 className={s.sectionTitle}>Admin actions</h2>
+            <p className={s.welcomeSubtitle}>
+              Manage attendance, shifts, and policies in one place.
+            </p>
 
             {/* DAILY OPERATIONS */}
             <div className={s.actionGroup}>
@@ -251,8 +230,9 @@ export default function TimeManagementPage() {
           </section>
         </div>
 
-      )}
+      )
+      }
 
-    </div>
+    </div >
   );
 }

@@ -77,6 +77,14 @@ export default function CreateAttendanceRecordForm({ onCreated }: CreateAttendan
                     minute: '2-digit',
                     hour12: false
                   })}
+                  onChange={(e) => {
+                    const [hours, minutes] = e.target.value.split(':').map(Number);
+                    const next = [...punches];
+                    const newTime = new Date(punch.time);
+                    newTime.setHours(hours, minutes);
+                    next[index] = { ...next[index], time: newTime };
+                    setPunches(next);
+                  }}
                 />
 
                 <select

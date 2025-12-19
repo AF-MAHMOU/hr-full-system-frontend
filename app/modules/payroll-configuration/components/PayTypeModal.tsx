@@ -21,6 +21,15 @@ export default function PayTypeModal({ isOpen, onClose, onSave, payType }: PayTy
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
+  // Valid pay types as per backend validation
+  const validPayTypes = [
+    { value: 'hourly', label: 'Hourly' },
+    { value: 'daily', label: 'Daily' },
+    { value: 'weekly', label: 'Weekly' },
+    { value: 'monthly', label: 'Monthly' },
+    { value: 'contract-based', label: 'Contract-based' },
+  ];
+
   useEffect(() => {
     if (payType) {
       setFormData({
@@ -84,13 +93,25 @@ export default function PayTypeModal({ isOpen, onClose, onSave, payType }: PayTy
             <label htmlFor="type" className={styles.label}>
               Type <span style={{ color: '#e76f51' }}>*</span>
             </label>
-            <Input
+            <select
               id="type"
               value={formData.type}
               onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-              placeholder="e.g., Full-Time Salary, Contractor Hourly"
-              error={errors.type}
-            />
+              className={styles.select}
+              style={errors.type ? { borderColor: '#e76f51' } : {}}
+            >
+              <option value="">Select Pay Type</option>
+              {validPayTypes.map((pt) => (
+                <option key={pt.value} value={pt.value}>
+                  {pt.label}
+                </option>
+              ))}
+            </select>
+            {errors.type && (
+              <span style={{ color: '#e76f51', fontSize: '0.875rem', marginTop: '0.25rem', display: 'block' }}>
+                {errors.type}
+              </span>
+            )}
           </div>
 
           <div className={styles.formGroup}>

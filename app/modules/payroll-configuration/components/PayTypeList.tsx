@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { Button } from '@/shared/components';
+import { Button, Modal } from '@/shared/components';
 import { useAuth } from '@/shared/hooks/useAuth';
 import { payTypeApi } from '../api/payrollConfigApi';
 import { PayType, ApprovalStatus, FilterPayTypeDto, PaySchedule } from '../types';
@@ -19,6 +19,13 @@ export default function PayTypeList() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPayType, setSelectedPayType] = useState<PayType | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{
+    show: boolean;
+    id: string;
+    status: ApprovalStatus;
+    message: string;
+  } | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const userRole = user?.roles?.[0];
   const isPayrollSpecialist = userRole === SystemRole.PAYROLL_SPECIALIST;
@@ -56,23 +63,31 @@ export default function PayTypeList() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id: string, status: ApprovalStatus) => {
+  const handleDelete = (id: string, status: ApprovalStatus) => {
     if (!isPayrollSpecialist && status === ApprovalStatus.DRAFT) return;
     if (!isPayrollManager && status === ApprovalStatus.APPROVED) return;
-    
-    const message = status === ApprovalStatus.APPROVED 
+
+    const message = status === ApprovalStatus.APPROVED
       ? 'This is an approved pay type. Are you sure you want to delete it? This action requires manager approval.'
       : 'Are you sure you want to delete this pay type?';
-    
-    if (!confirm(message)) return;
 
+    setDeleteConfirmation({ show: true, id, status, message });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteConfirmation) return;
+
+    setDeleteError(null);
     try {
-      setActionLoading(id);
-      // For approved items, deletedBy is tracked by the backend
-      await payTypeApi.delete(id, status === ApprovalStatus.APPROVED ? user?.userid : undefined);
+      setActionLoading(deleteConfirmation.id);
+      await payTypeApi.delete(
+        deleteConfirmation.id,
+        deleteConfirmation.status === ApprovalStatus.APPROVED ? user?.userid : undefined
+      );
+      setDeleteConfirmation(null);
       await fetchPayTypes();
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to delete pay type');
+      setDeleteError(err.response?.data?.message || 'Failed to delete pay type');
     } finally {
       setActionLoading(null);
     }
@@ -302,6 +317,59 @@ export default function PayTypeList() {
         onSave={fetchPayTypes}
         payType={selectedPayType}
       />
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmation && (
+        <Modal
+          isOpen={deleteConfirmation.show}
+          onClose={() => {
+            setDeleteConfirmation(null);
+            setDeleteError(null);
+          }}
+          title="Confirm Delete"
+          size="sm"
+        >
+          <div style={{ padding: '1rem' }}>
+            <p style={{ marginBottom: '1.5rem', fontSize: '1rem', color: '#374151' }}>
+              {deleteConfirmation.message}
+            </p>
+
+            {deleteError && (
+              <div style={{
+                marginBottom: '1rem',
+                padding: '0.75rem',
+                background: '#fee2e2',
+                border: '1px solid #ef4444',
+                borderRadius: '0.375rem',
+                color: '#991b1b',
+                fontSize: '0.875rem'
+              }}>
+                ❌ {deleteError}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setDeleteConfirmation(null);
+                  setDeleteError(null);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                onClick={confirmDelete}
+                disabled={actionLoading === deleteConfirmation.id}
+                style={{ background: '#ef4444', borderColor: '#ef4444' }}
+              >
+                {actionLoading === deleteConfirmation.id ? 'Deleting...' : 'Delete'}
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
